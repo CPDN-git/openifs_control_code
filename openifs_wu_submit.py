@@ -512,7 +512,7 @@ if __name__ == "__main__":
             print >> OUTPUT, input_string
             OUTPUT.close()
 
-            # Change back the project directory
+            # Change back to the project directory
             os.chdir(project_dir)
 
             # Run the create_work script to create the workunit
@@ -561,6 +561,8 @@ if __name__ == "__main__":
           cursor.execute(query)
           db.commit()
 
+    # Change back to the project directory
+    os.chdir(project_dir)
 
     # Close the connection to the secondary database
     cursor.close()
