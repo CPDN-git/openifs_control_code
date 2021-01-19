@@ -920,6 +920,7 @@ int main(int argc, char** argv) {
     }
     else if (process_status == 2){
       boinc_end_critical_section();
+      boinc_finish(1);
       return 0;
     }
     else {
