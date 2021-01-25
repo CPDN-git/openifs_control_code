@@ -405,6 +405,14 @@ if __name__ == "__main__":
             #print "fpops_est: "+fpops_est
             #print "fpops_bound: "+fpops_bound
 
+            # Set the memory bound
+            if int(horiz_resolution) == 159 and int(vert_resolution) == 60:
+              memory_bound = str(5370000000)
+            elif int(horiz_resolution) == 255 and int(vert_resolution) == 60:
+              memory_bound = str(8500000000)
+            elif int(horiz_resolution) == 255 and int(vert_resolution) == 91:
+              memory_bound = str(15000000000)
+            
             # Calculate the number of timesteps from the number of days of the simulation
             if fclen_units == 'days':
               num_timesteps = (int(fclen) * 86400)/int(timestep)
@@ -595,7 +603,7 @@ if __name__ == "__main__":
               "   <command_line> "+str(start_date)+" "+str(exptid)+" "+str(unique_member_id)+" "+batch_prefix+str(batchid)+" "+str(wuid)+" "+str(fclen)+"</command_line>\n" +\
               "   <rsc_fpops_est>"+fpops_est+"</rsc_fpops_est>\n" +\
               "   <rsc_fpops_bound>"+fpops_est+"0</rsc_fpops_bound>\n" +\
-              "   <rsc_memory_bound>12500000000</rsc_memory_bound>\n" +\
+              "   <rsc_memory_bound>"+memory_bound+"</rsc_memory_bound>\n" +\
               "   <rsc_disk_bound>4000000000</rsc_disk_bound>\n" +\
               "   <delay_bound>121.000</delay_bound>\n" +\
               "   <min_quorum>1</min_quorum>\n" +\
