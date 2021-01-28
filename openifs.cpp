@@ -48,6 +48,7 @@ int checkBOINCStatus(long,int);
 long launchProcess(const char*,const char*,const char*);
 std::string getTag(const std::string &str);
 int unzip_file(const char*);
+void process_trickle(double,const char*,const char*,const char*,int);
 
 using namespace std::chrono;
 using namespace std::this_thread;
@@ -112,7 +113,9 @@ int main(int argc, char** argv) {
     std::string batchid = argv[4];
     std::string wuid = argv[5];
     std::string fclen = argv[6];
+
     OIFS_EXPID = exptid;
+    wu_name = dataBOINC.wu_name;
 
     // Get the slots path (the current working path)
     char slot_path[_MAX_PATH];
@@ -762,6 +765,9 @@ int main(int argc, char** argv) {
                       fprintf(stderr,"Finished the upload of the result file: %s\n",upload_file_name.c_str());
                       fflush(stderr);
                    }
+			
+                   // Produce trickle
+                   process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
                 }
                 boinc_end_critical_section();
                 last_upload = current_iter; 
@@ -794,6 +800,9 @@ int main(int argc, char** argv) {
                    }
                 }
                 last_upload = current_iter;
+		     
+		// Produce trickle
+                process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
              }
              boinc_end_critical_section();
              upload_file_number++;
@@ -888,6 +897,9 @@ int main(int argc, char** argv) {
              fprintf(stderr,"Finished the upload of the result file\n");
              fflush(stderr);
           }
+	       
+	  // Produce trickle
+          process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
        }
        boinc_end_critical_section();
        last_upload = current_iter;
@@ -910,6 +922,8 @@ int main(int argc, char** argv) {
              return retval;
            }
         }
+	// Produce trickle
+        process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);     
     }
 	
     // if finished normally
@@ -1178,3 +1192,40 @@ int unzip_file(const char *file_name) {
     return retval;
 }
 #endif
+
+
+// Produce the trickle and either upload to the project server or as a physical file
+void process_trickle(double cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
+    char* trickle = new char[512];
+
+    fprintf(stderr,"cpu_time: %f\n",cpu_time);
+    fprintf(stderr,"wu_name: %s\n",wu_name);
+    fprintf(stderr,"result_name: %s\n",result_name);
+    fprintf(stderr,"slot_path: %s\n",slot_path);
+    fprintf(stderr,"timestep: %d\n",timestep);
+
+    std::sprintf(trickle, "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
+                           wu_name,result_name, timestep,(long) cpu_time);
+    //fprintf(stderr,"Contents of trickle: %s\n",trickle);
+
+    // Upload the trickle if not in standalone mode
+    if (!boinc_is_standalone()) {
+       fprintf(stderr,"Uploading trickle at timestep: %d\n",timestep);
+
+       boinc_send_trickle_up((char*) "orig",(char*) trickle);
+    }
+
+    // Write out the trickle in standalone mode
+    else {
+       char trickle_name[_MAX_PATH];
+       std::sprintf(trickle_name,"%s/trickle_%lu.xml",slot_path,(unsigned long) time(NULL));
+
+       fprintf(stderr,"Writing trickle to: %s\n",trickle_name);
+
+       FILE* trickle_file = boinc_fopen(trickle_name,"w");
+       if (trickle_file) {
+          fwrite(trickle, 1, strlen(trickle), trickle_file);
+          fclose(trickle_file);
+       }
+    }
+}
