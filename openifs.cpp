@@ -1,7 +1,7 @@
 //
 // Control code for the OpenIFS application in the climateprediction.net project
 //
-// Written by Andy Bowery (Oxford eResearch Centre, Oxford University) December 2020
+// Written by Andy Bowery (Oxford eResearch Centre, Oxford University) January 2021
 //
 
 #include <stdlib.h>
@@ -929,7 +929,7 @@ int main(int argc, char** argv) {
     }
     else if (process_status == 2){
       boinc_end_critical_section();
-      boinc_finish(1);
+      boinc_finish(0);
       return 0;
     }
     else {
