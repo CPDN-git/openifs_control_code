@@ -47,7 +47,6 @@ int checkChildStatus(long,int);
 int checkBOINCStatus(long,int);
 long launchProcess(const char*,const char*,const char*);
 std::string getTag(const std::string &str);
-int unzip_file(const char*);
 void process_trickle(double,const char*,const char*,const char*,int);
 
 using namespace std::chrono;
@@ -185,11 +184,7 @@ int main(int argc, char** argv) {
     fprintf(stderr,"Unzipping the app zip file: %s\n",app_zip.c_str());
     fflush(stderr);
 
-    #ifdef __APPLE__ // macOS
-       retval = unzip_file(app_zip.c_str());
-    #else // Linux
-       retval = boinc_zip(UNZIP_IT,app_zip.c_str(),slot_path);
-    #endif
+    retval = boinc_zip(UNZIP_IT,app_zip.c_str(),slot_path);
 
     if (retval) {
        fprintf(stderr,"..Unzipping the app file failed\n");
@@ -1124,75 +1119,6 @@ std::string getTag(const std::string &filename) {
        file.close();
     }
 }
-
-// Alternative method to unzip a folder (macOS only)
-#ifdef __APPLE__ // macOS
-int unzip_file(const char *file_name) {
-    struct zip *opened_file;
-    struct zip_file *zf;
-    struct zip_stat zip_position;
-    char buf[100];
-    int err,i,len,fd;
-    long long sum;
-
-    int retval = 0;
-
-    fprintf(stderr,"Unzipping file: %s\n",file_name);
-    if ((opened_file = zip_open(file_name, 0, &err)) == NULL) {
-       fprintf(stderr,"..Cannot open zip file: %s\n",file_name);
-       retval=1;
-    }
-
-    for (i = 0; i < zip_get_num_entries(opened_file,0); i++) {
-       if (zip_stat_index(opened_file,i,0,&zip_position) == 0) {
-          len = strlen(zip_position.name);
-
-          if (zip_position.name[len - 1] == '/') {
-             if (mkdir(zip_position.name, 0755) < 0) {
-                fprintf(stderr, "..Failed to create directory: %s\n",zip_position.name);
-                retval=1;
-             }
-          } else {
-             zf = zip_fopen_index(opened_file, i, 0);
-             if (!zf) {
-                fprintf(stderr, "..Failed to open zip index\n");
-                retval=1;
-             }
-
-             fd = open(zip_position.name,O_RDWR|O_TRUNC|O_CREAT,0755);
-             if (fd < 0) {
-                fprintf(stderr,"..Failed to open file in zip\n");
-                retval=1;
-             }
-
-             sum = 0;
-             while (sum != zip_position.size) {
-                len = zip_fread(zf, buf, 100);
-                if (len < 0) {
-                   fprintf(stderr,"..File in zip is of zero size\n");
-                   retval=1;
-                }
-                write(fd, buf, len);
-                sum += len;
-             }
-             close(fd);
-             zip_fclose(zf);
-          }
-       } else {
-          fprintf(stderr,"..File %s line %d\n",__FILE__,__LINE__);
-          retval=1;
-       }
-    }   
-
-    if (zip_close(opened_file) == -1) {
-       fprintf(stderr,"..Zip file cannot be closed: %s\n",file_name);
-       retval=1;
-    }
-
-    return retval;
-}
-#endif
-
 
 // Produce the trickle and either upload to the project server or as a physical file
 void process_trickle(double cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
