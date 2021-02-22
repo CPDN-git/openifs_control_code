@@ -23,7 +23,6 @@
 #include "./boinc/api/boinc_api.h"
 #include "./boinc/zip/boinc_zip.h"
 #include <signal.h>
-#include <zip.h>
 #include <fcntl.h>
 
 #ifndef __has_include
