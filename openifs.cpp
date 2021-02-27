@@ -907,23 +907,40 @@ int main(int argc, char** argv) {
 	// Produce trickle
         process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);     
     }
-	
+
+    sleep_until(system_clock::now() + seconds(120));
+
     // if finished normally
     if (process_status == 1){
       boinc_end_critical_section();
       boinc_finish(0);
+      #ifdef __APPLE_CC__
+         _exit(0);
+      #else
+         exit(0);
+      #endif 
       return 0;
     }
     else if (process_status == 2){
       boinc_end_critical_section();
       boinc_finish(0);
+      #ifdef __APPLE_CC__
+         _exit(0);
+      #else
+         exit(0);
+      #endif 
       return 0;
     }
     else {
       boinc_end_critical_section();
       boinc_finish(1);
+      #ifdef __APPLE_CC__
+         _exit(1);
+      #else
+         exit(1);
+      #endif 
       return 1;
-    }
+    }	
 }
 
 
