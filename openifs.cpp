@@ -25,6 +25,18 @@
 #include <signal.h>
 #include <fcntl.h>
 
+#ifndef __has_include
+  static_assert(false, "__has_include not supported");
+#else
+#  if __has_include(<filesystem>)
+#    include <filesystem>
+     namespace fs = std::filesystem;
+#  elif __has_include(<experimental/filesystem>)
+#    include <experimental/filesystem>
+     namespace fs = std::experimental::filesystem;
+#  endif
+#endif
+
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
 #endif
@@ -700,12 +712,12 @@ int main(int argc, char** argv) {
                    second_part = to_string(i);
                 }
 
-                if(std::filesystem::exists(slot_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
+                if(fs::exists(slot_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
                    fprintf(stderr,"Adding to the zip: %s\n",(slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
                    zfl.push_back(slot_path+std::string("/ICMGG")+exptid+"+"+second_part);
                 }
 
-                if(std::filesystem::exists(slot_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
+                if(fs::exists(slot_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
                    fprintf(stderr,"Adding to the zip: %s\n",(slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
                    zfl.push_back(slot_path+std::string("/ICMSH")+exptid+"+"+second_part);
                 }
