@@ -560,8 +560,8 @@ int main(int argc, char** argv) {
     // Set the stack limit to be unlimited
     struct rlimit stack_limits;
     #ifdef __APPLE__ // macOS
-       stack_limits.rlim_cur = stack_limits.rlim_max = 16000000;   // Set to 16MB
-       if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) fprintf(stderr,"..Setting the stack limit failed\n");
+       //stack_limits.rlim_cur = stack_limits.rlim_max = 16000000;   // Set to 16MB
+       //if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) fprintf(stderr,"..Setting the stack limit failed\n");
     #else // Linux
        stack_limits.rlim_cur = stack_limits.rlim_max = RLIM_INFINITY;
        if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) fprintf(stderr,"..Setting the stack limit to unlimited failed\n");
