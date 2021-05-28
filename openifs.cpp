@@ -25,17 +25,17 @@
 #include <signal.h>
 #include <fcntl.h>
 
-#ifndef __has_include
-  static_assert(false, "__has_include not supported");
-#else
-#  if __has_include(<filesystem>)
-#    include <filesystem>
-     namespace fs = std::filesystem;
-#  elif __has_include(<experimental/filesystem>)
-#    include <experimental/filesystem>
-     namespace fs = std::experimental::filesystem;
-#  endif
-#endif
+//#ifndef __has_include
+//  static_assert(false, "__has_include not supported");
+//#else
+//#  if __has_include(<filesystem>)
+//#    include <filesystem>
+//     namespace fs = std::filesystem;
+//#  elif __has_include(<experimental/filesystem>)
+//#    include <experimental/filesystem>
+//     namespace fs = std::experimental::filesystem;
+//#  endif
+//#endif
 
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
@@ -47,6 +47,7 @@ int checkBOINCStatus(long,int);
 long launchProcess(const char*,const char*,const char*);
 std::string getTag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
+bool file_exists(const std::string &str);
 
 using namespace std::chrono;
 using namespace std::this_thread;
@@ -707,7 +708,7 @@ int main(int argc, char** argv) {
              }
 
              // Move the ICMGG result file to the temporary folder in the project directory
-             if(fs::exists(slot_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
+             if(file_exists(slot_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
                 fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
                 retval = boinc_copy((slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str() , \
                                     (temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
@@ -722,7 +723,7 @@ int main(int argc, char** argv) {
              }
 
              // Move the ICMSH result file to the temporary folder in the project directory
-             if(fs::exists(slot_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
+             if(file_exists(slot_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
                 fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
                 retval = boinc_copy((slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str() , \
                                     (temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
@@ -781,7 +782,7 @@ int main(int argc, char** argv) {
                    }
 
                    // Add ICMGG result files to zip to be uploaded
-                   if(fs::exists(temp_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
+                   if(file_exists(temp_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
                       fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
                       zfl.push_back(temp_path+std::string("/ICMGG")+exptid+"+"+second_part);
                       // Delete the file that has been added to the zip
@@ -789,7 +790,7 @@ int main(int argc, char** argv) {
                    }
 
                    // Add ICMSH result files to zip to be uploaded
-                   if(fs::exists(temp_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
+                   if(file_exists(temp_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
                       fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
                       zfl.push_back(temp_path+std::string("/ICMSH")+exptid+"+"+second_part);
                       // Delete the file that has been added to the zip
@@ -1254,4 +1255,11 @@ void process_trickle(double cpu_time,const char* wu_name,const char* result_name
           fclose(trickle_file);
        }
     }
+}
+
+// Check whether a file exists
+bool file_exists(const std::string& filename)
+{
+    std::ifstream infile(filename.c_str());
+    return infile.good();
 }
