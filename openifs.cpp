@@ -744,9 +744,9 @@ int main(int argc, char** argv) {
 
                 // Cycle through all the steps from the last upload to the current upload
                 for (i = (last_upload / timestep_interval); i < (current_iter / timestep_interval); i++) {
-                   fprintf(stderr,"last_upload/timestep_interval: %i\n",(last_upload/timestep_interval));
-                   fprintf(stderr,"current_iter/timestep_interval: %i\n",(current_iter/timestep_interval));
-                   fprintf(stderr,"i: %s\n",(std::to_string(i)).c_str());
+                   //fprintf(stderr,"last_upload/timestep_interval: %i\n",(last_upload/timestep_interval));
+                   //fprintf(stderr,"current_iter/timestep_interval: %i\n",(current_iter/timestep_interval));
+                   //fprintf(stderr,"i: %s\n",(std::to_string(i)).c_str());
 
                    // Construct file name of the ICM result file
                    second_part = "";
