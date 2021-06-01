@@ -437,7 +437,7 @@ if __name__ == "__main__":
               if not(isinstance(upload_interval,int)):
                 raise ValueError('The number of time steps does not divide equally by the upload frequency')
               
-            number_of_uploads = math.ceil(num_timesteps / upload_interval)
+            number_of_uploads = int(math.ceil(float(num_timesteps) / float(upload_interval)))
 
             print "upload_interval: "+str(upload_interval)
             print "number_of_uploads: "+str(number_of_uploads)
