@@ -127,7 +127,7 @@ if __name__ == "__main__":
         batches = xmldoc.getElementsByTagName('batch')
         for batch in batches:
 
-          batchid = batchid+1
+          batchid = batchid + 1
           number_of_workunits = 0
 
           # Check model_class and if it is not openifs then exit loop and move on to the next xml file
@@ -137,7 +137,7 @@ if __name__ == "__main__":
           if model_class != 'openifs': 
             non_openifs_class = True
             print "The model class of the XML is not openifs, so moving on to the next XML file\n"
-            batchid = batchid-1
+            batchid = batchid - 1
             break
 
           model_config = str(batch.getElementsByTagName('model_config')[0].childNodes[0].nodeValue)
@@ -200,7 +200,7 @@ if __name__ == "__main__":
             print "namelist_template: "+namelist_template
             print "wam_namelist_template: "+wam_namelist_template
             
-          first_wuid = wuid+1
+          first_wuid = wuid + 1
           first_start_year = 9999
           last_start_year = 0
 
@@ -437,7 +437,7 @@ if __name__ == "__main__":
               if not(isinstance(upload_interval,int)):
                 raise ValueError('The number of time steps does not divide equally by the upload frequency')
               
-            number_of_uploads = num_timesteps / upload_interval
+            number_of_uploads = math.ceil(num_timesteps / upload_interval)
 
             print "upload_interval: "+str(upload_interval)
             print "number_of_uploads: "+str(number_of_uploads)
@@ -458,7 +458,7 @@ if __name__ == "__main__":
             if not (os.path.exists(project_dir+result_template)):
               output_string="<output_template>\n"
 
-              for upload_iteration in range(number_of_uploads):
+              for upload_iteration in range(1,number_of_uploads+1):
                 output_string=output_string+"<file_info>\n" +\
                 "  <name><OUTFILE_"+str(upload_iteration)+"/>.zip</name>\n" +\
                 "  <generated_locally/>\n" +\
