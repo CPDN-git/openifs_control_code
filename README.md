@@ -16,7 +16,7 @@ First ensure libzip is installed: brew install libzip
 
 Build the BOINC libraries using Xcode. Then build the controller code:
 
-clang++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -pthread -std=c++17 -o openifs_0.1_x86_64-apple-darwin
+clang++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -pthread -std=c++11 -o openifs_0.1_x86_64-apple-darwin
 
 This will create an executable that is the app imported into the BOINC environment alongside the OpenIFS executable. Now to run this the OpenIFS ancillary files along with the OpenIFS executable will need to be alongside, the command to run this in standalone mode is:
 
