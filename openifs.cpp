@@ -1,7 +1,7 @@
 //
 // Control code for the OpenIFS application in the climateprediction.net project
 //
-// Written by Andy Bowery (Oxford eResearch Centre, Oxford University) May 2021
+// Written by Andy Bowery (Oxford eResearch Centre, Oxford University) June 2021
 //
 
 #include <stdlib.h>
@@ -581,7 +581,7 @@ int main(int argc, char** argv) {
 
     ZipFileList zfl;
     std::string ifs_line, iter, last_iter, upload_file_name, ifs_word, second_part;
-    int current_iter=0, count=0, upload_file_number = 1;
+    int current_iter=0, count=0, upload_file_number = 0;
     std::ifstream ifs_stat_file;
     char upload_file[_MAX_PATH];
     char result_base_name[64]; 
