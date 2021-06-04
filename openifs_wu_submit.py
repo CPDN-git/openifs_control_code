@@ -2,7 +2,7 @@
 
 # Script to submit OpenIFS workunits
 
-# This script has been written by Andy Bowery (Oxford University, 2019)
+# This script has been written by Andy Bowery (Oxford University, 2021)
 
 if __name__ == "__main__":
 
@@ -458,7 +458,7 @@ if __name__ == "__main__":
             if not (os.path.exists(project_dir+result_template)):
               output_string="<output_template>\n"
 
-              for upload_iteration in range(1,number_of_uploads+1):
+              for upload_iteration in range(number_of_uploads):
                 output_string=output_string+"<file_info>\n" +\
                 "  <name><OUTFILE_"+str(upload_iteration)+"/>.zip</name>\n" +\
                 "  <generated_locally/>\n" +\
