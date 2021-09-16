@@ -799,6 +799,14 @@ int main(int argc, char** argv) {
                       // Delete the file that has been added to the zip
                    //   std::remove((temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
                    }
+		
+                   // Add ICMUA result files to zip to be uploaded
+                   if(file_exists(temp_path+std::string("/ICMUA")+exptid+"+"+second_part)) {
+                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                      zfl.push_back(temp_path+std::string("/ICMUA")+exptid+"+"+second_part);
+                      // Delete the file that has been added to the zip
+                   //   std::remove((temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                   }
                 }
 
                 // If running under a BOINC client
