@@ -725,6 +725,21 @@ int main(int argc, char** argv) {
                 }
              }
 
+             // Move the ICMUA result file to the temporary folder in the project directory (this is for 43r3 and above only)
+             if(file_exists(slot_path+std::string("/ICMUA")+exptid+"+"+second_part)) {
+                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                retval = boinc_copy((slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str() , \
+                                    (temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                if (retval) {
+                   fprintf(stderr,"..Copying ICMUA result file to the temp folder in the projects directory failed\n");
+                   return retval;
+                }
+                // If result file has been successfully copied over, remove it from slots directory
+                else {
+                   std::remove((slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                }
+             }
+		  
              // Convert iteration number to seconds
              current_iter = (std::stoi(last_iter)) * timestep_interval;
 
