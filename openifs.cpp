@@ -157,15 +157,15 @@ int main(int argc, char** argv) {
 
     // macOS
     #ifdef __APPLE__
-       std::string app_name = std::string("openifs_app_") + version + std::string("_x86_64-apple-darwin.zip");
+       std::string app_file = std::string("openifs_app_") + version + std::string("_x86_64-apple-darwin.zip");
     // Linux
     #else
-       std::string app_name = std::string("openifs_app_") + version + std::string("_x86_64-pc-linux-gnu.zip");
+       std::string app_file = std::string("openifs_app_") + version + std::string("_x86_64-pc-linux-gnu.zip");
     #endif
 
     // Copy the app file to the working directory
-    std::string app_target = project_path + app_name;
-    std::string app_destination = slot_path + std::string("/") + app_name;
+    std::string app_target = project_path + app_file;
+    std::string app_destination = slot_path + std::string("/") + app_file;
     fprintf(stderr,"Copying: %s to: %s\n",app_target.c_str(),app_destination.c_str());
     retval = boinc_copy(app_target.c_str(),app_destination.c_str());
     if (retval) {
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
     }
 
     // Unzip the app zip file
-    std::string app_zip = slot_path + std::string("/") + app_name;
+    std::string app_zip = slot_path + std::string("/") + app_file;
     fprintf(stderr,"Unzipping the app zip file: %s\n",app_zip.c_str());
     fflush(stderr);
 
