@@ -42,7 +42,7 @@ using namespace std::this_thread;
 using namespace std;
 
 int main(int argc, char** argv) {
-    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,result_name,wu_name,version;
+    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,app_name,result_name,wu_name,version;
     int HORIZ_RESOLUTION,VERT_RESOLUTION,upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
     char* strFind[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
@@ -117,6 +117,9 @@ int main(int argc, char** argv) {
       project_path = dataBOINC.project_dir + std::string("/");
       fprintf(stderr,"Current project directory is: %s\n",project_path.c_str());
 
+      // Get the app name
+      app_name = dataBOINC.app_name;
+	    
       // Get the app version and re-parse to add a dot
       version = std::to_string(dataBOINC.app_version);
       if (version.length()==3) {
@@ -131,7 +134,8 @@ int main(int argc, char** argv) {
          fprintf(stderr,"..Error with the length of app_version, length is: %lu\n",version.length());
          return 1;
       }
-
+	    
+      fprintf(stderr,"The current app is: %s\n",app_name.c_str());
       fprintf(stderr,"The current version is: %s\n",version.c_str());
       fprintf(stderr,"The current result_name is: %s\n",result_name.c_str());
     }
@@ -142,8 +146,10 @@ int main(int argc, char** argv) {
       project_path = slot_path + std::string("/../projects/");
       fprintf(stderr,"Current project directory is: %s\n",project_path.c_str());
 	    
-      // Get the app version and result name
+      // Get the app name, app version and result name
+      app_name = argv[8];
       version = argv[7];
+      fprintf(stderr,"(argv8) app_name: %s\n",argv[8]);
       fprintf(stderr,"(argv7) app_version: %s\n",argv[7]);
     }
 
