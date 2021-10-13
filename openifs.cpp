@@ -42,10 +42,10 @@ using namespace std::this_thread;
 using namespace std;
 
 int main(int argc, char** argv) {
-    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,app_name,result_name,wu_name,version;
+    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,result_name,wu_name,version;
     int HORIZ_RESOLUTION,VERT_RESOLUTION,upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
     char* strFind[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-    char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
+    char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH],app_name;
     char *pathvar;
     long handleProcess;
     double tv_sec,tv_usec,cpu_time,fraction_done;
@@ -157,16 +157,16 @@ int main(int argc, char** argv) {
 
     // Create temporary folder for moving the results to and uploading the results from
     // BOINC measures the disk usage on the slots directory so we must move all results out of this folder
-    std::string temp_path = project_path + std::string("openifs_") + wuid;
+    std::string temp_path = project_path + app_name + std::string("_") + wuid;
     fprintf(stderr,"Location of temp folder: %s\n",temp_path.c_str());
     if (mkdir(temp_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) fprintf(stderr,"..mkdir for temp folder for results failed\n");
 
     // macOS
     #ifdef __APPLE__
-       std::string app_file = std::string("openifs_app_") + version + std::string("_x86_64-apple-darwin.zip");
+       std::string app_file = app_name + std::string("_app_") + version + std::string("_x86_64-apple-darwin.zip");
     // Linux
     #else
-       std::string app_file = std::string("openifs_app_") + version + std::string("_x86_64-pc-linux-gnu.zip");
+       std::string app_file = app_name + std::string("_app_") + version + std::string("_x86_64-pc-linux-gnu.zip");
     #endif
 
     // Copy the app file to the working directory
@@ -197,11 +197,11 @@ int main(int argc, char** argv) {
 
     // Process the Namelist/workunit file:
     // Get the name of the 'jf_' filename from a link within the namelist file
-    std::string wu_target = getTag(slot_path + std::string("/openifs_") + unique_member_id + std::string("_") + start_date +\
+    std::string wu_target = getTag(slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
                       std::string("_") + fclen + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip"));
 
     // Copy the namelist files to the working directory
-    std::string wu_destination = slot_path + std::string("/openifs_") + unique_member_id + std::string("_") + start_date +\
+    std::string wu_destination = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
                       std::string("_") + fclen + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
     fprintf(stderr,"Copying the namelist files from: %s to: %s\n",wu_target.c_str(),wu_destination.c_str());
 
@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
     }
 
     // Unzip the namelist zip file
-    std::string namelist_zip = slot_path + std::string("/openifs_") + unique_member_id + std::string("_") + start_date +\
+    std::string namelist_zip = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
                       std::string("_") + fclen + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
     fprintf(stderr,"Unzipping the namelist zip file: %s\n",namelist_zip.c_str());
     fflush(stderr);
@@ -860,7 +860,7 @@ int main(int argc, char** argv) {
 
                 // Else running in standalone
                 else {
-                   upload_file_name = std::string("openifs_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
+                   upload_file_name = app_name + std::string("_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
                               fclen + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
                               std::to_string(upload_file_number) + std::string(".zip");
                    fprintf(stderr,"The current upload_file_name is: %s\n",upload_file_name.c_str());
@@ -992,7 +992,7 @@ int main(int argc, char** argv) {
     }
     // Else running in standalone
     else {
-       upload_file_name = std::string("openifs_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
+       upload_file_name = app_name + std::string("_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
                           fclen + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
                           std::to_string(upload_file_number) + std::string(".zip");
        fprintf(stderr,"The final upload_file_name is: %s\n",upload_file_name.c_str());
