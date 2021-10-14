@@ -293,7 +293,7 @@ if __name__ == "__main__":
                start_date = start_date + str(start_hour)
 
             # Set the name of the workunit
-            workunit_name = 'openifs_'+str(unique_member_id)+'_'+str(start_date)+'_'+str(fclen)+'_'+batch_prefix+str(batchid)+'_'+str(wuid)
+            workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_'+str(fclen)+'_'+batch_prefix+str(batchid)+'_'+str(wuid)
 
             # Construct ancil_file_location
             ancil_file_location = oifs_ancil_dir
@@ -600,7 +600,7 @@ if __name__ == "__main__":
               "     <file_number>3</file_number>\n" +\
               "     <open_name>"+str(climate_data_zip)+"</open_name>\n" +\
               "   </file_ref>\n" +\
-              "   <command_line> "+str(start_date)+" "+str(exptid)+" "+str(unique_member_id)+" "+batch_prefix+str(batchid)+" "+str(wuid)+" "+str(fclen)+"</command_line>\n" +\
+              "   <command_line> "+str(start_date)+" "+str(exptid)+" "+str(unique_member_id)+" "+batch_prefix+str(batchid)+" "+str(wuid)+" "+str(fclen)+" "+str(options.app_name)+"</command_line>\n" +\
               "   <rsc_fpops_est>"+fpops_est+"</rsc_fpops_est>\n" +\
               "   <rsc_fpops_bound>"+fpops_est+"0</rsc_fpops_bound>\n" +\
               "   <rsc_memory_bound>"+memory_bound+"</rsc_memory_bound>\n" +\
