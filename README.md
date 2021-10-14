@@ -8,7 +8,7 @@ To compile the controller code on a Linux machine:
 
 First ensure that libzip is installed using (on an Ubuntu machine): sudo apt-get install libzip-dev
 
-g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lzip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o openifs_0.1_x86_64-pc-linux-gnu
+g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o openifs_0.1_x86_64-pc-linux-gnu
 
 To compile the controller code on a Mac machine:
 
