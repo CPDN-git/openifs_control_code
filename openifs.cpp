@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,result_name,wu_name,version;
     int HORIZ_RESOLUTION,VERT_RESOLUTION,upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
     char* strFind[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-    char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH],app_name;
+    char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
     char *pathvar;
     long handleProcess;
     double tv_sec,tv_usec,cpu_time,fraction_done;
@@ -91,6 +91,7 @@ int main(int argc, char** argv) {
     fprintf(stderr,"(argv4) batchid: %s\n",argv[4]);
     fprintf(stderr,"(argv5) wuid: %s\n",argv[5]);
     fprintf(stderr,"(argv6) fclen: %s\n",argv[6]);
+    fprintf(stderr,"(argv7) app_name: %s\n",argv[7]);	
     fflush(stderr);
 
     // Read the exptid, batchid, version, wuid from the command line
@@ -100,7 +101,8 @@ int main(int argc, char** argv) {
     std::string batchid = argv[4];
     std::string wuid = argv[5];
     std::string fclen = argv[6];
-
+    std::string app_name = argv[7];
+	
     OIFS_EXPID = exptid;
     wu_name = dataBOINC.wu_name;
 
@@ -116,9 +118,6 @@ int main(int argc, char** argv) {
       // Get the project path
       project_path = dataBOINC.project_dir + std::string("/");
       fprintf(stderr,"Current project directory is: %s\n",project_path.c_str());
-
-      // Get the app name
-      app_name = dataBOINC.app_name;
 	    
       // Get the app version and re-parse to add a dot
       version = std::to_string(dataBOINC.app_version);
@@ -146,11 +145,10 @@ int main(int argc, char** argv) {
       project_path = slot_path + std::string("/../projects/");
       fprintf(stderr,"Current project directory is: %s\n",project_path.c_str());
 	    
-      // Get the app name, app version and result name
-      app_name = argv[8];
-      version = argv[7];
-      fprintf(stderr,"(argv8) app_name: %s\n",argv[8]);
-      fprintf(stderr,"(argv7) app_version: %s\n",argv[7]);
+      // Get the app version and result name
+      version = argv[8];
+      fprintf(stderr,"The current app is: %s\n",app_name.c_str());
+      fprintf(stderr,"(argv8) app_version: %s\n",argv[8]);
     }
 
     boinc_begin_critical_section();
