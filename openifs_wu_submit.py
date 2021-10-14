@@ -619,7 +619,7 @@ if __name__ == "__main__":
             print >> OUTPUT, input_string
             OUTPUT.close()
 
-            # Change back the project directory
+            # Change back to the project directory
             os.chdir(project_dir)
 
             workunit_url = 'http://dev.cpdn.org/download/batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+".zip"
