@@ -318,17 +318,17 @@ if __name__ == "__main__":
 
             ifsdatas = workunit.getElementsByTagName('ifsdata')
             for ifsdata in ifsdatas:
-              CFC_zip = str(ifsdata.getElementsByTagName('CFC_zip')[0].childNodes[0].nodeValue)
+              GHG_zip = str(ifsdata.getElementsByTagName('GHG_zip')[0].childNodes[0].nodeValue)
               radiation_zip = str(ifsdata.getElementsByTagName('radiation_zip')[0].childNodes[0].nodeValue)
               SO4_zip = str(ifsdata.getElementsByTagName('SO4_zip')[0].childNodes[0].nodeValue)
 
             # Copy each of the ifsdata zip files to the temp directory
-            copyfile(ancil_file_location+"ifsdata/CFC_files/"+CFC_zip,project_dir+"temp_openifs_submission_files/"+CFC_zip)
+            copyfile(ancil_file_location+"ifsdata/GHG_files/"+GHG_zip,project_dir+"temp_openifs_submission_files/"+GHG_zip)
             copyfile(ancil_file_location+"ifsdata/radiation_files/"+radiation_zip,project_dir+"temp_openifs_submission_files/"+radiation_zip)
             copyfile(ancil_file_location+"ifsdata/SO4_files/"+SO4_zip,project_dir+"temp_openifs_submission_files/"+SO4_zip)
 
             # Unzip each of the ifsdata files in the temp directory
-            zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+CFC_zip,'r')
+            zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+GHG_zip,'r')
             zip_file.extractall(project_dir+"temp_openifs_submission_files/")
             zip_file.close()
             zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+radiation_zip,'r')
@@ -760,10 +760,10 @@ if __name__ == "__main__":
             cursor.execute(query)
             db.commit()
 
-            # Enter the CFC_zip details of the submitted workunit into the parameter table
+            # Enter the GHG_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
-                                             %('169',CFC_zip,'0',wuid)
+                                             %('169',GHG_zip,'0',wuid)
             cursor.execute(query)
             db.commit()
 
