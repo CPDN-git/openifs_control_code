@@ -1,0 +1,45 @@
+<batch>
+   <model_class>openifs</model_class>
+   <model_config>MODEL_CONFIG_FILE.xml</model_config>
+   <fullpos_namelist>FULLPOS_NAME_FILE.nml</fullpos_namelist>
+   <upload_info>
+      <upload_handler>URL_UPLOAD_FILEHANDLER</upload_handler>
+      <result_template_prefix>upload_templates/dev/result_template_openifs</result_template_prefix>
+   </upload_info>
+   <workunits>
+      <workunit>
+         <analysis_member_number>00</analysis_member_number>
+         <ensemble_member_number>01</ensemble_member_number>
+         <exptid>EXPTID</exptid>
+         <fclen>1</fclen>
+         <fclen_units>days</fclen_units>
+         <start_day>START_DAY</start_day>
+         <start_hour>START_HOUR</start_hour>
+         <start_month>START_MONTH</start_month>
+         <start_year>START_YEAR</start_year>
+         <unique_member_id>f000</unique_member_id>
+         <ic_ancil>
+            <ic_ancil_zip>IC_ANCIL_FILE.zip</ic_ancil_zip>
+         </ic_ancil>
+         <ifsdata>
+            <GHG_zip>GHG_FILE.zip</GHG_zip>
+            <SO4_zip>SO4_FILE.zip</SO4_zip>
+            <radiation_zip>RADIATION_FILE.zip</radiation_zip>
+         </ifsdata>
+         <climate_data>
+            <climate_data_zip>CLIMATE_DATA_FILE.zip</climate_data_zip>
+         </climate_data>
+      </workunit>
+   </workunits>
+   <batch_info>
+      <desc>DESCRIPTION</desc>
+      <name>NAME</name>
+      <owner>OWNER &lt;OWNER_EMAIL_ADDRESS&gt;</owner>
+      <proj>PROJECT_NAME</proj>
+      <tech_info>-</tech_info>
+      <umid_start>STARTING_UMID</umid_start>
+      <umid_end>ENDING_UMID</umid_end>
+      <workunit_range>workunit_range</workunit_range>
+      <batchid>batchid</batchid>
+   </batch_info>
+</batch>
