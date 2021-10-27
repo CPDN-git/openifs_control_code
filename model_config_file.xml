@@ -1,0 +1,15 @@
+<model_config>
+        <app_name>openifs</app_name>
+        <wu_prefix>openifs</wu_prefix>
+        <description>MODEL_DESCRIPTION</description>
+        <model_version>MODEL_VERSION</model_version>
+        <region_id>15</region_id>
+        <horiz_resolution>HORIZONTAL_RESOLUTION</horiz_resolution>
+        <vert_resolution>VERTICAL_RESOLUTION</vert_resolution>
+        <grid_type>GRID_TYPE</grid_type>
+        <timestep>TIMESTEP</timestep>
+        <timestep_units>seconds</timestep_units>
+        <upload_frequency>daily</upload_frequency>
+        <namelist_template_global>NAMELIST_TEMPLATE_FILE</namelist_template_global>
+        <wam_template_global>WAM_TEMPLATE_FILE</wam_template_global>
+</model_config>
