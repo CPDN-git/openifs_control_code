@@ -324,7 +324,7 @@ if __name__ == "__main__":
 
             # Copy each of the ifsdata zip files to the temp directory
             copyfile(ancil_file_location+"ifsdata/GHG_files/"+GHG_zip,project_dir+"temp_openifs_submission_files/"+GHG_zip)
-            copyfile(ancil_file_location+"ifsdata/radiation_files/"+radiation_zip,project_dir+"temp_openifs_submission_files/"+radiation_zip)
+            copyfile(ancil_file_location+"ifsdata/other_radiation_files/"+radiation_zip,project_dir+"temp_openifs_submission_files/"+radiation_zip)
             copyfile(ancil_file_location+"ifsdata/SO4_files/"+SO4_zip,project_dir+"temp_openifs_submission_files/"+SO4_zip)
 
             # Unzip each of the ifsdata files in the temp directory
