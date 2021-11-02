@@ -918,7 +918,8 @@ int main(int argc, char** argv) {
        process_status = checkBOINCStatus(handleProcess,process_status);
     }
 
-
+    // Time delay to ensure final ICM are complete
+    sleep_until(system_clock::now() + seconds(60));
 
     boinc_begin_critical_section();
 
