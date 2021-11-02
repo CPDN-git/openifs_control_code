@@ -919,7 +919,7 @@ int main(int argc, char** argv) {
     }
 
     // Time delay to ensure final ICM are complete
-    sleep_until(system_clock::now() + seconds(60));
+    sleep_until(system_clock::now() + seconds(90));
 
     boinc_begin_critical_section();
 
