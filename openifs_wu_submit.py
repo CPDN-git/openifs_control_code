@@ -31,8 +31,6 @@ if __name__ == "__main__":
     print "got lock\n"
 
     project_dir = <PROJECT_DIRECTORY>
-    primary_db = <PRIMARY_DATABASE>
-    secondary_db = <SECONDARY_DATABASE>
     input_directory = project_dir+ <INCOMING_XML_FOLDER>
     oifs_ancil_dir = <ANCILS_LOCATION> + '/oifs_ancil_files/'
     
@@ -56,11 +54,16 @@ if __name__ == "__main__":
       db_name = str(config.getElementsByTagName('db_name')[0].childNodes[0].nodeValue)
 
     # Set batch id prefix, adding a 'd' if a dev batch
-    if db_name == "cpdnboinc_dev" or db_name == "cpdnboinc_alpha":
+    if primary_db == "cpdnboinc_dev":
       batch_prefix = "d"
-    elif db_name == "cpdnboinc":
+      secondary_db = 'cpdnexpt_dev'
+    elif primary_db == "cpdnboinc_alpha":
+      batch_prefix = "d"
+      secondary_db = 'cpdnexpt_alpha'
+    elif primary_db == "cpdnboinc":
       batch_prefix = ""
-        
+      secondary_db = 'cpdnexpt'
+    
     # Open cursor and connection to primary_db
     db = MySQLdb.connect(db_host,db_user,db_passwd,primary_db,port=33001)
     cursor = db.cursor()
