@@ -1245,6 +1245,7 @@ std::string getTag(const std::string &filename) {
        }
        file.close();
     }
+    return "";
 }
 
 // Produce the trickle and either upload to the project server or as a physical file
