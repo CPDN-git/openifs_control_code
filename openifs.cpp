@@ -121,7 +121,11 @@ int main(int argc, char** argv) {
 	    
       // Get the app version and re-parse to add a dot
       version = std::to_string(dataBOINC.app_version);
-      if (version.length()==3) {
+      if (version.length()==2) {
+         version = version.insert(0,".");
+         //fprintf(stderr,"version: %s\n",version.c_str());
+      }
+      else if (version.length()==3) {
          version = version.insert(1,".");
          //fprintf(stderr,"version: %s\n",version.c_str());
       }
