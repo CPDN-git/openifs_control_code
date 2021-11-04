@@ -32,7 +32,7 @@
 const char* stripPath(const char* path);
 int checkChildStatus(long,int);
 int checkBOINCStatus(long,int);
-long launchProcess(const char*,const char*,const char*);
+long launchProcess(const char*,const char*,const char*,const std::string);
 std::string getTag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
@@ -630,7 +630,7 @@ int main(int argc, char** argv) {
 
     // Start the OpenIFS job
     std::string strCmd = slot_path + std::string("/./master.exe");
-    handleProcess = launchProcess(slot_path,strCmd.c_str(),exptid.c_str(),app_name.c_str());
+    handleProcess = launchProcess(slot_path,strCmd.c_str(),exptid.c_str(),app_name);
     if (handleProcess > 0) process_status = 0;
 
     boinc_end_critical_section();
@@ -1168,8 +1168,7 @@ int checkBOINCStatus(long handleProcess, int process_status) {
     }
 }
 
-
-long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, const char* app_name) {
+long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, const std::string app_name) {
     int retval = 0;
     long handleProcess;
 
@@ -1204,14 +1203,15 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
           pathvar = getenv("GRIB_DEFINITION_PATH");
           fprintf(stderr,"The GRIB_DEFINITION_PATH environmental variable is: %s\n",pathvar);
 
-          fprintf(stderr,"Executing the command: %s\n",strCmd);
-	  if((app_name=='openifs') || (app_name=='oifs_40r1')) { // OpenIFS 40r1
-            fprintf(stderr,"Executing the command: %s -e %s\n",strCmd,exptid);  
+	  fprintf(stderr,"Executing the command: %s\n",strCmd);
+          if((app_name=="openifs") || (app_name=="oifs_40r1")) { // OpenIFS 40r1
+            fprintf(stderr,"Executing the command: %s -e %s\n",strCmd,exptid);
             retval = execl(strCmd,strCmd,"-e",exptid,NULL);
+          }
           else {  // OpenIFS 43r3 and above
             fprintf(stderr,"Executing the command: %s\n",strCmd);
             retval = execl(strCmd,strCmd,NULL,NULL,NULL);
-	  }		  
+          }
 
           // If execl returns then there was an error
           fprintf(stderr,"..The execl() command failed slot_path=%s,strCmd=%s,exptid=%s\n",slot_path,strCmd,exptid);
