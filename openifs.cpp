@@ -1206,13 +1206,15 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
 
           fprintf(stderr,"Executing the command: %s\n",strCmd);
 	  if((app_name=='openifs') || (app_name=='oifs_40r1')) { // OpenIFS 40r1
+            fprintf(stderr,"Executing the command: %s -e %s\n",strCmd,exptid);  
             retval = execl(strCmd,strCmd,"-e",exptid,NULL);
           else {  // OpenIFS 43r3 and above
+            fprintf(stderr,"Executing the command: %s\n",strCmd);
             retval = execl(strCmd,strCmd,NULL,NULL,NULL);
 	  }		  
 
           // If execl returns then there was an error
-          fprintf(stderr,"..The execl(%s,%s,%s) command failed\n",slot_path,strCmd,exptid);
+          fprintf(stderr,"..The execl() command failed slot_path=%s,strCmd=%s,exptid=%s\n",slot_path,strCmd,exptid);
           fflush(stderr);
           exit(retval);
           break;
