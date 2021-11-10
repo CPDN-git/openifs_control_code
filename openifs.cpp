@@ -982,7 +982,7 @@ int main(int argc, char** argv) {
           sleep_until(system_clock::now() + seconds(20));
           boinc_upload_file(upload_file_name);
           retval = boinc_upload_status(upload_file_name);
-          if (retval) {
+          if (!retval) {
              fprintf(stderr,"Finished the upload of the result file\n");
              fflush(stderr);
           }
