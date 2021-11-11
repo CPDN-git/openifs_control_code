@@ -611,16 +611,16 @@ int main(int argc, char** argv) {
     int last_upload = 0;
 
     int total_length_of_simulation = std::stoi(fclen) * 86400;
-    //fprintf(stderr,"total_length_of_simulation: %i\n",total_length_of_simulation);
+    fprintf(stderr,"total_length_of_simulation: %i\n",total_length_of_simulation);
 
     // Get result_base_name to construct upload file names using 
     // the first upload as an example and then stripping off '_1.zip'
     if (!boinc_is_standalone()) {
        memset(strTmp,0x00,_MAX_PATH);
        retval = boinc_resolve_filename("upload_file_1.zip",strTmp,_MAX_PATH);
-       //fprintf(stderr,"strTmp: %s\n",strTmp);
+       fprintf(stderr,"strTmp: %s\n",strTmp);
        strncpy(result_base_name, stripPath(strTmp), strlen(stripPath(strTmp))-6);
-       //fprintf(stderr,"result_base_name: %s\n",result_base_name);
+       fprintf(stderr,"result_base_name: %s\n",result_base_name);
        if (retval) {
           fprintf(stderr,"..Failed to get result name\n");
           return 1;
