@@ -826,11 +826,11 @@ int main(int argc, char** argv) {
                       memset(upload_file, 0x00, sizeof(upload_file));
                       std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
 
-                      fprintf(stderr,"Zipping up file: %s\n",upload_file);
+                      fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file);
                       retval = boinc_zip(ZIP_IT,upload_file,&zfl);
 
                       if (retval) {
-                         fprintf(stderr,"..Creating the zipped upload file failed\n");
+                         fprintf(stderr,"..Zipping up the intermediate file failed\n");
                          boinc_end_critical_section();
                          return retval;
                       }
@@ -844,13 +844,13 @@ int main(int argc, char** argv) {
                    
                       // Upload the file. In BOINC the upload file is the logical name, not the physical name
                       upload_file_name = std::string("upload_file_") + std::to_string(upload_file_number) + std::string(".zip");
-                      fprintf(stderr,"Uploading file: %s\n",upload_file_name.c_str());
+                      fprintf(stderr,"Uploading the intermediate file: %s\n",upload_file_name.c_str());
                       fflush(stderr);
                       sleep_until(system_clock::now() + seconds(20));
                       boinc_upload_file(upload_file_name);
                       retval = boinc_upload_status(upload_file_name);
-                      if (retval) {
-                         fprintf(stderr,"Finished the upload of the result file: %s\n",upload_file_name.c_str());
+                      if (!retval) {
+                         fprintf(stderr,"Finished the upload of the intermediate file: %s\n",upload_file_name.c_str());
                          fflush(stderr);
                       }
 			
@@ -959,11 +959,11 @@ int main(int argc, char** argv) {
           memset(upload_file, 0x00, sizeof(upload_file));
           std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
 
-          fprintf(stderr,"Zipping up file: %s\n",upload_file);
+          fprintf(stderr,"Zipping up the final file: %s\n",upload_file);
           retval = boinc_zip(ZIP_IT,upload_file,&zfl);
 
           if (retval) {
-             fprintf(stderr,"..Creating the zipped upload file failed\n");
+             fprintf(stderr,"..Zipping up the final file failed\n");
              boinc_end_critical_section();
              return retval;
           }
@@ -977,13 +977,13 @@ int main(int argc, char** argv) {
 
           // Upload the file. In BOINC the upload file is the logical name, not the physical name
           upload_file_name = std::string("upload_file_") + std::to_string(upload_file_number) + std::string(".zip");
-          fprintf(stderr,"Uploading file: %s\n",upload_file_name.c_str());
+          fprintf(stderr,"Uploading the final file: %s\n",upload_file_name.c_str());
           fflush(stderr);
           sleep_until(system_clock::now() + seconds(20));
           boinc_upload_file(upload_file_name);
           retval = boinc_upload_status(upload_file_name);
           if (!retval) {
-             fprintf(stderr,"Finished the upload of the result file\n");
+             fprintf(stderr,"Finished the upload of the final file\n");
              fflush(stderr);
           }
 	       
