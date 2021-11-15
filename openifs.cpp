@@ -618,10 +618,10 @@ int main(int argc, char** argv) {
     if (!boinc_is_standalone()) {
        memset(strTmp,0x00,_MAX_PATH);
        retval = boinc_resolve_filename("upload_file_0.zip",strTmp,_MAX_PATH);
-       fprintf(stderr,"strTmp: %s\n",strTmp);
+       //fprintf(stderr,"strTmp: %s\n",strTmp);
        strncpy(result_base_name, stripPath(strTmp), strlen(stripPath(strTmp))-6);
        fprintf(stderr,"result_base_name: %s\n",result_base_name);
-       if (retval) {
+       if (result_base_name=="upload_file") {
           fprintf(stderr,"..Failed to get result name\n");
           return 1;
        }
