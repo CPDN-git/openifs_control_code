@@ -428,7 +428,8 @@ if __name__ == "__main__":
               num_timesteps = (int(fclen) * 86400)/int(timestep)
               #print "timestep: "+str(timestep)
               #print "num_timesteps: "+str(num_timesteps)
-
+              num_hours = int(fclen) * 24
+            
               # Throw an error if not cleanly divisible
               if not(isinstance(num_timesteps,int)):
                 raise ValueError('Length of simulation (in days) does not divide equally by timestep')
@@ -515,6 +516,7 @@ if __name__ == "__main__":
                 line = line.replace('_TIMESTEP',timestep)
                 line = line.replace('_UPLOAD_INTERVAL',str(upload_interval))
                 line = line.replace('_ENSEMBLE_MEMBER_NUMBER',str(ensemble_member_number))
+                line = line.replace('_NUM_HOURS',str(num_hours))
                 # Remove commented lines
                 if not line.startswith('!!'):
                   template_file.append(line)
