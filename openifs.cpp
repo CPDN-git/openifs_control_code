@@ -380,7 +380,7 @@ int main(int argc, char** argv) {
 
 
     // Process the IC_ANCIL_FILE:
-    // For transfer downloading, BOINC renames download files to jf_HEXDECIMAL-NUMBER, these files
+    // For transfer downloading, BOINC renames download files to jf_HEXADECIMAL-NUMBER, these files
     // need to be renamed back to the original name
     // Get the name of the 'jf_' filename from a link within the IC_ANCIL_FILE
     std::string ic_ancil_target = getTag(slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip"));
