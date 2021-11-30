@@ -598,7 +598,7 @@ int main(int argc, char** argv) {
 	
     // Model progress is held in the progress file
     // First check if a file is not already present from an unscheduled shutdown
-    if(file_exists(progress_file) {
+    if(file_exists(progress_file)) {
        // If present parse file and extract values
        progress_file_in.open(progress_file);
        progress_file_buffer << progress_file_in.rdbuf();
@@ -620,11 +620,12 @@ int main(int argc, char** argv) {
        last_upload = std::stoi(last_upload_node->value());
        model_completed = std::stoi(model_completed_node->value());
 
-       printf("cpu_time: %i\n",cpu_time);
+       printf("last_cpu_time: %i\n",last_cpu_time);
        printf("upload_file_number: %i\n",upload_file_number);
        printf("last_iter: %s\n",last_iter.c_str());
        printf("last_upload: %i\n",last_upload);
        printf("model_completed: %i\n",model_completed);
+    }
     else {
        // Progress file not present, so create a progress file
        // Set the initial values
@@ -651,7 +652,7 @@ int main(int argc, char** argv) {
     time_per_fclen = 0.27;	
 
     ZipFileList zfl;
-    std::string ifs_line, iter, last_iter, ifs_word, second_part;
+    std::string ifs_line, iter, ifs_word, second_part, upload_file_name;
     int current_iter=0, count=0;
     std::ifstream ifs_stat_file;
     char upload_file[_MAX_PATH];
