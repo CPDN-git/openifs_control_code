@@ -8,11 +8,15 @@ To compile the controller code on a Linux machine:
 
 First ensure that libzip is installed using (on an Ubuntu machine): sudo apt-get install libzip-dev
 
+Then we need to obtain the RapidXml header for parsing XML files. This is downloaded from the site: http://rapidxml.sourceforge.net/
+We only need the file: 'rapidxml.hpp'
+
 g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o openifs_0.1_x86_64-pc-linux-gnu
 
 To compile the controller code on a Mac machine:
 
 First ensure libzip is installed: brew install libzip
+And that we have obtained the RapidXml header.
 
 Build the BOINC libraries using Xcode. Then build the controller code:
 
