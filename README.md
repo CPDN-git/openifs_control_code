@@ -16,6 +16,7 @@ g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zi
 To compile the controller code on a Mac machine:
 
 First ensure libzip is installed: brew install libzip
+
 And that we have obtained the RapidXml header.
 
 Build the BOINC libraries using Xcode. Then build the controller code:
