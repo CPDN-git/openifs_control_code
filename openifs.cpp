@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
     char *pathvar;
     long handleProcess;
-    double tv_sec,tv_usec,cpu_time,fraction_done;
+    double tv_sec,tv_usec,fraction_done,cpu_time=0;
     float time_per_fclen;
     struct dirent *dir;
     struct rusage usage;
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
       project_path = slot_path + std::string("/../projects/");
       fprintf(stderr,"Current project directory is: %s\n",project_path.c_str());
 	    
-      // Get the app version and result name
+      // In standalone get the app version from the command line
       version = argv[8];
       fprintf(stderr,"The current app is: %s\n",app_name.c_str());
       fprintf(stderr,"(argv8) app_version: %s\n",argv[8]);
@@ -582,14 +582,75 @@ int main(int argc, char** argv) {
        if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) fprintf(stderr,"..Setting the stack limit to unlimited failed\n");
     #endif
 
+    int last_cpu_time, upload_file_number, last_upload, model_completed;
+    std::string last_iter;
 
-    cpu_time = 0;
+    // last_upload is the time of the last upload file (in seconds)
+
+    // Define the name and location of the progress file
+    std::string progress_file = temp_path+std::string("/progress_file_")+wuid+std::string(".xml");
+    std::ofstream progress_file_out(progress_file);
+    std::ifstream progress_file_in(progress_file);
+    std::stringstream progress_file_buffer;
+    xml_document<> doc;
+	
+    // Model progress is held in the progress file
+    // First check if a file is not already present from an unscheduled shutdown
+    if(file_exists(progress_file) {
+       // If present parse file and extract values
+       progress_file_in.open(progress_file);
+       progress_file_buffer << progress_file_in.rdbuf();
+       progress_file_in.close();
+	    
+       // Parse XML progress file
+       doc.parse<0>(&progress_file_buffer.str()[0]);
+       xml_node<> *root_node = doc.first_node("running_values");
+       xml_node<> *last_cpu_time_node = root_node->first_node("last_cpu_time");
+       xml_node<> *upload_file_number_node = root_node->first_node("upload_file_number");
+       xml_node<> *last_iter_node = root_node->first_node("last_iter");
+       xml_node<> *last_upload_node = root_node->first_node("last_upload");
+       xml_node<> *model_completed_node = root_node->first_node("model_completed");
+
+       // Set the values from the XML
+       last_cpu_time = std::stoi(last_cpu_time_node->value());
+       upload_file_number = std::stoi(upload_file_number_node->value());
+       last_iter = last_iter_node->value();
+       last_upload = std::stoi(last_upload_node->value());
+       model_completed = std::stoi(model_completed_node->value());
+
+       printf("cpu_time: %i\n",cpu_time);
+       printf("upload_file_number: %i\n",upload_file_number);
+       printf("last_iter: %s\n",last_iter.c_str());
+       printf("last_upload: %i\n",last_upload);
+       printf("model_completed: %i\n",model_completed);
+    else {
+       // Progress file not present, so create a progress file
+       // Set the initial values
+       last_cpu_time = 0;
+       upload_file_number = 0;
+       last_iter = "0";
+       last_upload = 0;
+       model_completed = 0;
+	    
+       // Write out the initial progress file	
+       progress_file_out.open(progress_file);
+       progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
+       progress_file_out <<"<running_values>"<< std::endl;
+       progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
+       progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
+       progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
+       progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
+       progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
+       progress_file_out <<"</running_values>"<< std::endl;
+       progress_file_out.close();
+    }
+	
     fraction_done = 0;
     time_per_fclen = 0.27;	
 
     ZipFileList zfl;
-    std::string ifs_line, iter, last_iter, upload_file_name, ifs_word, second_part;
-    int current_iter=0, count=0, upload_file_number = 0;
+    std::string ifs_line, iter, last_iter, ifs_word, second_part;
+    int current_iter=0, count=0;
     std::ifstream ifs_stat_file;
     char upload_file[_MAX_PATH];
     char result_base_name[64]; 
@@ -606,9 +667,6 @@ int main(int argc, char** argv) {
        fprintf(stderr,"..upload_interval x timestep_interval equals zero\n");
        return 1;
     }
-
-    // time of the last upload file (in seconds)
-    int last_upload = 0;
 
     int total_length_of_simulation = std::stoi(fclen) * 86400;
     fprintf(stderr,"total_length_of_simulation: %i\n",total_length_of_simulation);
@@ -636,7 +694,6 @@ int main(int argc, char** argv) {
     boinc_end_critical_section();
 
 
-    last_iter = "0";
 
     // process_status = 0 running
     // process_status = 1 stopped normally
@@ -646,7 +703,7 @@ int main(int argc, char** argv) {
 
 
     // Periodically check the process status and the BOINC client status
-    while (process_status == 0) {
+    while (process_status == 0 && model_completed == 0) {
        sleep_until(system_clock::now() + seconds(1));
 
        count++;
@@ -801,7 +858,7 @@ int main(int argc, char** argv) {
                       fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
                       zfl.push_back(temp_path+std::string("/ICMSH")+exptid+"+"+second_part);
                       // Delete the file that has been added to the zip
-                   //   std::remove((temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
+                      // std::remove((temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
                    }
 		
                    // Add ICMUA result files to zip to be uploaded
@@ -809,7 +866,7 @@ int main(int argc, char** argv) {
                       fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
                       zfl.push_back(temp_path+std::string("/ICMUA")+exptid+"+"+second_part);
                       // Delete the file that has been added to the zip
-                   //   std::remove((temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                      // std::remove((temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
                    }
                 }
 
@@ -894,7 +951,19 @@ int main(int argc, char** argv) {
           last_iter = iter;
           count = 0;
           // Closing ifs.stat file access
-          ifs_stat_file.close();
+          ifs_stat_file.close();     
+	       
+          // Update the progress file	
+          progress_file_out.open(progress_file);
+          progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
+          progress_file_out <<"<running_values>"<< std::endl;
+          progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
+          progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
+          progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
+          progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
+          progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
+          progress_file_out <<"</running_values>"<< std::endl;
+          progress_file_out.close();
        }
 
 
@@ -902,7 +971,7 @@ int main(int argc, char** argv) {
        getrusage(RUSAGE_SELF,&usage); //Return resource usage measurement
        tv_sec = usage.ru_utime.tv_sec; //Time spent executing in user mode (seconds)
        tv_usec = usage.ru_utime.tv_usec; //Time spent executing in user mode (microseconds)
-       cpu_time = tv_sec+(tv_usec/1000000); //Convert to seconds
+       cpu_time = tv_sec+(tv_usec/1000000)+last_cpu_time; //Convert to seconds and add unscheduled restart cpu_time
        fraction_done = (cpu_time-0.96)/(time_per_fclen*atoi(fclen.c_str()));
 
        //fprintf(stderr,"tv_sec: %.5f\n",tv_sec);
@@ -918,9 +987,25 @@ int main(int argc, char** argv) {
        process_status = checkBOINCStatus(handleProcess,process_status);
     }
 
+    // Update model_completed
+    model_completed = 1;
+	    
     // Time delay to ensure final ICM are complete
     sleep_until(system_clock::now() + seconds(90));
 
+    // Update the progress file	
+    progress_file_out.open(progress_file);
+    progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
+    progress_file_out <<"<running_values>"<< std::endl;
+    progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
+    progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
+    progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
+    progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
+    progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
+    progress_file_out <<"</running_values>"<< std::endl;
+    progress_file_out.close();
+    
+	    
     boinc_begin_critical_section();
 
     // Create the final results zip file
