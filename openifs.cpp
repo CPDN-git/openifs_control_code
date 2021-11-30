@@ -4,26 +4,27 @@
 // Written by Andy Bowery (Oxford eResearch Centre, Oxford University) December 2021
 //
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/resource.h>
+#include <string>
 #include <chrono>
 #include <thread>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <exception>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
 #include <dirent.h> 
 #include <regex.h>
 #include <sys/wait.h>
-#include <string>
-#include <sstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/resource.h>
 #include "./boinc/api/boinc_api.h"
 #include "./boinc/zip/boinc_zip.h"
-#include <signal.h>
-#include <fcntl.h>
+#include "rapidxml.hpp"
 
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
@@ -37,9 +38,10 @@ std::string getTag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
 
+using namespace std;
 using namespace std::chrono;
 using namespace std::this_thread;
-using namespace std;
+using namespace rapidxml;
 
 int main(int argc, char** argv) {
     std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,result_name,wu_name,version;
