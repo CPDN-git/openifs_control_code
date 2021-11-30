@@ -987,7 +987,6 @@ int main(int argc, char** argv) {
           process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
        }
        boinc_end_critical_section();
-       last_upload = current_iter;
     }
     // Else running in standalone
     else {
