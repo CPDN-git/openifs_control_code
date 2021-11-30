@@ -636,7 +636,6 @@ int main(int argc, char** argv) {
     boinc_end_critical_section();
 
 
-    int total_count = 0;
     last_iter = "0";
 
     // process_status = 0 running
@@ -651,7 +650,6 @@ int main(int argc, char** argv) {
        sleep_until(system_clock::now() + seconds(1));
 
        count++;
-       total_count++;
 
        // Check every 60 seconds whether an upload point has been reached
        if(count==60) {   
@@ -760,8 +758,6 @@ int main(int argc, char** argv) {
              if((( current_iter - last_upload ) >= (upload_interval * timestep_interval)) && (current_iter < total_length_of_simulation)) {
                 // Create an intermediate results zip file using BOINC zip
                 zfl.clear();
-
-                //fprintf(stderr,"total_count: %d\n",total_count);
 
                 boinc_begin_critical_section();
 
@@ -1237,8 +1233,8 @@ std::string getTag(const std::string &filename) {
              std::string::size_type end = line.find('<', start + 1);
              if (end != line.npos) {
                 ++start;
-                std::string::size_type count = end - start;
-                return line.substr(start, count);
+                std::string::size_type count_size = end - start;
+                return line.substr(start, count_size);
              }
           }
           return "";
