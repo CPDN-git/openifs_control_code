@@ -598,7 +598,7 @@ int main(int argc, char** argv) {
 	
     // Model progress is held in the progress file
     // First check if a file is not already present from an unscheduled shutdown
-    if(file_exists(progress_file)) {
+    if(file_exists(progress_file) && progress_file_in.tellg() > 0) {
        // If present parse file and extract values
        progress_file_in.open(progress_file);
        progress_file_buffer << progress_file_in.rdbuf();
