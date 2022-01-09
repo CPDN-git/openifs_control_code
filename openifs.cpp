@@ -982,6 +982,9 @@ int main(int argc, char** argv) {
        //fprintf(stderr,"cpu_time: %1.5f\n",cpu_time);
        //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);
 
+       // Provide the cpu_time to the BOINC server (note: this is deprecated in BOINC)
+       boinc_report_app_status(cpu_time,cpu_time,fraction_done);
+	    
        // Provide the fraction done to the BOINC client, 
        // this is necessary for the percentage bar on the client
        boinc_fraction_done(fraction_done);
