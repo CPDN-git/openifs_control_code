@@ -9,7 +9,7 @@ To compile the controller code on a Linux machine:
 First ensure that libzip is installed using (on an Ubuntu machine): sudo apt-get install libzip-dev
 
 Then we need to obtain the RapidXml header for parsing XML files. This is downloaded from the site: http://rapidxml.sourceforge.net/
-We only need the file: 'rapidxml.hpp'
+We only need the file: 'rapidxml.hpp'. Download this file and put in the same folder as openifs.cpp.
 
 g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o openifs_0.1_x86_64-pc-linux-gnu
 
