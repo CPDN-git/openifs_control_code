@@ -1295,7 +1295,6 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
           pathvar = getenv("GRIB_DEFINITION_PATH");
           fprintf(stderr,"The GRIB_DEFINITION_PATH environmental variable is: %s\n",pathvar);
 
-	  fprintf(stderr,"Executing the command: %s\n",strCmd);
           if((app_name=="openifs") || (app_name=="oifs_40r1")) { // OpenIFS 40r1
             fprintf(stderr,"Executing the command: %s -e %s\n",strCmd,exptid);
             retval = execl(strCmd,strCmd,"-e",exptid,NULL);
