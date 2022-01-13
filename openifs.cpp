@@ -1,7 +1,7 @@
 //
 // Control code for the OpenIFS application in the climateprediction.net project
 //
-// Written by Andy Bowery (Oxford eResearch Centre, Oxford University) December 2021
+// Written by Andy Bowery (Oxford eResearch Centre, Oxford University) January 2022
 //
 
 #include <string>
@@ -705,6 +705,7 @@ int main(int argc, char** argv) {
     // process_status = 4 stopped with child process being stopped
 
 
+    // Main loop:	
     // Periodically check the process status and the BOINC client status
     while (process_status == 0 && model_completed == 0) {
        sleep_until(system_clock::now() + seconds(1));
@@ -982,15 +983,20 @@ int main(int argc, char** argv) {
        //fprintf(stderr,"cpu_time: %1.5f\n",cpu_time);
        //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);
 
-       // Provide the cpu_time to the BOINC server (note: this is deprecated in BOINC)
-       boinc_report_app_status(cpu_time,cpu_time,fraction_done);
+       if (!boinc_is_standalone()) {
+          // Provide the cpu_time to the BOINC server (note: this is deprecated in BOINC)
+          boinc_report_app_status(cpu_time,cpu_time,fraction_done);
 	    
-       // Provide the fraction done to the BOINC client, 
-       // this is necessary for the percentage bar on the client
-       boinc_fraction_done(fraction_done);
-	    
+          // Provide the fraction done to the BOINC client, 
+          // this is necessary for the percentage bar on the client
+          boinc_fraction_done(fraction_done);
+	  
+	  // Check the status of the client if not in standalone mode     
+          process_status = checkBOINCStatus(handleProcess,process_status);       
+       }
+	
+       // Check the status of the child process    
        process_status = checkChildStatus(handleProcess,process_status);
-       process_status = checkBOINCStatus(handleProcess,process_status);
     }
 
     // Update model_completed
