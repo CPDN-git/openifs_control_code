@@ -1,4 +1,4 @@
-# ECMWF OpenIFS BOINC control code
+# Control code for ECMWF OpenIFS (40r1 and 43r3) running in climateprediction.net (CPDN)
 
 This respository contains the instructions and code for building the controlling application used for controlling the ECMWF OpenIFS code in the climateprediction.net project.
 
