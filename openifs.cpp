@@ -1114,7 +1114,8 @@ int main(int argc, char** argv) {
         process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);     
     }
 
-    // Remove the temp folder
+    // Now task has finished, remove the progress file and temp folder
+    std::remove(progress_file.c_str());
     std::remove(temp_path.c_str());
 
     sleep_until(system_clock::now() + seconds(120));
