@@ -94,7 +94,6 @@ int main(int argc, char** argv) {
     fprintf(stderr,"(argv5) wuid: %s\n",argv[5]);
     fprintf(stderr,"(argv6) fclen: %s\n",argv[6]);
     fprintf(stderr,"(argv7) app_name: %s\n",argv[7]);	
-    fflush(stderr);
 
     // Read the exptid, batchid, version, wuid from the command line
     std::string start_date = argv[1];
@@ -186,7 +185,6 @@ int main(int argc, char** argv) {
     // Unzip the app zip file
     std::string app_zip = slot_path + std::string("/") + app_file;
     fprintf(stderr,"Unzipping the app zip file: %s\n",app_zip.c_str());
-    fflush(stderr);
 
     retval = boinc_zip(UNZIP_IT,app_zip.c_str(),slot_path);
 
@@ -219,7 +217,6 @@ int main(int argc, char** argv) {
     std::string namelist_zip = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
                       std::string("_") + fclen + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
     fprintf(stderr,"Unzipping the namelist zip file: %s\n",namelist_zip.c_str());
-    fflush(stderr);
     retval = boinc_zip(UNZIP_IT,namelist_zip.c_str(),slot_path);
     if (retval) {
        fprintf(stderr,"..Unzipping the namelist file failed\n");
@@ -399,7 +396,6 @@ int main(int argc, char** argv) {
     // Unzip the IC ancils zip file
     std::string ic_ancil_zip = slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip");
     fprintf(stderr,"Unzipping the IC ancils zip file: %s\n",ic_ancil_zip.c_str());
-    fflush(stderr);
     retval = boinc_zip(UNZIP_IT,ic_ancil_zip.c_str(),slot_path);
     if (retval) {
        fprintf(stderr,"..Unzipping the IC ancils file failed\n");
@@ -431,7 +427,6 @@ int main(int argc, char** argv) {
     // Unzip the IFSDATA_FILE zip file
     std::string ifsdata_zip = slot_path + std::string("/ifsdata/") + IFSDATA_FILE + std::string(".zip");
     fprintf(stderr,"Unzipping IFSDATA_FILE zip file: %s\n", ifsdata_zip.c_str());
-    fflush(stderr);
     retval = boinc_zip(UNZIP_IT,ifsdata_zip.c_str(),slot_path+std::string("/ifsdata/"));
     if (retval) {
        fprintf(stderr,"..Unzipping the IFSDATA file failed\n");
@@ -469,7 +464,6 @@ int main(int argc, char** argv) {
                               std::to_string(HORIZ_RESOLUTION) + std::string(GRID_TYPE) + \
                               std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
     fprintf(stderr,"Unzipping the climate data zip file: %s\n",climate_zip.c_str());
-    fflush(stderr);
     retval = boinc_zip(UNZIP_IT,climate_zip.c_str(),\
                        slot_path+std::string("/")+std::to_string(HORIZ_RESOLUTION)+std::string(GRID_TYPE));
     if (retval) {
@@ -552,7 +546,6 @@ int main(int argc, char** argv) {
     struct stat buffer;
     if(NAMELIST != "fort.4") {
        fprintf(stderr,"The namelist file path is: %s\n",namelist_file.c_str());
-       fflush(stderr);
        if (stat((char *)namelist_file.c_str(),&buffer) < 0){
           fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
        }
@@ -722,7 +715,6 @@ int main(int argc, char** argv) {
           // Read last completed ICM file from ifs.stat file
           while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
              //fprintf(stderr,"Reading ifs.stat file\n");
-             //fflush(stderr);
 
              std::istringstream iss(ifs_line);  //put line into stringstream
              int ifs_word_count=0;
@@ -902,13 +894,11 @@ int main(int argc, char** argv) {
                       // Upload the file. In BOINC the upload file is the logical name, not the physical name
                       upload_file_name = std::string("upload_file_") + std::to_string(upload_file_number) + std::string(".zip");
                       fprintf(stderr,"Uploading the intermediate file: %s\n",upload_file_name.c_str());
-                      fflush(stderr);
                       sleep_until(system_clock::now() + seconds(20));
                       boinc_upload_file(upload_file_name);
                       retval = boinc_upload_status(upload_file_name);
                       if (!retval) {
                          fprintf(stderr,"Finished the upload of the intermediate file: %s\n",upload_file_name.c_str());
-                         fflush(stderr);
                       }
 			
                       // Produce trickle
@@ -1071,13 +1061,11 @@ int main(int argc, char** argv) {
           // Upload the file. In BOINC the upload file is the logical name, not the physical name
           upload_file_name = std::string("upload_file_") + std::to_string(upload_file_number) + std::string(".zip");
           fprintf(stderr,"Uploading the final file: %s\n",upload_file_name.c_str());
-          fflush(stderr);
           sleep_until(system_clock::now() + seconds(20));
           boinc_upload_file(upload_file_name);
           retval = boinc_upload_status(upload_file_name);
           if (!retval) {
              fprintf(stderr,"Finished the upload of the final file\n");
-             fflush(stderr);
           }
 	       
 	  // Produce trickle
@@ -1268,7 +1256,6 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
     fprintf(stderr,"slot_path: %s\n",slot_path);
     fprintf(stderr,"strCmd: %s\n",strCmd);
     fprintf(stderr,"exptid: %s\n",exptid);
-    fflush(stderr);
 
     switch((handleProcess=fork())) {
        case -1: {
