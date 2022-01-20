@@ -24,6 +24,7 @@
 #include <sys/resource.h>
 #include "./boinc/api/boinc_api.h"
 #include "./boinc/zip/boinc_zip.h"
+#include "./boinc/lib/util.h"
 #include "rapidxml.hpp"
 
 #ifndef _MAX_PATH
@@ -37,7 +38,7 @@ long launchProcess(const char*,const char*,const char*,const std::string);
 std::string getTag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
-double cpu_time();
+double cpu_time(long);
 
 using namespace std;
 using namespace std::chrono;
@@ -51,7 +52,7 @@ int main(int argc, char** argv) {
     char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
     char *pathvar;
     long handleProcess;
-    double tv_sec,tv_usec,fraction_done,cpu_time=0;
+    double tv_sec,tv_usec,fraction_done,current_cpu_time=0;
     float time_per_fclen;
     struct dirent *dir;
     struct rusage usage;
@@ -903,7 +904,7 @@ int main(int argc, char** argv) {
                       }
 			
                       // Produce trickle
-                      process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+                      process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
                    }
                    last_upload = current_iter; 
                 }
@@ -937,7 +938,7 @@ int main(int argc, char** argv) {
                    last_upload = current_iter;
 		     
 	           // Produce trickle
-                   process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+                   process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
                 }
                 boinc_end_critical_section();
                 upload_file_number++;
@@ -962,16 +963,16 @@ int main(int argc, char** argv) {
        }
 	    
        // Calculate current cpu_time     
-       cpu_time = last_cpu_time + cpu_time();
-       //fprintf(stderr,"cpu_time: %1.5f\n",cpu_time);
+       current_cpu_time = last_cpu_time + cpu_time(handleProcess);
+       //fprintf(stderr,"current_cpu_time: %1.5f\n",current_cpu_time);
 	    
        if (!boinc_is_standalone()) {
 	  // Calculate the fraction done     
-	  fraction_done = (cpu_time-0.96)/(time_per_fclen*atoi(fclen.c_str()));
+	  fraction_done = (current_cpu_time-0.96)/(time_per_fclen*atoi(fclen.c_str()));
 	  //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
 	       
-          // Provide the cpu_time to the BOINC server (note: this is deprecated in BOINC)
-          boinc_report_app_status(cpu_time,cpu_time,fraction_done);
+          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
+          boinc_report_app_status(current_cpu_time,current_cpu_time,fraction_done);
 	    
           // Provide the fraction done to the BOINC client, 
           // this is necessary for the percentage bar on the client
@@ -1065,7 +1066,7 @@ int main(int argc, char** argv) {
           }
 	       
 	  // Produce trickle
-          process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+          process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
        }
        boinc_end_critical_section();
     }
@@ -1095,7 +1096,7 @@ int main(int argc, char** argv) {
           }
         }
 	// Produce trickle
-        process_trickle(cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);     
+        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);     
     }
 
     // Now task has finished, remove the progress file and temp folder
@@ -1324,17 +1325,17 @@ std::string getTag(const std::string &filename) {
 }
 
 // Produce the trickle and either upload to the project server or as a physical file
-void process_trickle(double cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
+void process_trickle(double current_cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
     char* trickle = new char[512];
 
-    fprintf(stderr,"cpu_time: %f\n",cpu_time);
+    fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
     fprintf(stderr,"wu_name: %s\n",wu_name);
     fprintf(stderr,"result_name: %s\n",result_name);
     fprintf(stderr,"slot_path: %s\n",slot_path);
     fprintf(stderr,"timestep: %d\n",timestep);
 
     std::sprintf(trickle, "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
-                           wu_name,result_name, timestep,(long) cpu_time);
+                           wu_name,result_name, timestep,(long) current_cpu_time);
     //fprintf(stderr,"Contents of trickle: %s\n",trickle);
 
     // Upload the trickle if not in standalone mode
@@ -1367,7 +1368,7 @@ bool file_exists(const std::string& filename)
 }
 
 // Calculate the cpu_time
-double cpu_time() {
+double cpu_time(long handleProcess) {
     #ifdef __APPLE_CC__
        double x;
        int retval = boinc_calling_thread_cpu_time(x);
@@ -1383,6 +1384,6 @@ double cpu_time() {
        //return tv_sec+(tv_usec/1000000); //Convert to seconds
        //fprintf(stderr,"tv_sec: %.5f\n",tv_sec);
        //fprintf(stderr,"tv_usec: %.5f\n",(tv_usec/1000000));
-       return linux_cpu_time(pid);
+       return linux_cpu_time(handleProcess);
     #endif
 }
