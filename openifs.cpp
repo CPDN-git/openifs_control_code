@@ -37,6 +37,7 @@ long launchProcess(const char*,const char*,const char*,const std::string);
 std::string getTag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
+double cpu_time();
 
 using namespace std;
 using namespace std::chrono;
@@ -959,21 +960,16 @@ int main(int argc, char** argv) {
           progress_file_out <<"</running_values>"<< std::endl;
           progress_file_out.close();
        }
-
-
-       // Calculate the fraction done
-       getrusage(RUSAGE_SELF,&usage); //Return resource usage measurement
-       tv_sec = usage.ru_utime.tv_sec; //Time spent executing in user mode (seconds)
-       tv_usec = usage.ru_utime.tv_usec; //Time spent executing in user mode (microseconds)
-       cpu_time = tv_sec+(tv_usec/1000000)+last_cpu_time; //Convert to seconds and add unscheduled restart cpu_time
-       fraction_done = (cpu_time-0.96)/(time_per_fclen*atoi(fclen.c_str()));
-
-       //fprintf(stderr,"tv_sec: %.5f\n",tv_sec);
-       //fprintf(stderr,"tv_usec: %.5f\n",(tv_usec/1000000));
+	    
+       // Calculate current cpu_time     
+       cpu_time = last_cpu_time + cpu_time();
        //fprintf(stderr,"cpu_time: %1.5f\n",cpu_time);
-       //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);
-
+	    
        if (!boinc_is_standalone()) {
+	  // Calculate the fraction done     
+	  fraction_done = (cpu_time-0.96)/(time_per_fclen*atoi(fclen.c_str()));
+	  //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
+	       
           // Provide the cpu_time to the BOINC server (note: this is deprecated in BOINC)
           boinc_report_app_status(cpu_time,cpu_time,fraction_done);
 	    
@@ -982,7 +978,7 @@ int main(int argc, char** argv) {
           boinc_fraction_done(fraction_done);
 	  
 	  // Check the status of the client if not in standalone mode     
-          process_status = checkBOINCStatus(handleProcess,process_status);       
+          process_status = checkBOINCStatus(handleProcess,process_status);
        }
 	
        // Check the status of the child process    
@@ -1368,4 +1364,25 @@ bool file_exists(const std::string& filename)
 {
     std::ifstream infile(filename.c_str());
     return infile.good();
+}
+
+// Calculate the cpu_time
+double cpu_time() {
+    #ifdef __APPLE_CC__
+       double x;
+       int retval = boinc_calling_thread_cpu_time(x);
+       return x;
+    #elif defined(_WIN32) || defined(_WIN64)
+       double x;
+       int retval = boinc_process_cpu_time(GetCurrentProcess(), x);
+       return x;
+    #else
+       //getrusage(RUSAGE_SELF,&usage); //Return resource usage measurement
+       //tv_sec = usage.ru_utime.tv_sec; //Time spent executing in user mode (seconds)
+       //tv_usec = usage.ru_utime.tv_usec; //Time spent executing in user mode (microseconds)
+       //return tv_sec+(tv_usec/1000000); //Convert to seconds
+       //fprintf(stderr,"tv_sec: %.5f\n",tv_sec);
+       //fprintf(stderr,"tv_usec: %.5f\n",(tv_usec/1000000));
+       return linux_cpu_time(pid);
+    #endif
 }
