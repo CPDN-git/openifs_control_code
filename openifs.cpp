@@ -953,7 +953,7 @@ int main(int argc, char** argv) {
           progress_file_out.open(progress_file);
           progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
           progress_file_out <<"<running_values>"<< std::endl;
-          progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
+          progress_file_out <<"  <last_cpu_time>"<<std::to_string(current_cpu_time)<<"</last_cpu_time>"<< std::endl;
           progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
           progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
           progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
@@ -962,10 +962,12 @@ int main(int argc, char** argv) {
           progress_file_out.close();
        }
 	    
-       // Calculate current cpu_time     
-       current_cpu_time = last_cpu_time + cpu_time(handleProcess);
-       //fprintf(stderr,"current_cpu_time: %1.5f\n",current_cpu_time);
-	    
+       // Calculate current_cpu_time, only update if cpu_time returns a value
+       if (cpu_time(handleProcess)) {
+          current_cpu_time = last_cpu_time + cpu_time(handleProcess);
+          //fprintf(stderr,"current_cpu_time: %1.5f\n",current_cpu_time);
+       }
+	       
        if (!boinc_is_standalone()) {
 	  // Calculate the fraction done     
 	  fraction_done = (current_cpu_time-0.96)/(time_per_fclen*atoi(fclen.c_str()));
@@ -1065,7 +1067,7 @@ int main(int argc, char** argv) {
     progress_file_out.open(progress_file);
     progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
     progress_file_out <<"<running_values>"<< std::endl;
-    progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
+    progress_file_out <<"  <last_cpu_time>"<<std::to_string(current_cpu_time)<<"</last_cpu_time>"<< std::endl;
     progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
     progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
     progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
