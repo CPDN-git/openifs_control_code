@@ -1431,10 +1431,11 @@ double cpu_time(long handleProcess) {
        double x;
        int retval = boinc_calling_thread_cpu_time(x);
        return x;
-    #elif defined(_WIN32) || defined(_WIN64)
-       double x;
-       int retval = boinc_process_cpu_time(GetCurrentProcess(), x);
-       return x;
+    // Placeholder for Windows
+    //#elif defined(_WIN32) || defined(_WIN64)
+    //   double x;
+    //   int retval = boinc_process_cpu_time(GetCurrentProcess(), x);
+    //   return x;
     #else
        //getrusage(RUSAGE_SELF,&usage); //Return resource usage measurement
        //tv_sec = usage.ru_utime.tv_sec; //Time spent executing in user mode (seconds)
