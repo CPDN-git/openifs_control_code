@@ -708,7 +708,7 @@ int main(int argc, char** argv) {
        count++;
 
        // Check every 60 seconds whether an upload point has been reached
-       if(count==60) {   
+       if(count==10) {   
           if(!(ifs_stat_file.is_open())) {
              //fprintf(stderr,"Opening ifs.stat file\n");
              ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
