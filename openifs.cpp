@@ -1061,19 +1061,6 @@ int main(int argc, char** argv) {
           std::remove((slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
        }
     }
-	
-	
-    // Update the progress file	
-    progress_file_out.open(progress_file);
-    progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
-    progress_file_out <<"<running_values>"<< std::endl;
-    progress_file_out <<"  <last_cpu_time>"<<std::to_string(current_cpu_time)<<"</last_cpu_time>"<< std::endl;
-    progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
-    progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
-    progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
-    progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
-    progress_file_out <<"</running_values>"<< std::endl;
-    progress_file_out.close();
     
 	    
     boinc_begin_critical_section();
