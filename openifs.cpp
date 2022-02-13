@@ -988,14 +988,48 @@ int main(int argc, char** argv) {
        process_status = checkChildStatus(handleProcess,process_status);
     }
 
-    // Update model_completed
-    model_completed = 1;
-	    
+
     // Time delay to ensure final ICM are complete
-    sleep_until(system_clock::now() + seconds(90));
+    sleep_until(system_clock::now() + seconds(90));	
 
 	
-    // We need to handle the last file
+    // Check whether model completed successfully	
+    if(file_exists(ifs_stat_file)) {
+       if(!(ifs_stat_file.is_open())) {
+          //fprintf(stderr,"Opening ifs.stat file\n");
+          ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
+       }
+
+       // Read last line from ifs.stat file
+       while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
+          //fprintf(stderr,"Reading ifs.stat file\n");
+
+          std::istringstream iss(ifs_line);  //put line into stringstream
+          int ifs_word_count=0;
+          // Read fourth column from file
+          while(iss >> ifs_word) {  //read word by word
+             ifs_word_count++;
+             if (ifs_word_count==3) last_line = ifs_word;
+             //fprintf(stderr,"count: %i\n",ifs_word_count);
+             //fprintf(stderr,"last_line: %s\n",last_line.c_str());
+          }
+       }
+       if (!last_line=='CNT0') {
+          fprintf(stderr,"..Failed, model did not complete successfully\n");
+          return 1;
+       }
+    }
+    // ifs.stat has not been produced, then model did not start
+    else {
+       fprintf(stderr,"..Failed, model did not start\n");
+       return 1;	    
+    }
+	
+	
+    // Update model_completed
+    model_completed = 1;
+
+    // We need to handle the last ICM files
     // Construct final file name of the ICM result file
     second_part = "";
     if (last_iter.length() == 1) {
