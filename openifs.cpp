@@ -647,7 +647,7 @@ int main(int argc, char** argv) {
     time_per_fclen = 0.27;	
 
     ZipFileList zfl;
-    std::string ifs_line, iter, ifs_word, second_part, upload_file_name, last_line;
+    std::string ifs_line="", iter="", ifs_word="", second_part, upload_file_name, last_line="";
     int current_iter=0, count=0;
     std::ifstream ifs_stat_file;
     char upload_file[_MAX_PATH];
@@ -993,8 +993,8 @@ int main(int argc, char** argv) {
     sleep_until(system_clock::now() + seconds(90));	
 
 	
-    // Check whether model completed successfully	
-    if(file_exists(ifs_stat_file)) {
+    // Check whether model completed successfully
+    if(file_exists(slot_path + std::string("/ifs.stat"))) {
        if(!(ifs_stat_file.is_open())) {
           //fprintf(stderr,"Opening ifs.stat file\n");
           ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
@@ -1007,14 +1007,14 @@ int main(int argc, char** argv) {
           std::istringstream iss2(ifs_line);  //put line into stringstream
           int ifs_word_count=0;
           // Read fourth column from file
-          while(iss >> ifs_word) {  //read word by word
+          while(iss2 >> ifs_word) {  //read word by word
              ifs_word_count++;
              if (ifs_word_count==3) last_line = ifs_word;
              //fprintf(stderr,"count: %i\n",ifs_word_count);
              //fprintf(stderr,"last_line: %s\n",last_line.c_str());
           }
        }
-       if (!(last_line=='CNT0')) {
+       if (last_line!="CNT0") {
           fprintf(stderr,"..Failed, model did not complete successfully\n");
           return 1;
        }
