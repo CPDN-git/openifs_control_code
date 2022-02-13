@@ -647,7 +647,7 @@ int main(int argc, char** argv) {
     time_per_fclen = 0.27;	
 
     ZipFileList zfl;
-    std::string ifs_line, iter, ifs_word, second_part, upload_file_name;
+    std::string ifs_line, iter, ifs_word, second_part, upload_file_name, last_line;
     int current_iter=0, count=0;
     std::ifstream ifs_stat_file;
     char upload_file[_MAX_PATH];
@@ -1004,7 +1004,7 @@ int main(int argc, char** argv) {
        while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
           //fprintf(stderr,"Reading ifs.stat file\n");
 
-          std::istringstream iss(ifs_line);  //put line into stringstream
+          std::istringstream iss2(ifs_line);  //put line into stringstream
           int ifs_word_count=0;
           // Read fourth column from file
           while(iss >> ifs_word) {  //read word by word
@@ -1014,7 +1014,7 @@ int main(int argc, char** argv) {
              //fprintf(stderr,"last_line: %s\n",last_line.c_str());
           }
        }
-       if (!last_line=='CNT0') {
+       if (!(last_line=='CNT0')) {
           fprintf(stderr,"..Failed, model did not complete successfully\n");
           return 1;
        }
