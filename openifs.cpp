@@ -114,13 +114,13 @@ int main(int argc, char** argv) {
     if (getcwd(slot_path, sizeof(slot_path)) == NULL)
       fprintf(stderr,"..getcwd returned an error\n");
     else
-      fprintf(stderr,"Current working directory is: %s\n",slot_path);
+      fprintf(stderr,"Working directory is: %s\n",slot_path);
 
     if (!boinc_is_standalone()) {
 
       // Get the project path
       project_path = dataBOINC.project_dir + std::string("/");
-      fprintf(stderr,"Current project directory is: %s\n",project_path.c_str());
+      fprintf(stderr,"Project directory is: %s\n",project_path.c_str());
 	    
       // Get the app version and re-parse to add a dot
       version = std::to_string(dataBOINC.app_version);
@@ -141,20 +141,20 @@ int main(int argc, char** argv) {
          return 1;
       }
 	    
-      fprintf(stderr,"The current app is: %s\n",app_name.c_str());
-      fprintf(stderr,"The current version is: %s\n",version.c_str());
-      fprintf(stderr,"The current result_name is: %s\n",result_name.c_str());
+      fprintf(stderr,"app name: %s\n",app_name.c_str());
+      fprintf(stderr,"version: %s\n",version.c_str());
+      fprintf(stderr,"result_name: %s\n",result_name.c_str());
     }
     // Running in standalone
     else {
       fprintf(stderr,"Running in standalone mode\n");
       // Set the project path
       project_path = slot_path + std::string("/../projects/");
-      fprintf(stderr,"Current project directory is: %s\n",project_path.c_str());
+      fprintf(stderr,"Project directory is: %s\n",project_path.c_str());
 	    
       // In standalone get the app version from the command line
       version = argv[8];
-      fprintf(stderr,"The current app is: %s\n",app_name.c_str());
+      fprintf(stderr,"app name: %s\n",app_name.c_str());
       fprintf(stderr,"(argv8) app_version: %s\n",argv[8]);
     }
 
@@ -487,7 +487,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     pathvar = getenv("OIFS_DUMMY_ACTION");
-    fprintf(stderr,"The OIFS_DUMMY_ACTION environmental variable is: %s\n",pathvar);
+    //fprintf(stderr,"The OIFS_DUMMY_ACTION environmental variable is: %s\n",pathvar);
 
     // Set the OMP_NUM_THREADS environmental variable, the number of threads
     std::string OMP_NUM_var = std::string("OMP_NUM_THREADS=") + std::to_string(NTHREADS);
@@ -496,7 +496,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     pathvar = getenv("OMP_NUM_THREADS");
-    fprintf(stderr,"The OMP_NUM_THREADS environmental variable is: %s\n",pathvar);
+    //fprintf(stderr,"The OMP_NUM_THREADS environmental variable is: %s\n",pathvar);
 
     // Set the OMP_SCHEDULE environmental variable, this enforces static thread scheduling
     std::string OMP_SCHED_var = std::string("OMP_SCHEDULE=STATIC");
@@ -505,7 +505,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     pathvar = getenv("OMP_SCHEDULE");
-    fprintf(stderr,"The OMP_SCHEDULE environmental variable is: %s\n",pathvar);
+    //fprintf(stderr,"The OMP_SCHEDULE environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK environmental variable, this controls the tracing facility in OpenIFS, off=0 and on=1
     std::string DR_HOOK_var = std::string("DR_HOOK=1");
@@ -514,7 +514,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     pathvar = getenv("DR_HOOK");
-    fprintf(stderr,"The DR_HOOK environmental variable is: %s\n",pathvar);
+    //fprintf(stderr,"The DR_HOOK environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK_HEAPCHECK environmental variable, this ensures the heap size statistics are reported
     std::string DR_HOOK_HEAP_var = std::string("DR_HOOK_HEAPCHECK=no");
@@ -523,7 +523,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     pathvar = getenv("DR_HOOK_HEAPCHECK");
-    fprintf(stderr,"The DR_HOOK_HEAPCHECK environmental variable is: %s\n",pathvar);
+    //fprintf(stderr,"The DR_HOOK_HEAPCHECK environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK_STACKCHECK environmental variable, this ensures the stack size statistics are reported
     std::string DR_HOOK_STACK_var = std::string("DR_HOOK_STACKCHECK=no");
@@ -532,7 +532,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     pathvar = getenv("DR_HOOK_STACKCHECK");
-    fprintf(stderr, "The DR_HOOK_STACKCHECK environmental variable is: %s\n",pathvar);
+    //fprintf(stderr, "The DR_HOOK_STACKCHECK environmental variable is: %s\n",pathvar);
 
     // Set the OMP_STACKSIZE environmental variable, OpenIFS needs more stack memory per process
     std::string OMP_STACK_var = std::string("OMP_STACKSIZE=128M");
@@ -541,7 +541,7 @@ int main(int argc, char** argv) {
       return 1;
     }
     pathvar = getenv("OMP_STACKSIZE");
-    fprintf(stderr,"The OMP_STACKSIZE environmental variable is: %s\n",pathvar);
+    //fprintf(stderr,"The OMP_STACKSIZE environmental variable is: %s\n",pathvar);
 
 	
     // Check for the existence of the namelist
@@ -615,11 +615,11 @@ int main(int argc, char** argv) {
        last_upload = std::stoi(last_upload_node->value());
        model_completed = std::stoi(model_completed_node->value());
 
-       printf("last_cpu_time: %i\n",last_cpu_time);
-       printf("upload_file_number: %i\n",upload_file_number);
-       printf("last_iter: %s\n",last_iter.c_str());
-       printf("last_upload: %i\n",last_upload);
-       printf("model_completed: %i\n",model_completed);
+       //printf("last_cpu_time: %i\n",last_cpu_time);
+       //printf("upload_file_number: %i\n",upload_file_number);
+       //printf("last_iter: %s\n",last_iter.c_str());
+       //printf("last_upload: %i\n",last_upload);
+       //printf("model_completed: %i\n",model_completed);
     }
     else {
        // Progress file not present, so create a progress file
@@ -848,7 +848,7 @@ int main(int argc, char** argv) {
                       fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
                       zfl.push_back(temp_path+std::string("/ICMGG")+exptid+"+"+second_part);
                       // Delete the file that has been added to the zip
-                   //   std::remove((temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
+                      // std::remove((temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
                    }
 
                    // Add ICMSH result files to zip to be uploaded
@@ -1420,11 +1420,11 @@ std::string getTag(const std::string &filename) {
 void process_trickle(double current_cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
     char* trickle = new char[512];
 
-    fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
-    fprintf(stderr,"wu_name: %s\n",wu_name);
-    fprintf(stderr,"result_name: %s\n",result_name);
-    fprintf(stderr,"slot_path: %s\n",slot_path);
-    fprintf(stderr,"timestep: %d\n",timestep);
+    //fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
+    //fprintf(stderr,"wu_name: %s\n",wu_name);
+    //fprintf(stderr,"result_name: %s\n",result_name);
+    //fprintf(stderr,"slot_path: %s\n",slot_path);
+    //fprintf(stderr,"timestep: %d\n",timestep);
 
     std::sprintf(trickle, "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
                            wu_name,result_name, timestep,(long) current_cpu_time);
