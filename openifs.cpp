@@ -677,7 +677,7 @@ int main(int argc, char** argv) {
        //fprintf(stderr,"strTmp: %s\n",strTmp);
        strncpy(result_base_name, stripPath(strTmp), strlen(stripPath(strTmp))-6);
        fprintf(stderr,"result_base_name: %s\n",result_base_name);
-       if (result_base_name=="upload_file") {
+       if (strcmp(result_base_name,"upload_file")==0) {
           fprintf(stderr,"..Failed to get result name\n");
           return 1;
        }
