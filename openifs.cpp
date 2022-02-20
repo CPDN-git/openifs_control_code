@@ -1342,9 +1342,9 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
     int retval = 0;
     long handleProcess;
 
-    fprintf(stderr,"slot_path: %s\n",slot_path);
-    fprintf(stderr,"strCmd: %s\n",strCmd);
-    fprintf(stderr,"exptid: %s\n",exptid);
+    //fprintf(stderr,"slot_path: %s\n",slot_path);
+    //fprintf(stderr,"strCmd: %s\n",strCmd);
+    //fprintf(stderr,"exptid: %s\n",exptid);
 
     switch((handleProcess=fork())) {
        case -1: {
@@ -1361,7 +1361,7 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
             fprintf(stderr,"..Setting the GRIB_SAMPLES_PATH failed\n");
           }
           pathvar = getenv("GRIB_SAMPLES_PATH");
-          fprintf(stderr,"The GRIB_SAMPLES_PATH environmental variable is: %s\n",pathvar);
+          //fprintf(stderr,"The GRIB_SAMPLES_PATH environmental variable is: %s\n",pathvar);
 
           // Set the GRIB_DEFINITION_PATH environmental variable
           std::string GRIB_DEF_var = std::string("GRIB_DEFINITION_PATH=") + slot_path + \
@@ -1370,7 +1370,7 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
             fprintf(stderr,"..Setting the GRIB_DEFINITION_PATH failed\n");
           }
           pathvar = getenv("GRIB_DEFINITION_PATH");
-          fprintf(stderr,"The GRIB_DEFINITION_PATH environmental variable is: %s\n",pathvar);
+          //fprintf(stderr,"The GRIB_DEFINITION_PATH environmental variable is: %s\n",pathvar);
 
           if((app_name=="openifs") || (app_name=="oifs_40r1")) { // OpenIFS 40r1
             fprintf(stderr,"Executing the command: %s -e %s\n",strCmd,exptid);
