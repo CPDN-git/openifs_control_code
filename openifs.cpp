@@ -533,6 +533,16 @@ int main(int argc, char** argv) {
     }
     pathvar = getenv("DR_HOOK_STACKCHECK");
     //fprintf(stderr, "The DR_HOOK_STACKCHECK environmental variable is: %s\n",pathvar);
+	
+    // Set the EC_MEMINFO environment variable, only applies to OpenIFS 43r3.
+    // Disable EC_MEMINFO to remove the useless EC_MEMINFO messages to the stdout file to reduce filesize.
+    std::string EC_MEMINFO = std::string("EC_MEMINFO");
+    if (putenv((char *)EC_MEMINFO.c_str())) {
+       fprintf(stderr,"..Setting the EC_MEMINFO environment variable failed\n");
+       return 1;
+    }
+    pathvar = getenv("EC_MEMINFO");
+    //fprintf(stderr, "The EC_MEMINFO environment variable is: %s\n, pathvar);
 
     // Set the OMP_STACKSIZE environmental variable, OpenIFS needs more stack memory per process
     std::string OMP_STACK_var = std::string("OMP_STACKSIZE=128M");
