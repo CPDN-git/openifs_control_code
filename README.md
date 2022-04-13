@@ -13,6 +13,10 @@ We only need the file: 'rapidxml.hpp'. Download this file and put in the same fo
 
 g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o openifs_0.1_x86_64-pc-linux-gnu
 
+And to build on an ARM architecture machine:
+
+g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -lstdc++ -lm -std=c++11 -o openifs_0.1_aarch64-poky-linux-gnu
+
 To compile the controller code on a Mac machine:
 
 First ensure libzip is installed: brew install libzip
