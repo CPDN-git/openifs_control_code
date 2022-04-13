@@ -717,7 +717,7 @@ int main(int argc, char** argv) {
 
        count++;
 
-       // Check every 60 seconds whether an upload point has been reached
+       // Check every 10 seconds whether an upload point has been reached
        if(count==10) {   
           if(!(ifs_stat_file.is_open())) {
              //fprintf(stderr,"Opening ifs.stat file\n");
@@ -741,10 +741,10 @@ int main(int argc, char** argv) {
 
           // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
           // to the files for that iteration, those files can now be moved and uploaded
-          //fprintf(stderr,"iter: %i\n",stoi(iter));
-          //fprintf(stderr,"last_iter: %i\n",stoi(last_iter));
+          //fprintf(stderr,"iter: %i\n",std::stoi(iter));
+          //fprintf(stderr,"last_iter: %i\n",std::stoi(last_iter));
 
-          if (stoi(iter) != stoi(last_iter)) {
+          if (std::stoi(iter) != std::stoi(last_iter)) {
              // Construct file name of the ICM result file
              second_part = "";
              if (last_iter.length() == 1) {
