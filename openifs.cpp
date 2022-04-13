@@ -657,7 +657,7 @@ int main(int argc, char** argv) {
     time_per_fclen = 0.27;	
 
     ZipFileList zfl;
-    std::string ifs_line="", iter="", ifs_word="", second_part, upload_file_name, last_line="";
+    std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
     int current_iter=0, count=0;
     std::ifstream ifs_stat_file;
     char upload_file[_MAX_PATH];
