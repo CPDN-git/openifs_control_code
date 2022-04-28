@@ -374,9 +374,11 @@ if __name__ == "__main__":
             #print "fpops_bound: "+fpops_bound
 
             # Set the memory bound
-            if int(horiz_resolution) == 159 and int(vert_resolution) == 60:
+            if int(horiz_resolution) == 63 and int(vert_resolution) == 91:
               memory_bound = str(5370000000)
             elif int(horiz_resolution) == 95 and int(vert_resolution) == 91:
+              memory_bound = str(5370000000)
+            elif int(horiz_resolution) == 159 and int(vert_resolution) == 60:
               memory_bound = str(5370000000)
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 91:
               memory_bound = str(5370000000)
