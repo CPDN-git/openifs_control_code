@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # app_name is either openifs, oifs_43r3 or oifs_40r1
     parser.add_argument("--app_name",help="application name",default="")
     options = parser.parse_args()
-    if options.app_name not in ('openifs','oifs_43r3','oifs_40r1'):
+    if options.app_name not in ('openifs','oifs_43r3','oifs_40r1','oifs_43r3_arm'):
       raise ValueError('Incorrect app_name')
     print "Application name: "+options.app_name
 
@@ -344,6 +344,11 @@ if __name__ == "__main__":
             zip_file.extractall(project_dir+"temp_openifs_submission_files/")
             zip_file.close()
 
+            # Remove the zip files
+            os.remove(project_dir+"temp_openifs_submission_files/"+GHG_zip)
+            os.remove(project_dir+"temp_openifs_submission_files/"+radiation_zip)
+            os.remove(project_dir+"temp_openifs_submission_files/"+SO4_zip)
+            
             # Zip together the ifsdata files
             shutil.make_archive(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/ifsdata_'+str(wuid), 'zip', project_dir+"temp_openifs_submission_files/")
             
