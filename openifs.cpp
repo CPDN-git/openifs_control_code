@@ -167,8 +167,11 @@ int main(int argc, char** argv) {
     if (mkdir(temp_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) fprintf(stderr,"..mkdir for temp folder for results failed\n");
 
     // macOS
-    #ifdef __APPLE__
+    #if defined (__APPLE__)
        std::string app_file = app_name + std::string("_app_") + version + std::string("_x86_64-apple-darwin.zip");
+    // ARM
+    #elif defined (_ARM) 
+       std::string app_file = app_name + std::string("_app_") + version + std::string("_aarch64-poky-linux.zip");
     // Linux
     #else
        std::string app_file = app_name + std::string("_app_") + version + std::string("_x86_64-pc-linux-gnu.zip");
