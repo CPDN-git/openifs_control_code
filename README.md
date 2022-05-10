@@ -15,7 +15,7 @@ g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zi
 
 And to build on an ARM architecture machine:
 
-g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -lstdc++ -lm -std=c++11 -o openifs_0.1_aarch64-poky-linux-gnu
+g++ openifs.cpp -D_ARM -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -lstdc++ -lm -std=c++11 -o openifs_0.1_aarch64-poky-linux
 
 To compile the controller code on a Mac machine:
 
