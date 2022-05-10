@@ -11,11 +11,11 @@ First ensure that libzip is installed using (on an Ubuntu machine): sudo apt-get
 Then we need to obtain the RapidXml header for parsing XML files. This is downloaded from the site: http://rapidxml.sourceforge.net/
 We only need the file: 'rapidxml.hpp'. Download this file and put in the same folder as openifs.cpp.
 
-g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o openifs_0.1_x86_64-pc-linux-gnu
+g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o openifs_1.00_x86_64-pc-linux-gnu
 
 And to build on an ARM architecture machine:
 
-g++ openifs.cpp -D_ARM -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -lstdc++ -lm -std=c++11 -o openifs_0.1_aarch64-poky-linux
+g++ openifs.cpp -D_ARM -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -lstdc++ -lm -std=c++11 -o openifs_1.00_aarch64-poky-linux
 
 To compile the controller code on a Mac machine:
 
@@ -25,15 +25,15 @@ And that we have obtained the RapidXml header.
 
 Build the BOINC libraries using Xcode. Then build the controller code:
 
-clang++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -pthread -std=c++11 -o openifs_0.1_x86_64-apple-darwin
+clang++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -pthread -std=c++11 -o openifs_1.00_x86_64-apple-darwin
 
 This will create an executable that is the app imported into the BOINC environment alongside the OpenIFS executable. Now to run this the OpenIFS ancillary files along with the OpenIFS executable will need to be alongside, the command to run this in standalone mode is (40r1):
 
-./openifs_0.1_x86_64-pc-linux-gnu 2000010100 gw3a 0001 1 00001 1 openifs 1.1
+./openifs_1.00_x86_64-pc-linux-gnu 2000010100 gw3a 0001 1 00001 1 openifs 1.00
 
 Or for macOS:
 
-./openifs_0.1_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 openifs 1.1
+./openifs_1.00_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 openifs 1.00
 
 The command line parameters: [1] compiled executable, [2] start date YYYYMMDDHH, [3] experiment id, [4] unique member id, [5] batch id, [6] workunit id, [7] FCLEN, [8] app name, [9]  app version id.
 
