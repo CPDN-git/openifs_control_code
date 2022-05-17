@@ -416,7 +416,20 @@ if __name__ == "__main__":
               # Throw an error if not cleanly divisible
               if not(isinstance(upload_interval,int)):
                 raise ValueError('The number of time steps does not divide equally by the upload frequency')
-              
+            
+            elif fclen_units == 'hours':
+              num_timesteps = (int(fclen) * 60)/int(timestep)
+              num_hours = int(fclen)
+
+              # Throw an error if not cleanly divisible
+              if not(isinstance(num_timesteps,int)):
+                raise ValueError('Length of simulation (in hours) does not divide equally by timestep')
+
+              # Set upload interval and number of uploads, upload_interval is the number of timesteps between uploads
+              if upload_frequency == 'hourly':
+                upload_interval = num_timesteps / int(fclen)
+
+            
             number_of_uploads = int(math.ceil(float(num_timesteps) / float(upload_interval)))
 
             print "upload_interval: "+str(upload_interval)
