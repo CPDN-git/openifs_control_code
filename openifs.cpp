@@ -98,14 +98,14 @@ int main(int argc, char** argv) {
     fprintf(stderr,"(argv8) nthreads: %s\n",argv[8]);
 
     // Read the exptid, batchid, version, wuid from the command line
-    std::string start_date = argv[1];
-    std::string exptid = argv[2];
-    std::string unique_member_id = argv[3];
-    std::string batchid = argv[4];
-    std::string wuid = argv[5];
-    std::string fclen = argv[6];
-    std::string app_name = argv[7];
-    std::string nthreads = argv[8];
+    std::string start_date = argv[1]; // simulation start date
+    std::string exptid = argv[2];     // OpenIFS experiment id
+    std::string unique_member_id = argv[3];  // umid
+    std::string batchid = argv[4];    // batch id
+    std::string wuid = argv[5];       // workunit id
+    std::string fclen = argv[6];      // number of simulation days
+    std::string app_name = argv[7];   // CPDN app name
+    std::string nthreads = argv[8];   // number ofexi OPENMP threads
 	
     OIFS_EXPID = exptid;
     wu_name = dataBOINC.wu_name;
