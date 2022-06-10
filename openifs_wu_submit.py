@@ -40,6 +40,9 @@ if __name__ == "__main__":
     # Set the max_results_per_workunit
     max_results_per_workunit = 1
 
+    # Set the default number of threads
+    nthreads = 1
+    
     # Set the flops factor (for the progress bar)
     flops_factor = 12800000000000
     # flops_factor = 1078000000000 # Original
@@ -594,7 +597,7 @@ if __name__ == "__main__":
               "     <file_number>3</file_number>\n" +\
               "     <open_name>"+str(climate_data_zip)+"</open_name>\n" +\
               "   </file_ref>\n" +\
-              "   <command_line> "+str(start_date)+" "+str(exptid)+" "+str(unique_member_id)+" "+batch_prefix+str(batchid)+" "+str(wuid)+" "+str(fclen)+" "+str(options.app_name)+"</command_line>\n" +\
+              "   <command_line> "+str(start_date)+" "+str(exptid)+" "+str(unique_member_id)+" "+batch_prefix+str(batchid)+" "+str(wuid)+" "+str(fclen)+" "+str(options.app_name)+" "+str(nthreads)+"</command_line>\n" +\
               "   <rsc_fpops_est>"+fpops_est+"</rsc_fpops_est>\n" +\
               "   <rsc_fpops_bound>"+fpops_est+"0</rsc_fpops_bound>\n" +\
               "   <rsc_memory_bound>"+memory_bound+"</rsc_memory_bound>\n" +\
