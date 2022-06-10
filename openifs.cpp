@@ -61,7 +61,6 @@ int main(int argc, char** argv) {
 
     // Set defaults for input arguments
     std::string OIFS_EXPID;           // model experiment id, must match string in filenames
-    int NTHREADS=1;                   // default number ofexi OPENMP threads
     std::string NAMELIST="fort.4";    // NAMELIST file, this name is fixed
 
     // Initialise BOINC
@@ -95,7 +94,8 @@ int main(int argc, char** argv) {
     fprintf(stderr,"(argv4) batchid: %s\n",argv[4]);
     fprintf(stderr,"(argv5) wuid: %s\n",argv[5]);
     fprintf(stderr,"(argv6) fclen: %s\n",argv[6]);
-    fprintf(stderr,"(argv7) app_name: %s\n",argv[7]);	
+    fprintf(stderr,"(argv7) app_name: %s\n",argv[7]);
+    fprintf(stderr,"(argv8) nthreads: %s\n",argv[8]);
 
     // Read the exptid, batchid, version, wuid from the command line
     std::string start_date = argv[1];
@@ -105,6 +105,7 @@ int main(int argc, char** argv) {
     std::string wuid = argv[5];
     std::string fclen = argv[6];
     std::string app_name = argv[7];
+    std::string nthreads = argv[8];
 	
     OIFS_EXPID = exptid;
     wu_name = dataBOINC.wu_name;
@@ -153,9 +154,9 @@ int main(int argc, char** argv) {
       fprintf(stderr,"Project directory is: %s\n",project_path.c_str());
 	    
       // In standalone get the app version from the command line
-      version = argv[8];
+      version = argv[9];
       fprintf(stderr,"app name: %s\n",app_name.c_str());
-      fprintf(stderr,"(argv8) app_version: %s\n",argv[8]);
+      fprintf(stderr,"(argv8) app_version: %s\n",argv[9]);
     }
 
     boinc_begin_critical_section();
@@ -493,7 +494,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The OIFS_DUMMY_ACTION environmental variable is: %s\n",pathvar);
 
     // Set the OMP_NUM_THREADS environmental variable, the number of threads
-    std::string OMP_NUM_var = std::string("OMP_NUM_THREADS=") + std::to_string(NTHREADS);
+    std::string OMP_NUM_var = std::string("OMP_NUM_THREADS=") + nthreads;
     if (putenv((char *)OMP_NUM_var.c_str())) {
       fprintf(stderr,"..Setting the OMP_NUM_THREADS environmental variable failed\n");
       return 1;
