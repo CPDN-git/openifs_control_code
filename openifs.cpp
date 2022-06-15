@@ -697,6 +697,19 @@ int main(int argc, char** argv) {
        }
     }
 
+    // Check for the existence of a Unix script file to override the environment variables
+    // Script file should be in projects folder
+    std::string override_env_vars = project_path + std::string("override_env_variables");
+    if(file_exists(override_env_vars)) {
+       // If exists then run file
+       FILE* pipe = popen(override_env_vars.c_str(), "r");
+       if (!pipe) {
+          fprintf(stderr,"..Failed to open environment variables override file\n");
+          return 1;
+       }
+       pclose(pipe);
+    }	
+	
 
     // Start the OpenIFS job
     std::string strCmd = slot_path + std::string("/./master.exe");
@@ -704,7 +717,6 @@ int main(int argc, char** argv) {
     if (handleProcess > 0) process_status = 0;
 
     boinc_end_critical_section();
-
 
 
     // process_status = 0 running
