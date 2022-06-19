@@ -2,7 +2,7 @@
 
 # Script to submit OpenIFS workunits
 
-# This script has been written by Andy Bowery (Oxford University, 2021)
+# This script has been written by Andy Bowery (Oxford University, 2022)
 
 if __name__ == "__main__":
 
