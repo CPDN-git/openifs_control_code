@@ -374,13 +374,6 @@ if __name__ == "__main__":
             p = subprocess.Popen(args)
             p.wait()
 
-
-            # Set the fpops_est and fpops_bound for the workunit
-            fpops_est = str(flops_factor * int(fclen))
-            fpops_bound = str(flops_factor * int(fclen) * 10)
-            #print "fpops_est: "+fpops_est
-            #print "fpops_bound: "+fpops_bound
-
             # Set the memory bound
             if int(horiz_resolution) == 63 and int(vert_resolution) == 91:
               memory_bound = str(5370000000)
@@ -401,6 +394,7 @@ if __name__ == "__main__":
               #print "timestep: "+str(timestep)
               #print "num_timesteps: "+str(num_timesteps)
               num_hours = int(fclen) * 24
+              num_days = fclen
             
               # Throw an error if not cleanly divisible
               if not(isinstance(num_timesteps,int)):
@@ -423,6 +417,7 @@ if __name__ == "__main__":
             elif fclen_units == 'hours':
               num_timesteps = (int(fclen) * 60)/int(timestep)
               num_hours = int(fclen)
+              num_days = str(float('%.3f' % (int(fclen) / 24)))  # Convert to days and round to three decimals figures
 
               # Throw an error if not cleanly divisible
               if not(isinstance(num_timesteps,int)):
@@ -441,7 +436,15 @@ if __name__ == "__main__":
             # Throw an error if not cleanly divisible
             if not(isinstance(number_of_uploads,int)):
               raise ValueError('The total number of timesteps does not divide equally by the upload interval')
-                
+ 
+
+            # Set the fpops_est and fpops_bound for the workunit
+            fpops_est = str(flops_factor * int(num_days))
+            fpops_bound = str(flops_factor * int(num_days) * 10)
+            #print "fpops_est: "+fpops_est
+            #print "fpops_bound: "+fpops_bound
+
+            
             upload_infos = batch.getElementsByTagName('upload_info')
             for upload_info in upload_infos:
               upload_handler = str(upload_info.getElementsByTagName('upload_handler')[0].childNodes[0].nodeValue)
@@ -597,7 +600,7 @@ if __name__ == "__main__":
               "     <file_number>3</file_number>\n" +\
               "     <open_name>"+str(climate_data_zip)+"</open_name>\n" +\
               "   </file_ref>\n" +\
-              "   <command_line> "+str(start_date)+" "+str(exptid)+" "+str(unique_member_id)+" "+batch_prefix+str(batchid)+" "+str(wuid)+" "+str(fclen)+" "+str(options.app_name)+" "+str(nthreads)+"</command_line>\n" +\
+              "   <command_line> "+str(start_date)+" "+str(exptid)+" "+str(unique_member_id)+" "+batch_prefix+str(batchid)+" "+str(wuid)+" "+str(num_days)+" "+str(options.app_name)+" "+str(nthreads)+"</command_line>\n" +\
               "   <rsc_fpops_est>"+fpops_est+"</rsc_fpops_est>\n" +\
               "   <rsc_fpops_bound>"+fpops_est+"0</rsc_fpops_bound>\n" +\
               "   <rsc_memory_bound>"+memory_bound+"</rsc_memory_bound>\n" +\
