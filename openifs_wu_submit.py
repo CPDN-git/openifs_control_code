@@ -301,9 +301,6 @@ if __name__ == "__main__":
             elif start_hour < 25 and start_hour > 9:
                start_date = start_date + str(start_hour)
 
-            # Set the name of the workunit
-            workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_'+str(fclen)+'_'+batch_prefix+str(batchid)+'_'+str(wuid)
-
             # Construct ancil_file_location
             ancil_file_location = oifs_ancil_dir
             ic_ancil_location = oifs_ancil_dir +"ic_ancil/"+str(exptid)+"/"+str(start_date)+"/"+str(analysis_member_number)+"/"
@@ -414,6 +411,10 @@ if __name__ == "__main__":
               if not(isinstance(upload_interval,int)):
                 raise ValueError('The number of time steps does not divide equally by the upload frequency')
             
+              # Set the name of the workunit (days)
+              workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_'+str(num_days)+'_'+batch_prefix+str(batchid)+'_'+str(wuid)
+
+            
             elif fclen_units == 'hours':
               num_timesteps = (int(fclen) * 60)/int(timestep)
               num_hours = int(fclen)
@@ -427,6 +428,8 @@ if __name__ == "__main__":
               if upload_frequency == 'hourly':
                 upload_interval = num_timesteps / int(fclen)
 
+              # Set the name of the workunit (hours)
+              workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_0_'+batch_prefix+str(batchid)+'_'+str(wuid)
             
             number_of_uploads = int(math.ceil(float(num_timesteps) / float(upload_interval)))
 
@@ -443,7 +446,6 @@ if __name__ == "__main__":
             fpops_bound = str(flops_factor * int(num_days) * 10)
             #print "fpops_est: "+fpops_est
             #print "fpops_bound: "+fpops_bound
-
             
             upload_infos = batch.getElementsByTagName('upload_info')
             for upload_info in upload_infos:
