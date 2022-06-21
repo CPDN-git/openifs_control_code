@@ -26,6 +26,7 @@
 #include "./boinc/zip/boinc_zip.h"
 #include "./boinc/lib/util.h"
 #include "rapidxml.hpp"
+#include <cmath>
 
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
@@ -110,6 +111,9 @@ int main(int argc, char** argv) {
     OIFS_EXPID = exptid;
     wu_name = dataBOINC.wu_name;
 
+    double num_days = atof(fclen.c_str()); // number of simulation days
+    int num_days_trunc = atoi(trunc(num_days)); // number of simulation days truncated to an integer
+	
     // Get the slots path (the current working path)
     char slot_path[_MAX_PATH];
     if (getcwd(slot_path, sizeof(slot_path)) == NULL)
