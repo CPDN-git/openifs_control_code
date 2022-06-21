@@ -26,7 +26,6 @@
 #include "./boinc/zip/boinc_zip.h"
 #include "./boinc/lib/util.h"
 #include "rapidxml.hpp"
-#include <cmath>
 
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
@@ -112,7 +111,7 @@ int main(int argc, char** argv) {
     wu_name = dataBOINC.wu_name;
 
     double num_days = atof(fclen.c_str()); // number of simulation days
-    int num_days_trunc = atoi(trunc(num_days)); // number of simulation days truncated to an integer
+    int num_days_trunc = (int) num_days; // number of simulation days truncated to an integer
 	
     // Get the slots path (the current working path)
     char slot_path[_MAX_PATH];
@@ -210,11 +209,11 @@ int main(int argc, char** argv) {
     // Process the Namelist/workunit file:
     // Get the name of the 'jf_' filename from a link within the namelist file
     std::string wu_target = getTag(slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
-                      std::string("_") + fclen + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip"));
+                      std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip"));
 
     // Copy the namelist files to the working directory
     std::string wu_destination = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
-                      std::string("_") + fclen + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
+                      std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
     fprintf(stderr,"Copying the namelist files from: %s to: %s\n",wu_target.c_str(),wu_destination.c_str());
 
     retval = boinc_copy(wu_target.c_str(),wu_destination.c_str());
@@ -225,7 +224,7 @@ int main(int argc, char** argv) {
 
     // Unzip the namelist zip file
     std::string namelist_zip = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
-                      std::string("_") + fclen + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
+                      std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
     fprintf(stderr,"Unzipping the namelist zip file: %s\n",namelist_zip.c_str());
     retval = boinc_zip(UNZIP_IT,namelist_zip.c_str(),slot_path);
     if (retval) {
@@ -684,7 +683,7 @@ int main(int argc, char** argv) {
        return 1;
     }
 
-    int total_length_of_simulation = std::stoi(fclen) * 86400;
+    int total_length_of_simulation = (int) (num_days * 86400);
     fprintf(stderr,"total_length_of_simulation: %i\n",total_length_of_simulation);
 
     // Get result_base_name to construct upload file names using 
@@ -942,7 +941,7 @@ int main(int argc, char** argv) {
                 // Else running in standalone
                 else {
                    upload_file_name = app_name + std::string("_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
-                              fclen + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
+                              std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
                               std::to_string(upload_file_number) + std::string(".zip");
                    fprintf(stderr,"The current upload_file_name is: %s\n",upload_file_name.c_str());
 
@@ -1000,7 +999,7 @@ int main(int argc, char** argv) {
 	       
        if (!boinc_is_standalone()) {
 	  // Calculate the fraction done     
-	  fraction_done = (current_cpu_time-0.96)/(time_per_fclen*atoi(fclen.c_str()));
+	  fraction_done = (current_cpu_time-0.96)/(time_per_fclen*num_days);
 	  //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
 	       
           // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
@@ -1195,7 +1194,7 @@ int main(int argc, char** argv) {
     // Else running in standalone
     else {
        upload_file_name = app_name + std::string("_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
-                          fclen + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
+                          std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
                           std::to_string(upload_file_number) + std::string(".zip");
        fprintf(stderr,"The final upload_file_name is: %s\n",upload_file_name.c_str());
 
