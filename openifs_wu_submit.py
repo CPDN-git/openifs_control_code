@@ -156,6 +156,9 @@ if __name__ == "__main__":
           fullpos_namelist = oifs_ancil_dir + 'fullpos_namelist/' + fullpos_namelist_file
           print "fullpos_namelist: "+fullpos_namelist
         
+          nthreads = str(batch.getElementsByTagName('num_threads')[0].childNodes[0].nodeValue)
+          print "num_threads: "+nthreads
+        
           batch_infos = batch.getElementsByTagName('batch_info')
           for batch_info in batch_infos:
             batch_desc = str(batch_info.getElementsByTagName('desc')[0].childNodes[0].nodeValue)
