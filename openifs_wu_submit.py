@@ -278,29 +278,24 @@ if __name__ == "__main__":
             if str(start_year) is None or start_year <= 0:
                start_date = '0000'
             else:
-               start_date = str(start_year)
+               start_date = str(start_year).zfill(4)
 
             if str(start_month) is None or start_month <= 0:
                start_date = start_date + '00'
-            elif start_month > 0 and start_month < 10:
-               start_date = start_date + '0' + str(start_month)
-            elif start_month < 13 and start_month > 9:
-               start_date = start_date + str(start_month)
+            elif start_month > 0 and start_month < 13:
+               start_date = start_date + str(start_month).zfill(2)
 
             if str(start_day) is None or start_day <= 0:
                start_date = start_date + '00'
-            elif start_day > 0 and start_day < 10:
-               start_date = start_date + '0' + str(start_day)
-            elif start_day < 32 and start_day > 9:
-               start_date = start_date + str(start_day)
+            elif start_day > 0 and start_day < 32:
+               start_date = start_date + str(start_day).zfill(2)
 
             if str(start_hour) is None or start_hour <= 0:
                start_date = start_date + '00'
-            elif start_hour > 0 and start_hour < 10:
-               start_date = start_date + '0' + str(start_hour)
-            elif start_hour < 25 and start_hour > 9:
-               start_date = start_date + str(start_hour)
-
+            elif start_hour > 0 and start_hour < 25:
+               start_date = start_date + str(start_hour).zfill(2)
+            
+            
             # Construct ancil_file_location
             ancil_file_location = oifs_ancil_dir
             ic_ancil_location = oifs_ancil_dir +"ic_ancil/"+str(exptid)+"/"+str(start_date)+"/"+str(analysis_member_number)+"/"
