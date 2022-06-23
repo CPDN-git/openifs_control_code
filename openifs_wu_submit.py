@@ -411,7 +411,7 @@ if __name__ == "__main__":
 
             
             elif fclen_units == 'hours':
-              num_timesteps = (int(fclen) * 60)/int(timestep)
+              num_timesteps = (int(fclen) * 3600)/int(timestep)
               num_hours = int(fclen)
               num_days = str(float('%.3f' % (int(fclen) / 24)))  # Convert to days and round to three decimals figures
 
