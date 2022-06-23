@@ -543,7 +543,7 @@ int main(int argc, char** argv) {
 	
     // Set the EC_MEMINFO environment variable, only applies to OpenIFS 43r3.
     // Disable EC_MEMINFO to remove the useless EC_MEMINFO messages to the stdout file to reduce filesize.
-    std::string EC_MEMINFO = std::string("EC_MEMINFO");
+    std::string EC_MEMINFO = std::string("EC_MEMINFO=0");
     if (putenv((char *)EC_MEMINFO.c_str())) {
        fprintf(stderr,"..Setting the EC_MEMINFO environment variable failed\n");
        return 1;
