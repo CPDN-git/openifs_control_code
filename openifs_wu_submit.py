@@ -39,9 +39,6 @@ if __name__ == "__main__":
 
     # Set the max_results_per_workunit
     max_results_per_workunit = 1
-
-    # Set the default number of threads
-    nthreads = 1
     
     # Set the flops factor (for the progress bar)
     flops_factor = 12800000000000
