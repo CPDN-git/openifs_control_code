@@ -51,7 +51,7 @@ if __name__ == "__main__":
       db_host = str(config.getElementsByTagName('db_host')[0].childNodes[0].nodeValue)
       db_user = str(config.getElementsByTagName('db_user')[0].childNodes[0].nodeValue)
       db_passwd = str(config.getElementsByTagName('db_passwd')[0].childNodes[0].nodeValue)
-      db_name = str(config.getElementsByTagName('db_name')[0].childNodes[0].nodeValue)
+      primary_db = str(config.getElementsByTagName('db_name')[0].childNodes[0].nodeValue)
 
     # Set batch id prefix, adding a 'd' if a dev batch
     if primary_db == "cpdnboinc_dev":
