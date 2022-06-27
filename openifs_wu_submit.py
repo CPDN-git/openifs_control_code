@@ -320,7 +320,7 @@ if __name__ == "__main__":
             ifsdatas = workunit.getElementsByTagName('ifsdata')
             for ifsdata in ifsdatas:
               GHG_zip = str(ifsdata.getElementsByTagName('GHG_zip')[0].childNodes[0].nodeValue)
-              radiation_zip = str(ifsdata.getElementsByTagName('radiation_zip')[0].childNodes[0].nodeValue)
+              radiation_zip = str(ifsdata.getElementsByTagName('other_radiation_zip')[0].childNodes[0].nodeValue)
               SO4_zip = str(ifsdata.getElementsByTagName('SO4_zip')[0].childNodes[0].nodeValue)
 
             # Copy each of the ifsdata zip files to the temp directory
