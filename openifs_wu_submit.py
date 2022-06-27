@@ -437,8 +437,8 @@ if __name__ == "__main__":
  
 
             # Set the fpops_est and fpops_bound for the workunit
-            fpops_est = str(flops_factor * int(num_days))
-            fpops_bound = str(flops_factor * int(num_days) * 10)
+            fpops_est = str(flops_factor * int(float(num_days)))
+            fpops_bound = str(flops_factor * int(float(num_days)) * 10)
             #print "fpops_est: "+fpops_est
             #print "fpops_bound: "+fpops_bound
             
@@ -681,7 +681,7 @@ if __name__ == "__main__":
               run_years = 0
             
             # Enter the details of the submitted workunit into the workunit_table
-            query = """insert into WORKUNIT_TABLE((wuid,cpdn_batch,umid,name,start_year,run_years,appid) \
+            query = """insert into WORKUNIT_TABLE(wuid,cpdn_batch,umid,name,start_year,run_years,appid) \
                                                 values(%s,%s,'%s','%s',%s,%s,%s)""" \
                                                 %(wuid,batchid,unique_member_id,workunit_name,start_year,run_years,appid)
             cursor.execute(query)
