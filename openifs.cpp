@@ -365,8 +365,6 @@ int main(int argc, char** argv) {
             TSTEP = strTmp; 
             while(!TSTEP.empty() && \
                   std::isspace(*TSTEP.rbegin())) TSTEP.erase(TSTEP.length()-1);
-            // Remove the trailing comma
-            if (!TSTEP.empty()) TSTEP.resize(TSTEP.size() - 1);
             fprintf(stderr,"TSTEP: %s\n",TSTEP.c_str());
             // Convert to an integer
             timestep_interval = std::stoi(TSTEP);
