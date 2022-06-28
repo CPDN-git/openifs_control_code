@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
     // Parse the fort.4 namelist for the filenames and variables
     std::string namelist_file = slot_path + std::string("/") + NAMELIST;
     const char strSearch[9][22]={"!IFSDATA_FILE=","!IC_ANCIL_FILE=","!CLIMATE_DATA_FILE=","!HORIZ_RESOLUTION=",\
-                                 "!VERT_RESOLUTION=","!GRID_TYPE=","!UPLOAD_INTERVAL=","TSTEP=","NFRPOS="};
+                                 "!VERT_RESOLUTION=","!GRID_TYPE=","!UPLOAD_INTERVAL=","!TSTEP=","NFRPOS="};
     memset(strCpy,0x00,9*_MAX_PATH);
     memset(strTmp,0x00,_MAX_PATH);
     FILE* fParse = boinc_fopen(namelist_file.c_str(),"r");
