@@ -2,7 +2,21 @@
 
 This respository contains the instructions and code for building the controlling application used for controlling the ECMWF OpenIFS code in the climateprediction.net project.
 
-To compile the controlling code you will need to download and build the BOINC code (this is available from: https://github.com/BOINC/boinc). For instructions on building this code see: https://boinc.berkeley.edu/trac/wiki/CompileClient. This code needs to be in the same directory as the OpenIFS controller code.
+To compile the controlling code you will need to download and build the BOINC code (this is available from: https://github.com/BOINC/boinc). For instructions on building this code see: https://boinc.berkeley.edu/trac/wiki/CompileClient.
+
+As only the libraries are required, the boinc client and manager can be disabled (reduces system packages required).
+
+In short:
+    git clone git@github.com:BOINC/boinc.git
+    cd boinc
+    ./_autosetup
+    ./configure --disable-server --disable-fcgi --disable-manager --disable-client  \
+                --enable-libraries --enable-boinczip  \
+                CXXFLAGS='-O3'
+    make install
+
+This installs the boinc libraries and include files into the same directory as the git source (use the --prefix argument to install into a different directory).
+
 
 To compile the controller code on a Linux machine:
 
@@ -11,11 +25,13 @@ First ensure that libzip is installed using (on an Ubuntu machine): sudo apt-get
 Then we need to obtain the RapidXml header for parsing XML files. This is downloaded from the site: http://rapidxml.sourceforge.net/
 We only need the file: 'rapidxml.hpp'. Download this file and put in the same folder as openifs.cpp.
 
-g++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o oifs_43r3_1.00_x86_64-pc-linux-gnu
+    g++ openifs.cpp -I../boinc/include -L../boinc/lib  -lboinc_api -lboinc -lboinc_zip -static -pthread -std=c++11 -o oifs_43r3_1.00_x86_64-pc-linux-gnu
+
+(assuming boinc libraries are located in ../boinc relative to this repository)
 
 And to build on an ARM architecture machine:
 
-g++ openifs.cpp -D_ARM -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -static -pthread -lstdc++ -lm -std=c++11 -o oifs_43r3_1.00_aarch64-poky-linux
+    g++ openifs.cpp -D_ARM -I../boinc/include -L../boinc/lib -lboinc_api -lboinc -lboinc_zip -static -pthread -lstdc++ -lm -std=c++11 -o oifs_43r3_1.00_aarch64-poky-linux
 
 To compile the controller code on a Mac machine:
 
@@ -25,17 +41,17 @@ And that we have obtained the RapidXml header.
 
 Build the BOINC libraries using Xcode. Then build the controller code:
 
-clang++ openifs.cpp -I./boinc -I./boinc/lib -L./boinc/api -L./boinc/lib -L./boinc/zip -lboinc_api -lboinc -lboinc_zip -pthread -std=c++11 -o oifs_43r3_1.00_x86_64-apple-darwin
+    clang++ openifs.cpp -I../boinc/include -L../boinc/lib  -lboinc_api -lboinc -lboinc_zip -pthread -std=c++11 -o oifs_43r3_1.00_x86_64-apple-darwin
 
 This will create an executable that is the app imported into the BOINC environment alongside the OpenIFS executable. Now to run this the OpenIFS ancillary files along with the OpenIFS executable will need to be alongside, the command to run this in standalone mode is (40r1):
 
-./oifs_43r3_1.00_x86_64-pc-linux-gnu 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1 1.00
+    ./oifs_43r3_1.00_x86_64-pc-linux-gnu 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1
 
 Or for macOS:
 
-./oifs_43r3_1.00_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1 1.00
+    ./oifs_43r3_1.00_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1
 
-The command line parameters: [1] compiled executable, [2] start date in YYYYMMDDHH format, [3] experiment id, [4] unique member id, [5] batch id, [6] workunit id, [7] FCLEN, [8] app name, [9]  nthreads, [10] app version id.
+The command line parameters: [1] compiled executable, [2] start date in YYYYMMDDHH format, [3] experiment id, [4] unique member id, [5] batch id, [6] workunit id, [7] FCLEN, [8] app name, [9] nthreads.
 
 The current version of OpenIFS this supports is: oifs40r1 and oifs43r3. The OpenIFS code is compiled separately and is installed alongside the OpenIFS controller in BOINC. To upgrade the controller code in the future to later versions of OpenIFS consideration will need to be made whether there are any changes to the command line parameters the compiled version of OpenIFS takes in, and whether there are changes to the structure and content of the supporting ancillary files.
 
@@ -45,18 +61,20 @@ OIFS_DUMMY_ACTION=abort    : Action to take if a dummy (blank) subroutine is ent
 
 OMP_SCHEDULE=STATIC        : OpenMP thread scheduling to use. STATIC usually gives the best performance.
 
+OMP_STACKSIZE=128M         : Set OpenMP stack size per thread. Default is usually too low for OpenIFS.
+
+OMP_NUM_THREADS=1          : Number of threads (cores). Defaults to 1, can be changed by argument.
+
+OIFS_RUN=1                 : Run number
+
 DR_HOOK=1                  : DrHook is OpenIFS's tracing facility. Set to '1' to enable.
 
 DR_HOOK_HEAPCHECK=no       : Enable/disable DrHook heap checking. Usually 'no' unless debugging.
 
 DR_HOOK_STACKCHECK=no      : Enable/disable DrHook stack checks. Usually 'no' unless debugging.
 
+DR_HOOK_NOT_MPI=true       : If set true, DrHook will not make calls to MPI (OpenIFS does not use MPI in CPDN).
+
 EC_MEMINFO=0               : Disable EC_MEMINFO messages in stdout.
 
-OMP_STACKSIZE=128M         : Set OpenMP stack size per thread. Default is usually too low for OpenIFS.
-
-OIFS_RUN=1                 : Run number
-
 NAMELIST=fort.4            : NAMELIST file
-
-DR_HOOK_NOT_MPI=true       : If set true, DrHook will not make calls to MPI (OpenIFS does not use MPI in CPDN).
