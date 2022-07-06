@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     std::string wuid = argv[5];       // workunit id
     std::string fclen = argv[6];      // number of simulation days
     std::string app_name = argv[7];   // CPDN app name
-    std::string nthreads = argv[8];   // number ofexi OPENMP threads
+    std::string nthreads = argv[8];   // number of OPENMP threads
 	
     OIFS_EXPID = exptid;
     wu_name = dataBOINC.wu_name;
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
       // In standalone get the app version from the command line
       version = argv[9];
       fprintf(stderr,"app name: %s\n",app_name.c_str());
-      fprintf(stderr,"(argv8) app_version: %s\n",argv[9]);
+      fprintf(stderr,"(argv9) app_version: %s\n",argv[9]);
     }
 
     boinc_begin_critical_section();
