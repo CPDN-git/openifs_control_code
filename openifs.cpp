@@ -147,7 +147,6 @@ int main(int argc, char** argv) {
 	    
       fprintf(stderr,"app name: %s\n",app_name.c_str());
       fprintf(stderr,"version: %s\n",version.c_str());
-      fprintf(stderr,"result_name: %s\n",result_name.c_str());
     }
     // Running in standalone
     else {
