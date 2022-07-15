@@ -26,6 +26,7 @@
 #include "./boinc/zip/boinc_zip.h"
 #include "./boinc/lib/util.h"
 #include "rapidxml.hpp"
+#include <algorithm>
 
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
