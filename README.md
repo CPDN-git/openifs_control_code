@@ -35,7 +35,9 @@ Or for macOS:
 
 ./oifs_43r3_1.00_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1 1.00
 
-The command line parameters: [1] compiled executable, [2] start date in YYYYMMDDHH format, [3] experiment id, [4] unique member id, [5] batch id, [6] workunit id, [7] FCLEN, [8] app name, [9]  nthreads, [10] app version id.
+The command line parameters: [0] compiled executable, [1] start date in YYYYMMDDHH format, [2] experiment id, [3] unique member id, [4] batch id, [5] workunit id, [6] FCLEN, [7] app name, [8]  nthreads, [9] app version id.
+
+Note, [9] is only used in standalone mode.
 
 The current version of OpenIFS this supports is: oifs40r1 and oifs43r3. The OpenIFS code is compiled separately and is installed alongside the OpenIFS controller in BOINC. To upgrade the controller code in the future to later versions of OpenIFS consideration will need to be made whether there are any changes to the command line parameters the compiled version of OpenIFS takes in, and whether there are changes to the structure and content of the supporting ancillary files.
 
