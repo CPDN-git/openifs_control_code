@@ -26,6 +26,7 @@
 #include "boinc/boinc_zip.h"
 #include "boinc/util.h"
 #include "rapidxml.hpp"
+#include <algorithm>
 
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
@@ -105,7 +106,7 @@ int main(int argc, char** argv) {
     std::string wuid = argv[5];       // workunit id
     std::string fclen = argv[6];      // number of simulation days
     std::string app_name = argv[7];   // CPDN app name
-    std::string nthreads = argv[8];   // number ofexi OPENMP threads
+    std::string nthreads = argv[8];   // number of OPENMP threads
 	
     OIFS_EXPID = exptid;
     wu_name = dataBOINC.wu_name;
@@ -147,7 +148,6 @@ int main(int argc, char** argv) {
 	    
       fprintf(stderr,"app name: %s\n",app_name.c_str());
       fprintf(stderr,"version: %s\n",version.c_str());
-      fprintf(stderr,"result_name: %s\n",result_name.c_str());
     }
     // Running in standalone
     else {
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
       // In standalone get the app version from the command line
       version = argv[9];
       fprintf(stderr,"app name: %s\n",app_name.c_str());
-      fprintf(stderr,"(argv8) app_version: %s\n",argv[9]);
+      fprintf(stderr,"(argv9) app_version: %s\n",argv[9]);
     }
 
     boinc_begin_critical_section();
@@ -236,153 +236,81 @@ int main(int argc, char** argv) {
        std::remove(namelist_zip.c_str());
     }
 
+	
     // Parse the fort.4 namelist for the filenames and variables
     std::string namelist_file = slot_path + std::string("/") + NAMELIST;
-    const char strSearch[9][22]={"!IFSDATA_FILE=","!IC_ANCIL_FILE=","!CLIMATE_DATA_FILE=","!HORIZ_RESOLUTION=",\
-                                 "!VERT_RESOLUTION=","!GRID_TYPE=","!UPLOAD_INTERVAL=","!TSTEP=","NFRPOS="};
-    memset(strCpy,0x00,9*_MAX_PATH);
-    memset(strTmp,0x00,_MAX_PATH);
-    FILE* fParse = boinc_fopen(namelist_file.c_str(),"r");
+    std::string namelist_line="",nss="",delimiter="=";
+    std::ifstream namelist_filestream;
+
+    // Open the namelist file
+    if(!(namelist_file.is_open())) {
+       namelist_file.open(namelist_file);
+    }
 
     // Read the namelist file
-    if (!fParse) {
-       fprintf(stderr,"..Opening the namelist file to read failed\n");
-       return 1;
+    while(std::getline(namelist_filestream, namelist_line)) { //get 1 row as a string
+       std::istringstream nss(namelist_line);   //put line into stringstream
+
+       if (nss.str().find("IFSDATA_FILE") != std::string::npos) {
+          std::string IFSDATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          IFSDATA_FILE.erase(std::remove(IFSDATA_FILE.begin(),IFSDATA_FILE.end(),' '),IFSDATA_FILE.end());
+          fprintf(stderr,"IFSDATA_FILE: %s\n",IFSDATA_FILE.c_str());
+       }
+       else if (nss.str().find("IC_ANCIL_FILE") != std::string::npos) {
+          std::string IC_ANCIL_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          IC_ANCIL_FILE.erase(std::remove(IC_ANCIL_FILE.begin(),IC_ANCIL_FILE.end(),' '),IC_ANCIL_FILE.end());
+          fprintf(stderr,"IC_ANCIL_FILE: %s\n",IC_ANCIL_FILE.c_str());
+       }
+       else if (nss.str().find("CLIMATE_DATA_FILE") != std::string::npos) {
+          std::string CLIMATE_DATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          CLIMATE_DATA_FILE.erase(std::remove(CLIMATE_DATA_FILE.begin(),CLIMATE_DATA_FILE.end(),' '),CLIMATE_DATA_FILE.end());
+          fprintf(stderr,"CLIMATE_DATA_FILE: %s\n",CLIMATE_DATA_FILE.c_str());
+       }
+       else if (nss.str().find("HORIZ_RESOLUTION") != std::string::npos) {
+          std::string HORIZ_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          HORIZ_RESOLUTION.erase(std::remove(HORIZ_RESOLUTION.begin(),HORIZ_RESOLUTION.end(),' '),HORIZ_RESOLUTION.end());
+          fprintf(stderr,"HORIZ_RESOLUTION: %s\n",HORIZ_RESOLUTION.c_str());
+       }
+       else if (nss.str().find("VERT_RESOLUTION") != std::string::npos) {
+          std::string VERT_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          VERT_RESOLUTION.erase(std::remove(VERT_RESOLUTION.begin(),VERT_RESOLUTION.end(),' '),VERT_RESOLUTION.end());
+          fprintf(stderr,"VERT_RESOLUTION: %s\n",VERT_RESOLUTION.c_str());
+       }
+       else if (nss.str().find("GRID_TYPE") != std::string::npos) {
+          std::string GRID_TYPE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          GRID_TYPE.erase(std::remove(GRID_TYPE.begin(),GRID_TYPE.end(),' '),GRID_TYPE.end());
+          fprintf(stderr,"GRID_TYPE: %s\n",GRID_TYPE.c_str());
+       }
+       else if (nss.str().find("UPLOAD_INTERVAL") != std::string::npos) {
+          std::string tmpstr1 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          tmpstr1.erase(std::remove(tmpstr1.begin(),tmpstr1.end(),' '),tmpstr1.end());
+          int upload_interval=std::stoi(tmpstr1);
+          fprintf(stderr,"UPLOAD_INTERVAL: %i\n",upload_interval);
+       }
+       else if (nss.str().find("!TSTEP") != std::string::npos) {
+          std::string tmpstr2 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace
+          tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),' '),tmpstr2.end());
+          int timestep_interval = std::stoi(tmpstr2);
+          fprintf(stderr,"TSTEP: %i\n",timestep_interval);
+       }
+       else if (nss.str().find("!NFRPOS") != std::string::npos) {
+          std::string tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace and commas
+          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),','),tmpstr3.end());
+          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),' '),tmpstr3.end());
+          int ICM_file_interval = std::stoi(tmpstr3);
+          fprintf(stderr,"NFRPOS: %i\n",ICM_file_interval);
+       }
     }
-    else {
-       // Start at the top of the file
-       fseek(fParse,0x00,SEEK_SET);
-       memset(strTmp,0x00,_MAX_PATH);
-       while (!feof(fParse)) {
-           memset(strTmp,0x00,_MAX_PATH);
-           fgets(strTmp,_MAX_PATH-1,fParse);
-           if (!strFind[0]) {
-               strFind[0] = strstr(strTmp,strSearch[0]);
-               if (strFind[0]) {
-                   strcpy(strCpy[0],strFind[0]);
-               }
-            }
-            if (!strFind[1]) {
-                strFind[1] = strstr(strTmp,strSearch[1]);
-                if (strFind[1]) {
-                    strcpy(strCpy[1],strFind[1]);
-		}
-            }
-            if (!strFind[2]) {
-                strFind[2] = strstr(strTmp,strSearch[2]);
-                if (strFind[2]) {
-                    strcpy(strCpy[2],strFind[2]);
-                }
-            }
-            if (!strFind[3]) {
-                strFind[3] = strstr(strTmp,strSearch[3]);
-                if (strFind[3]) {
-                    strcpy(strCpy[3],strFind[3]);
-                }
-            }
-            if (!strFind[4]) {
-                strFind[4] = strstr(strTmp,strSearch[4]);
-                if (strFind[4]) {
-                    strcpy(strCpy[4],strFind[4]);
-                }
-            }
-            if (!strFind[5]) {
-                strFind[5] = strstr(strTmp,strSearch[5]);
-                if (strFind[5]) {
-                    strcpy(strCpy[5],strFind[5]);
-                }
-            }
-            if (!strFind[6]) {
-                strFind[6] = strstr(strTmp,strSearch[6]);
-                if (strFind[6]) {
-                    strcpy(strCpy[6],strFind[6]);
-                }
-            }
-            if (!strFind[7]) {
-                strFind[7] = strstr(strTmp,strSearch[7]);
-                if (strFind[7]) {
-                    strcpy(strCpy[7],strFind[7]);
-                }
-            }
-            if (!strFind[8]) {
-                strFind[8] = strstr(strTmp,strSearch[8]);
-                if (strFind[8]) {
-                    strcpy(strCpy[8],strFind[8]);
-                }
-            }
-            if (strFind[0]&&strFind[1]&&strFind[2]&&strFind[3]&&strFind[4]&&strFind[5]&&strFind[6]&&strFind[7]&&strFind[8]) {
-                break;
-            }
-       }
-       // Either feof or we hit the string		
-       if (strCpy[0][0] != 0x00) {
-            memset(strTmp,0x00,_MAX_PATH);
-            strncpy(strTmp,(char*)(strCpy[0] + strlen(strSearch[0])),100);
-            IFSDATA_FILE = strTmp;
-            // Handle any white space in tags
-            while(!IFSDATA_FILE.empty() && \
-                  std::isspace(*IFSDATA_FILE.rbegin())) IFSDATA_FILE.erase(IFSDATA_FILE.length()-1);
-            fprintf(stderr,"IFSDATA_FILE: %s\n",IFSDATA_FILE.c_str());
-       }
-       if (strCpy[1][0] != 0x00) {
-            memset(strTmp,0x00,_MAX_PATH);
-            strncpy(strTmp,(char*)(strCpy[1] + strlen(strSearch[1])),100);
-            IC_ANCIL_FILE = strTmp; 
-            while(!IC_ANCIL_FILE.empty() && \
-                  std::isspace(*IC_ANCIL_FILE.rbegin())) IC_ANCIL_FILE.erase(IC_ANCIL_FILE.length()-1);
-            fprintf(stderr,"IC_ANCIL_FILE: %s\n",IC_ANCIL_FILE.c_str());
-       }
-       if (strCpy[2][0] != 0x00) {
-            memset(strTmp,0x00,_MAX_PATH);
-            strncpy(strTmp,(char*)(strCpy[2] + strlen(strSearch[2])),100);
-            CLIMATE_DATA_FILE = strTmp; 
-            while(!CLIMATE_DATA_FILE.empty() && \
-                  std::isspace(*CLIMATE_DATA_FILE.rbegin())) CLIMATE_DATA_FILE.erase(CLIMATE_DATA_FILE.length()-1);
-            fprintf(stderr,"CLIMATE_DATA_FILE: %s\n",CLIMATE_DATA_FILE.c_str());
-       }
-       if (strCpy[3][0] != 0x00) {
-            HORIZ_RESOLUTION=atoi(strCpy[3] + strlen(strSearch[3]));
-            fprintf(stderr,"HORIZ_RESOLUTION: %i\n",HORIZ_RESOLUTION);
-       }
-       if (strCpy[4][0] != 0x00) {
-            VERT_RESOLUTION=atoi(strCpy[4] + strlen(strSearch[4]));
-            fprintf(stderr,"VERT_RESOLUTION: %i\n",VERT_RESOLUTION);
-       }
-       if (strCpy[5][0] != 0x00) {
-            memset(strTmp,0x00,_MAX_PATH);
-            strncpy(strTmp,(char*)(strCpy[5] + strlen(strSearch[5])),100);
-            GRID_TYPE = strTmp; 
-            while(!GRID_TYPE.empty() && std::isspace(*GRID_TYPE.rbegin())) GRID_TYPE.erase(GRID_TYPE.length()-1);
-            fprintf(stderr,"GRID_TYPE: %s\n",GRID_TYPE.c_str());
-       }
-       if (strCpy[6][0] != 0x00) {
-            upload_interval=atoi(strCpy[6] + strlen(strSearch[6]));
-            fprintf(stderr,"UPLOAD_INTERVAL: %i\n",upload_interval);
-       }
-       if (strCpy[7][0] != 0x00) {
-            memset(strTmp,0x00,_MAX_PATH);
-            strncpy(strTmp,(char*)(strCpy[7] + strlen(strSearch[7])),100);
-            TSTEP = strTmp; 
-            while(!TSTEP.empty() && \
-                  std::isspace(*TSTEP.rbegin())) TSTEP.erase(TSTEP.length()-1);
-            fprintf(stderr,"TSTEP: %s\n",TSTEP.c_str());
-            // Convert to an integer
-            timestep_interval = std::stoi(TSTEP);
-       }
-       if (strCpy[8][0] != 0x00) {
-            memset(strTmp,0x00,_MAX_PATH);
-            strncpy(strTmp,(char*)(strCpy[8] + strlen(strSearch[8])),100);
-            NFRPOS = strTmp; 
-            while(!NFRPOS.empty() && \
-                  std::isspace(*NFRPOS.rbegin())) NFRPOS.erase(NFRPOS.length()-1);
-            // Remove the trailing comma
-            if (!NFRPOS.empty()) NFRPOS.resize(NFRPOS.size() - 1);
-            fprintf(stderr,"NFRPOS: %s\n",NFRPOS.c_str());
-            // Convert to an integer
-            ICM_file_interval = std::stoi(NFRPOS);
-       }
-       fclose(fParse);
-    }
+    namelist_file.close();
 
 
     // Process the IC_ANCIL_FILE:

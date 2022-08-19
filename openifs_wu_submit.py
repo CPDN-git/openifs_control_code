@@ -379,6 +379,12 @@ if __name__ == "__main__":
               memory_bound = str(8500000000)
             elif int(horiz_resolution) == 255 and int(vert_resolution) == 91:
               memory_bound = str(15000000000)
+
+            # Set the disk bound
+            if options.app_name == 'oifs_43r3_arm':
+              disk_bound = str(1000000000)   # 954MB
+            else:
+              disk_bound = str(40000000000)  # 38147MB
             
             # Calculate the number of timesteps from the number of days of the simulation
             if fclen_units == 'days':
@@ -603,7 +609,7 @@ if __name__ == "__main__":
               "   <rsc_fpops_est>"+fpops_est+"</rsc_fpops_est>\n" +\
               "   <rsc_fpops_bound>"+fpops_est+"0</rsc_fpops_bound>\n" +\
               "   <rsc_memory_bound>"+memory_bound+"</rsc_memory_bound>\n" +\
-              "   <rsc_disk_bound>40000000000</rsc_disk_bound>\n" +\
+              "   <rsc_disk_bound>"+disk_bound+"</rsc_disk_bound>\n" +\
               "   <delay_bound>121.000</delay_bound>\n" +\
               "   <min_quorum>1</min_quorum>\n" +\
               "   <target_nresults>1</target_nresults>\n" +\
