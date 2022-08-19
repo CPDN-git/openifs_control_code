@@ -7,15 +7,16 @@ To compile the controlling code you will need to download and build the BOINC co
 As only the libraries are required, the boinc client and manager can be disabled (reduces system packages required).
 
 In short:
-    git clone git@github.com:BOINC/boinc.git
+    git clone https://github.com/BOINC/boinc.git
     cd boinc
     ./_autosetup
     ./configure --disable-server --disable-fcgi --disable-manager --disable-client  \
                 --enable-libraries --enable-boinczip  \
+                --prefix=../boinc-install             \
                 CXXFLAGS='-O3'
     make install
 
-This installs the boinc libraries and include files into the same directory as the git source (use the --prefix argument to install into a different directory).
+This installs the boinc libraries and include files into the parent directory to the git source (change the --prefix argument to install into a different directory). It's preferable not to install into the same directory as the source. To specify the location of the include files, use the -I argument on the compile line, to specify the location of the libraries, use the -L argument.
 
 
 To compile the controller code on a Linux machine:
@@ -51,7 +52,9 @@ Or for macOS:
 
     ./oifs_43r3_1.00_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1
 
-The command line parameters: [1] compiled executable, [2] start date in YYYYMMDDHH format, [3] experiment id, [4] unique member id, [5] batch id, [6] workunit id, [7] FCLEN, [8] app name, [9] nthreads.
+The command line parameters: [0] compiled executable, [1] start date in YYYYMMDDHH format, [2] experiment id, [3] unique member id, [4] batch id, [5] workunit id, [6] FCLEN, [7] app name, [8]  nthreads, [9] app version id.
+
+Note, [9] is only used in standalone mode.
 
 The current version of OpenIFS this supports is: oifs40r1 and oifs43r3. The OpenIFS code is compiled separately and is installed alongside the OpenIFS controller in BOINC. To upgrade the controller code in the future to later versions of OpenIFS consideration will need to be made whether there are any changes to the command line parameters the compiled version of OpenIFS takes in, and whether there are changes to the structure and content of the supporting ancillary files.
 
