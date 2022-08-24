@@ -7,6 +7,7 @@ To compile the controlling code you will need to download and build the BOINC co
 As only the libraries are required, the boinc client and manager can be disabled (reduces system packages required).
 
 In short:
+
     git clone https://github.com/BOINC/boinc.git
     cd boinc
     ./_autosetup
