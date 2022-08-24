@@ -47,11 +47,11 @@ Build the BOINC libraries using Xcode. Then build the controller code:
 
 This will create an executable that is the app imported into the BOINC environment alongside the OpenIFS executable. Now to run this the OpenIFS ancillary files along with the OpenIFS executable will need to be alongside, the command to run this in standalone mode is (40r1):
 
-    ./oifs_43r3_1.00_x86_64-pc-linux-gnu 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1
+    ./oifs_43r3_1.00_x86_64-pc-linux-gnu 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1.00
 
 Or for macOS:
 
-    ./oifs_43r3_1.00_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1
+    ./oifs_43r3_1.00_x86_64-apple-darwin 2000010100 gw3a 0001 1 00001 1 oifs_43r3 1.00
 
 The command line parameters: [0] compiled executable, [1] start date in YYYYMMDDHH format, [2] experiment id, [3] unique member id, [4] batch id, [5] workunit id, [6] FCLEN, [7] app name, [8]  nthreads, [9] app version id.
 
