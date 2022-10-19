@@ -228,6 +228,16 @@ if __name__ == "__main__":
             start_year = int(workunit.getElementsByTagName('start_year')[0].childNodes[0].nodeValue)
             unique_member_id = str(workunit.getElementsByTagName('unique_member_id')[0].childNodes[0].nodeValue)
 
+            # If baroclinic wave simulation
+            if options.app_name == 'oifs_43r3_bl':
+              zn = int(workunit.getElementsByTagName('zn')[0].childNodes[0].nodeValue)
+              zb = str(workunit.getElementsByTagName('zb')[0].childNodes[0].nodeValue)
+              zt0 = str(workunit.getElementsByTagName('zt0')[0].childNodes[0].nodeValue)
+              zu0 = str(workunit.getElementsByTagName('zu0')[0].childNodes[0].nodeValue)
+              zrh0 = str(workunit.getElementsByTagName('zrh0')[0].childNodes[0].nodeValue)
+              zgamma = str(workunit.getElementsByTagName('zgamma')[0].childNodes[0].nodeValue)
+              zchar = str(workunit.getElementsByTagName('zchar')[0].childNodes[0].nodeValue)
+            
             # This section can be used to resubmit particular workunits from an XML file
             # To use this, provide a file containing a list of umids that are contained within the XML 
             # This section will then check whether workunit is in the list and resubmit, and will exit loop if not listed
@@ -510,6 +520,15 @@ if __name__ == "__main__":
                 line = line.replace('_UPLOAD_INTERVAL',str(upload_interval))
                 line = line.replace('_ENSEMBLE_MEMBER_NUMBER',str(ensemble_member_number))
                 line = line.replace('_NUM_HOURS',str(num_hours))
+                # If baroclinic wave simulation
+                if options.app_name == 'oifs_43r3_bl':
+                  line = line.replace('_ZN',zn)
+                  line = line.replace('_ZB',zb)
+                  line = line.replace('_ZT0',zt0)
+                  line = line.replace('_ZU0',zu0)
+                  line = line.replace('_ZRH0',zrh0)
+                  line = line.replace('_ZGAMMA',zgamma)
+                  line = line.replace('_ZCHAR',zchar)
                 # Remove commented lines
                 if not line.startswith('!!'):
                   template_file.append(line)
