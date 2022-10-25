@@ -811,7 +811,62 @@ if __name__ == "__main__":
                                              %('172',climate_data_zip_in,'0',wuid)
             cursor.execute(query)
             db.commit()
-            
+ 
+
+            # If baroclinic wave simulation enter values for parameters into parameter table
+            if options.app_name == 'oifs_43r3_bl':
+
+               # Enter the zn details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('180',zn,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+
+               # Enter the zb details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('181',zb,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+
+               # Enter the zt0 details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('182',zt0,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+
+               # Enter the zu0 details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('183',zu0,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+
+               # Enter the zrh0 details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('184',zrh0,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+
+               # Enter the zgamma details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('185',zgamma,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+
+               # Enter the zchar details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('186',zchar,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+        
+        
+
             # Remove the contents of the temp_openifs_submission_files directory
             args = ['rm','-rf','temp_openifs_submission_files/*']
             p = subprocess.Popen(args)
