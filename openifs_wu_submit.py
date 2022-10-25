@@ -230,14 +230,15 @@ if __name__ == "__main__":
 
             # If baroclinic wave simulation
             if options.app_name == 'oifs_43r3_bl':
-              zn = int(workunit.getElementsByTagName('zn')[0].childNodes[0].nodeValue)
-              zb = str(workunit.getElementsByTagName('zb')[0].childNodes[0].nodeValue)
-              zt0 = str(workunit.getElementsByTagName('zt0')[0].childNodes[0].nodeValue)
-              zu0 = str(workunit.getElementsByTagName('zu0')[0].childNodes[0].nodeValue)
-              zrh0 = str(workunit.getElementsByTagName('zrh0')[0].childNodes[0].nodeValue)
-              zgamma = str(workunit.getElementsByTagName('zgamma')[0].childNodes[0].nodeValue)
-              zchar = str(workunit.getElementsByTagName('zchar')[0].childNodes[0].nodeValue)
-            
+              for parameter in parameters:
+                 zn = int(parameter.getElementsByTagName('zn')[0].childNodes[0].nodeValue)
+                 zb = str(parameter.getElementsByTagName('zb')[0].childNodes[0].nodeValue)
+                 zt0 = str(parameter.getElementsByTagName('zt0')[0].childNodes[0].nodeValue)
+                 zu0 = str(parameter.getElementsByTagName('zu0')[0].childNodes[0].nodeValue)
+                 zrh0 = str(parameter.getElementsByTagName('zrh0')[0].childNodes[0].nodeValue)
+                 zgamma = str(parameter.getElementsByTagName('zgamma')[0].childNodes[0].nodeValue)
+                 zchar = str(parameter.getElementsByTagName('zchar')[0].childNodes[0].nodeValue)
+                    
             # This section can be used to resubmit particular workunits from an XML file
             # To use this, provide a file containing a list of umids that are contained within the XML 
             # This section will then check whether workunit is in the list and resubmit, and will exit loop if not listed
