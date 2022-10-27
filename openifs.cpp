@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
     char *pathvar;
     long handleProcess;
-    double tv_sec,tv_usec,fraction_done,current_cpu_time=0;
+    double tv_sec,tv_usec,fraction_done,current_cpu_time=0,total_nsteps = 0;
     float time_per_fclen;
     struct dirent *dir;
     struct rusage usage;
@@ -925,6 +925,10 @@ int main(int argc, char** argv) {
 	       
        if (!boinc_is_standalone()) {
 	  // Calculate the fraction done     
+	  total_nsteps = (num_days * 86400.0) / (double) timestep_interval;
+          fraction done = atof(iter.c_str()) / total_nsteps ;
+          if (fraction_done < 0.0) fraction_done = 0.0;
+          if (fraction_done > 1.0) fraction_done = 1.0;     
 	  fraction_done = (current_cpu_time-0.96)/(time_per_fclen*num_days);
 	  //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
 	       
