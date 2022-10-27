@@ -929,7 +929,6 @@ int main(int argc, char** argv) {
           fraction done = atof(iter.c_str()) / total_nsteps ;
           if (fraction_done < 0.0) fraction_done = 0.0;
           if (fraction_done > 1.0) fraction_done = 1.0;     
-	  fraction_done = (current_cpu_time-0.96)/(time_per_fclen*num_days);
 	  //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
 	       
           // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
