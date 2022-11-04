@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # app_name is either openifs, oifs_43r3 or oifs_40r1
     parser.add_argument("--app_name",help="application name",default="oifs_43r3")
     options = parser.parse_args()
-    if options.app_name not in ('openifs','oifs_43r3','oifs_40r1','oifs_43r3_arm','oifs_43r3_bl'):
+    if options.app_name not in ('openifs','oifs_43r3','oifs_40r1','oifs_43r3_arm','oifs_43r3_bl','oifs_43r3_ps'):
       raise ValueError('Incorrect app_name')
     print "Application name: "+options.app_name
 
