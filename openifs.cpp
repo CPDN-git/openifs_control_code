@@ -22,9 +22,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
-#include "boinc/api/boinc_api.h"
-#include "boinc/zip/boinc_zip.h"
-#include "boinc/lib/util.h"
+#include "boinc/boinc_api.h"
+#include "boinc/boinc_zip.h"
+#include "boinc/util.h"
 #include "rapidxml.hpp"
 #include <algorithm>
 
@@ -242,9 +242,15 @@ int main(int argc, char** argv) {
     std::string namelist_line="",nss="",delimiter="=";
     std::ifstream namelist_filestream;
 
+   // Check for the existence of the namelist
+   if( !file_exists(namelist_file) ) {
+      fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
+      // TODO: Glenn -> Andy; should terminate at this point, the model won't run.
+    }
+
     // Open the namelist file
-    if(!(namelist_file.is_open())) {
-       namelist_file.open(namelist_file);
+    if(!(namelist_filestream.is_open())) {
+       namelist_filestream.open(namelist_file);
     }
 
     // Read the namelist file
@@ -310,7 +316,7 @@ int main(int argc, char** argv) {
           fprintf(stderr,"NFRPOS: %i\n",ICM_file_interval);
        }
     }
-    namelist_file.close();
+    namelist_filestream.close();
 
 
     // Process the IC_ANCIL_FILE:
@@ -486,28 +492,6 @@ int main(int argc, char** argv) {
     pathvar = getenv("OMP_STACKSIZE");
     //fprintf(stderr,"The OMP_STACKSIZE environmental variable is: %s\n",pathvar);
 
-	
-    // Check for the existence of the namelist
-    struct stat buffer;
-    if(NAMELIST != "fort.4") {
-       fprintf(stderr,"The namelist file path is: %s\n",namelist_file.c_str());
-       if (stat((char *)namelist_file.c_str(),&buffer) < 0){
-          fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
-       }
-       // Rename the namelist file to fort.4
-       std::string namelist_target = namelist_file;
-       std::string namelist_destination = slot_path + std::string("/fort.4");
-       fprintf(stderr,"Renaming the namelist file from: %s to: %s\n",namelist_target.c_str(),namelist_destination.c_str());
-       retval = boinc_copy(namelist_target.c_str(),namelist_destination.c_str());
-       if (retval) {
-          fprintf(stderr,"..Renaming the namelist file failed\n");
-          return retval;
-       }
-    }
-    if (stat((char *)namelist_file.c_str(), &buffer) < 0) {
-       fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
-    }
-
 
     // Set the core dump size to 0
     struct rlimit core_limits;
@@ -587,7 +571,7 @@ int main(int argc, char** argv) {
     }
 	
     fraction_done = 0;
-    time_per_fclen = 0.27;	
+    time_per_fclen = 0.27;	   // GC: where did 0.27 come from? It's not used anywhere?
 
     ZipFileList zfl;
     std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
@@ -923,23 +907,24 @@ int main(int argc, char** argv) {
           //fprintf(stderr,"current_cpu_time: %1.5f\n",current_cpu_time);
        }
 	       
-       if (!boinc_is_standalone()) {
-	  // Calculate the fraction done     
-	  total_nsteps = (num_days * 86400.0) / (double) timestep_interval;
-          fraction done = atof(iter.c_str()) / total_nsteps ;
-          if (fraction_done < 0.0) fraction_done = 0.0;
-          if (fraction_done > 1.0) fraction_done = 1.0;     
-	  //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
-	       
-          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
-          boinc_report_app_status(current_cpu_time,current_cpu_time,fraction_done);
-	    
-          // Provide the fraction done to the BOINC client, 
-          // this is necessary for the percentage bar on the client
-          boinc_fraction_done(fraction_done);
+          
+      // Calculate the fraction done
+      total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // 86400 is secs/day
+      fraction_done = atof(iter.c_str()) / total_nsteps ;
+      if (fraction_done < 0.0)  fraction_done = 0.0;
+      if (fraction_done > 1.0)  fraction_done = 1.0;     
+      fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
+
+      if (!boinc_is_standalone()) {
+         // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
+         boinc_report_app_status(current_cpu_time,current_cpu_time,fraction_done);
+
+         // Provide the fraction done to the BOINC client, 
+         // this is necessary for the percentage bar on the client
+         boinc_fraction_done(fraction_done);
 	  
-	  // Check the status of the client if not in standalone mode     
-          process_status = checkBOINCStatus(handleProcess,process_status);
+         // Check the status of the client if not in standalone mode     
+         process_status = checkBOINCStatus(handleProcess,process_status);
        }
 	
        // Check the status of the child process    
