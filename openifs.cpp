@@ -295,12 +295,13 @@ int main(int argc, char** argv) {
           upload_interval=std::stoi(tmpstr1);
           fprintf(stderr,"UPLOAD_INTERVAL: %i\n",upload_interval);
        }
-       else if (nss.str().find("!TSTEP") != std::string::npos) {
+       else if (nss.str().find("UTSTEP") != std::string::npos) {
           tmpstr2 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
+	  tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),','),tmpstr2.end());
           tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),' '),tmpstr2.end());
           timestep_interval = std::stoi(tmpstr2);
-          fprintf(stderr,"TSTEP: %i\n",timestep_interval);
+          fprintf(stderr,"UTSTEP: %i\n",timestep_interval);
        }
        else if (nss.str().find("!NFRPOS") != std::string::npos) {
           tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
