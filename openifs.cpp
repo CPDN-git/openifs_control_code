@@ -48,7 +48,8 @@ using namespace rapidxml;
 
 int main(int argc, char** argv) {
     std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,result_name,wu_name,version;
-    int HORIZ_RESOLUTION,VERT_RESOLUTION,upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
+    std::string HORIZ_RESOLUTION,VERT_RESOLUTION,tmpstr1,tmpstr2,tmpstr3;
+    int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
     char* strFind[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
     char *pathvar;
@@ -252,61 +253,61 @@ int main(int argc, char** argv) {
        std::istringstream nss(namelist_line);   //put line into stringstream
 
        if (nss.str().find("IFSDATA_FILE") != std::string::npos) {
-          std::string IFSDATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          IFSDATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           IFSDATA_FILE.erase(std::remove(IFSDATA_FILE.begin(),IFSDATA_FILE.end(),' '),IFSDATA_FILE.end());
           fprintf(stderr,"IFSDATA_FILE: %s\n",IFSDATA_FILE.c_str());
        }
        else if (nss.str().find("IC_ANCIL_FILE") != std::string::npos) {
-          std::string IC_ANCIL_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          IC_ANCIL_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           IC_ANCIL_FILE.erase(std::remove(IC_ANCIL_FILE.begin(),IC_ANCIL_FILE.end(),' '),IC_ANCIL_FILE.end());
           fprintf(stderr,"IC_ANCIL_FILE: %s\n",IC_ANCIL_FILE.c_str());
        }
        else if (nss.str().find("CLIMATE_DATA_FILE") != std::string::npos) {
-          std::string CLIMATE_DATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          CLIMATE_DATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           CLIMATE_DATA_FILE.erase(std::remove(CLIMATE_DATA_FILE.begin(),CLIMATE_DATA_FILE.end(),' '),CLIMATE_DATA_FILE.end());
           fprintf(stderr,"CLIMATE_DATA_FILE: %s\n",CLIMATE_DATA_FILE.c_str());
        }
        else if (nss.str().find("HORIZ_RESOLUTION") != std::string::npos) {
-          std::string HORIZ_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          HORIZ_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           HORIZ_RESOLUTION.erase(std::remove(HORIZ_RESOLUTION.begin(),HORIZ_RESOLUTION.end(),' '),HORIZ_RESOLUTION.end());
           fprintf(stderr,"HORIZ_RESOLUTION: %s\n",HORIZ_RESOLUTION.c_str());
        }
        else if (nss.str().find("VERT_RESOLUTION") != std::string::npos) {
-          std::string VERT_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          VERT_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           VERT_RESOLUTION.erase(std::remove(VERT_RESOLUTION.begin(),VERT_RESOLUTION.end(),' '),VERT_RESOLUTION.end());
           fprintf(stderr,"VERT_RESOLUTION: %s\n",VERT_RESOLUTION.c_str());
        }
        else if (nss.str().find("GRID_TYPE") != std::string::npos) {
-          std::string GRID_TYPE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          GRID_TYPE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           GRID_TYPE.erase(std::remove(GRID_TYPE.begin(),GRID_TYPE.end(),' '),GRID_TYPE.end());
           fprintf(stderr,"GRID_TYPE: %s\n",GRID_TYPE.c_str());
        }
        else if (nss.str().find("UPLOAD_INTERVAL") != std::string::npos) {
-          std::string tmpstr1 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          tmpstr1 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           tmpstr1.erase(std::remove(tmpstr1.begin(),tmpstr1.end(),' '),tmpstr1.end());
-          int upload_interval=std::stoi(tmpstr1);
+          upload_interval=std::stoi(tmpstr1);
           fprintf(stderr,"UPLOAD_INTERVAL: %i\n",upload_interval);
        }
        else if (nss.str().find("!TSTEP") != std::string::npos) {
-          std::string tmpstr2 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          tmpstr2 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),' '),tmpstr2.end());
-          int timestep_interval = std::stoi(tmpstr2);
+          timestep_interval = std::stoi(tmpstr2);
           fprintf(stderr,"TSTEP: %i\n",timestep_interval);
        }
        else if (nss.str().find("!NFRPOS") != std::string::npos) {
-          std::string tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace and commas
           tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),','),tmpstr3.end());
           tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),' '),tmpstr3.end());
-          int ICM_file_interval = std::stoi(tmpstr3);
+          ICM_file_interval = std::stoi(tmpstr3);
           fprintf(stderr,"NFRPOS: %i\n",ICM_file_interval);
        }
     }
