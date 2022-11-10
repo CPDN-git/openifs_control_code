@@ -55,7 +55,6 @@ int main(int argc, char** argv) {
     char *pathvar;
     long handleProcess;
     double tv_sec,tv_usec,fraction_done,current_cpu_time=0,total_nsteps = 0;
-    float time_per_fclen;
     struct dirent *dir;
     struct rusage usage;
     regex_t regex;
@@ -589,7 +588,6 @@ int main(int argc, char** argv) {
     }
 	
     fraction_done = 0;
-    time_per_fclen = 0.27;	
 
     ZipFileList zfl;
     std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
