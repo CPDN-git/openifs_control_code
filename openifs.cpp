@@ -911,6 +911,7 @@ int main(int argc, char** argv) {
       // GC: Calculate the fraction done
       total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // GC: this should match CUSTEP in fort.4. If it doesn't we have a problem
       fraction_done = model_frac_done( atof(iter.c_str()), total_nsteps, atoi(nthreads.c_str()) );
+      //fprintf(stderr,"fraction done: %.6f\n", fraction_done);
      
 
       if (!boinc_is_standalone()) {
@@ -1428,9 +1429,9 @@ double cpu_time(long handleProcess) {
 double model_frac_done(double step, double total_steps, int nthreads ) {
    static int     stepm1 = -1;
    static double  heartbeat = 0.0;
+   static bool    debug = false;
    double      frac_done, frac_per_step;
    double      heartbeat_inc;
-   bool        debug = false;
 
    frac_done     = step / total_steps;	// this increments slowly, as a model step is ~30sec->2mins cpu
    frac_per_step = 1.0 / total_steps;
@@ -1444,12 +1445,13 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
    // Constant below represents estimate of how many times around the mainloop
    // before the model completes it's next step. This varies alot depending on model
    // resolution, computer speed, etc. Tune it looking at varied runtimes & resolutions!
+   // Higher is better than lower to underestimate.
    // 
    // Impact of speedup due to multiple threads is accounted by below.
    //
    // If we want more accuracy could use the ratio of the model timestep to 1h (T159 tstep) to 
    // provide a 'slowdown' factor for higher resolutions.
-   heartbeat_inc = (frac_per_step / (80.0 / (double)nthreads) );
+   heartbeat_inc = (frac_per_step / (70.0 / (double)nthreads) );
 
    if ( (int) step > stepm1 ) {
       heartbeat = 0.0;
@@ -1461,7 +1463,7 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
    } 
 
    if (frac_done < 0.0)  frac_done = 0.0;
-   if (frac_done > 1.0)  frac_done = 1.0;
+   if (frac_done > 1.0)  frac_done = 0.9999; // never 100% until wrapper finishes
    if (debug){
       fprintf(stderr, "    heartbeat_inc = %.8f\n", heartbeat_inc);
       fprintf(stderr, "    heartbeat     = %.8f\n", heartbeat );
