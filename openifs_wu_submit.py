@@ -16,10 +16,10 @@ if __name__ == "__main__":
 
     # use argparse to read in the options from the shell command line
     parser = argparse.ArgumentParser()
-    # app_name is either openifs, oifs_43r3 or oifs_40r1
+    # app_name is either oifs_43r3, oifs_43r3_arm, oifs_43r3_bl or oifs_43r3_ps
     parser.add_argument("--app_name",help="application name",default="oifs_43r3")
     options = parser.parse_args()
-    if options.app_name not in ('openifs','oifs_43r3','oifs_40r1','oifs_43r3_arm','oifs_43r3_bl'):
+    if options.app_name not in ('oifs_43r3','oifs_43r3_arm','oifs_43r3_bl','oifs_43r3_ps'):
       raise ValueError('Incorrect app_name')
     print "Application name: "+options.app_name
 
