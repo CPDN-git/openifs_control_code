@@ -22,9 +22,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
-#include "boinc/boinc_api.h"
-#include "boinc/boinc_zip.h"
-#include "boinc/util.h"
+#include "boinc/api/boinc_api.h"
+#include "boinc/zip/boinc_zip.h"
+#include "boinc/lib/util.h"
 #include "rapidxml.hpp"
 #include <algorithm>
 
