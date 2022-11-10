@@ -1432,7 +1432,7 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
    static double  heartbeat = 0.0;
    double      frac_done, frac_per_step;
    double      heartbeat_inc;
-   bool        debug = true;
+   bool        debug = false;
 
    frac_done     = step / total_steps;	// this increments slowly, as a model step is ~30sec->2mins cpu
    frac_per_step = 1.0 / total_steps;
