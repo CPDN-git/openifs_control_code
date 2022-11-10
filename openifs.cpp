@@ -40,6 +40,7 @@ std::string getTag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
 double cpu_time(long);
+double model_frac_done(double,double,int);
 
 using namespace std;
 using namespace std::chrono;
@@ -47,8 +48,9 @@ using namespace std::this_thread;
 using namespace rapidxml;
 
 int main(int argc, char** argv) {
-    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,result_name,wu_name,version;
-    int HORIZ_RESOLUTION,VERT_RESOLUTION,upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
+    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,HORIZ_RESOLUTION,VERT_RESOLUTION;
+    std::string project_path,result_name,wu_name,version;
+    int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
     char* strFind[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
     char *pathvar;
@@ -187,7 +189,7 @@ int main(int argc, char** argv) {
     fprintf(stderr,"Copying: %s to: %s\n",app_target.c_str(),app_destination.c_str());
     retval = boinc_copy(app_target.c_str(),app_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the app file to the working directory failed\n");
+       fprintf(stderr,"..Copying the app file to the working directory failed: error %i\n",retval);
        return retval;
     }
 
@@ -204,6 +206,7 @@ int main(int argc, char** argv) {
     // Remove the zip file
     else {
        std::remove(app_zip.c_str());
+       
     }
 
     // Process the Namelist/workunit file:
@@ -245,7 +248,7 @@ int main(int argc, char** argv) {
    // Check for the existence of the namelist
    if( !file_exists(namelist_file) ) {
       fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
-      // TODO: Glenn -> Andy; should terminate at this point, the model won't run.
+      return 1;        // should terminate, the model won't run.
     }
 
     // Open the namelist file
@@ -258,37 +261,37 @@ int main(int argc, char** argv) {
        std::istringstream nss(namelist_line);   //put line into stringstream
 
        if (nss.str().find("IFSDATA_FILE") != std::string::npos) {
-          std::string IFSDATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          IFSDATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           IFSDATA_FILE.erase(std::remove(IFSDATA_FILE.begin(),IFSDATA_FILE.end(),' '),IFSDATA_FILE.end());
           fprintf(stderr,"IFSDATA_FILE: %s\n",IFSDATA_FILE.c_str());
        }
        else if (nss.str().find("IC_ANCIL_FILE") != std::string::npos) {
-          std::string IC_ANCIL_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          IC_ANCIL_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           IC_ANCIL_FILE.erase(std::remove(IC_ANCIL_FILE.begin(),IC_ANCIL_FILE.end(),' '),IC_ANCIL_FILE.end());
           fprintf(stderr,"IC_ANCIL_FILE: %s\n",IC_ANCIL_FILE.c_str());
        }
        else if (nss.str().find("CLIMATE_DATA_FILE") != std::string::npos) {
-          std::string CLIMATE_DATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          CLIMATE_DATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           CLIMATE_DATA_FILE.erase(std::remove(CLIMATE_DATA_FILE.begin(),CLIMATE_DATA_FILE.end(),' '),CLIMATE_DATA_FILE.end());
           fprintf(stderr,"CLIMATE_DATA_FILE: %s\n",CLIMATE_DATA_FILE.c_str());
        }
        else if (nss.str().find("HORIZ_RESOLUTION") != std::string::npos) {
-          std::string HORIZ_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          HORIZ_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           HORIZ_RESOLUTION.erase(std::remove(HORIZ_RESOLUTION.begin(),HORIZ_RESOLUTION.end(),' '),HORIZ_RESOLUTION.end());
           fprintf(stderr,"HORIZ_RESOLUTION: %s\n",HORIZ_RESOLUTION.c_str());
        }
        else if (nss.str().find("VERT_RESOLUTION") != std::string::npos) {
-          std::string VERT_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          VERT_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           VERT_RESOLUTION.erase(std::remove(VERT_RESOLUTION.begin(),VERT_RESOLUTION.end(),' '),VERT_RESOLUTION.end());
           fprintf(stderr,"VERT_RESOLUTION: %s\n",VERT_RESOLUTION.c_str());
        }
        else if (nss.str().find("GRID_TYPE") != std::string::npos) {
-          std::string GRID_TYPE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          GRID_TYPE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           GRID_TYPE.erase(std::remove(GRID_TYPE.begin(),GRID_TYPE.end(),' '),GRID_TYPE.end());
           fprintf(stderr,"GRID_TYPE: %s\n",GRID_TYPE.c_str());
@@ -297,14 +300,14 @@ int main(int argc, char** argv) {
           std::string tmpstr1 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           tmpstr1.erase(std::remove(tmpstr1.begin(),tmpstr1.end(),' '),tmpstr1.end());
-          int upload_interval=std::stoi(tmpstr1);
+          upload_interval=std::stoi(tmpstr1);
           fprintf(stderr,"UPLOAD_INTERVAL: %i\n",upload_interval);
        }
        else if (nss.str().find("!TSTEP") != std::string::npos) {
           std::string tmpstr2 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),' '),tmpstr2.end());
-          int timestep_interval = std::stoi(tmpstr2);
+          timestep_interval = std::stoi(tmpstr2);
           fprintf(stderr,"TSTEP: %i\n",timestep_interval);
        }
        else if (nss.str().find("!NFRPOS") != std::string::npos) {
@@ -312,7 +315,7 @@ int main(int argc, char** argv) {
           // Remove any whitespace and commas
           tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),','),tmpstr3.end());
           tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),' '),tmpstr3.end());
-          int ICM_file_interval = std::stoi(tmpstr3);
+          ICM_file_interval = std::stoi(tmpstr3);
           fprintf(stderr,"NFRPOS: %i\n",ICM_file_interval);
        }
     }
@@ -381,8 +384,7 @@ int main(int argc, char** argv) {
 
     // Process the CLIMATE_DATA_FILE:
     // Make the climate data directory
-    std::string climate_data_path = slot_path + std::string("/") + \
-                       std::to_string(HORIZ_RESOLUTION) + std::string(GRID_TYPE);
+    std::string climate_data_path = slot_path + std::string("/") + HORIZ_RESOLUTION + GRID_TYPE;
     if (mkdir(climate_data_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) \
                        fprintf(stderr,"..mkdir for the climate data folder failed\n");
 
@@ -391,7 +393,7 @@ int main(int argc, char** argv) {
 
     // Copy the climate data file to working directory
     std::string climate_data_destination = slot_path + std::string("/") + \
-                                           std::to_string(HORIZ_RESOLUTION) + std::string(GRID_TYPE) + \
+                                           HORIZ_RESOLUTION + GRID_TYPE + \
                                            std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
     fprintf(stderr,"Copying the climate data file from: %s to: %s\n",climate_data_target.c_str(),climate_data_destination.c_str());
     retval = boinc_copy(climate_data_target.c_str(),climate_data_destination.c_str());
@@ -402,11 +404,11 @@ int main(int argc, char** argv) {
 
     // Unzip the climate data zip file
     std::string climate_zip = slot_path + std::string("/") + \
-                              std::to_string(HORIZ_RESOLUTION) + std::string(GRID_TYPE) + \
+                              HORIZ_RESOLUTION + GRID_TYPE + \
                               std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
     fprintf(stderr,"Unzipping the climate data zip file: %s\n",climate_zip.c_str());
     retval = boinc_zip(UNZIP_IT,climate_zip.c_str(),\
-                       slot_path+std::string("/")+std::to_string(HORIZ_RESOLUTION)+std::string(GRID_TYPE));
+                       slot_path+std::string("/")+HORIZ_RESOLUTION+GRID_TYPE);
     if (retval) {
        fprintf(stderr,"..Unzipping the climate data file failed\n");
        return retval;
@@ -571,7 +573,7 @@ int main(int argc, char** argv) {
     }
 	
     fraction_done = 0;
-    time_per_fclen = 0.27;	   // GC: where did 0.27 come from? It's not used anywhere?
+    time_per_fclen = 0.27;	   // GC: It's not used anywhere?
 
     ZipFileList zfl;
     std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
@@ -584,8 +586,7 @@ int main(int argc, char** argv) {
     // seconds between upload files: upload_interval
     // seconds between ICM files: ICM_file_interval * timestep_interval
     // upload interval in steps = upload_interval / timestep_interval
-
-    //fprintf(stderr,"upload_interval x timestep_interval: %i\n",(upload_interval * timestep_interval));
+    //fprintf(stderr, "upload_interval, timestep_interval: %i, %i\n",upload_interval,timestep_interval);
 
     // Check if upload_interval x timestep_interval equal to zero
     if (upload_interval * timestep_interval == 0) {
@@ -907,13 +908,11 @@ int main(int argc, char** argv) {
           //fprintf(stderr,"current_cpu_time: %1.5f\n",current_cpu_time);
        }
 	       
-          
-      // Calculate the fraction done
-      total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // 86400 is secs/day
-      fraction_done = atof(iter.c_str()) / total_nsteps ;
-      if (fraction_done < 0.0)  fraction_done = 0.0;
-      if (fraction_done > 1.0)  fraction_done = 1.0;     
-      fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
+
+      // GC: Calculate the fraction done
+      total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // GC: this should match CUSTEP in fort.4. If it doesn't we have a problem
+      fraction_done = model_frac_done( atof(iter.c_str()), total_nsteps, atoi(nthreads.c_str()) );
+     
 
       if (!boinc_is_standalone()) {
          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
@@ -1422,4 +1421,55 @@ double cpu_time(long handleProcess) {
        //fprintf(stderr,"tv_usec: %.5f\n",(tv_usec/1000000));
        return linux_cpu_time(handleProcess);
     #endif
+}
+
+
+// returns fraction completed of model run
+// (candidate for moving into OpenIFS specific src file)
+double model_frac_done(double step, double total_steps, int nthreads ) {
+   static int     stepm1 = -1;
+   static double  heartbeat = 0.0;
+   double      frac_done, frac_per_step;
+   double      heartbeat_inc;
+   bool        debug = true;
+
+   frac_done     = step / total_steps;	// this increments slowly, as a model step is ~30sec->2mins cpu
+   frac_per_step = 1.0 / total_steps;
+   
+   if (debug) {
+      fprintf( stderr,"get_frac_done: step = %.0f\n", step);
+      fprintf( stderr,"        total_steps = %.0f\n", total_steps );
+      fprintf( stderr,"      frac_per_step = %f\n", frac_per_step );
+   }
+   
+   // Constant below represents estimate of how many times around the mainloop
+   // before the model completes it's next step. This varies alot depending on model
+   // resolution, computer speed, etc. Tune it looking at varied runtimes & resolutions!
+   // 
+   // Impact of speedup due to multiple threads is accounted by below.
+   //
+   // If we want more accuracy could use the ratio of the model timestep to 1h (T159 tstep) to 
+   // provide a 'slowdown' factor for higher resolutions.
+   heartbeat_inc = (frac_per_step / (80.0 / (double)nthreads) );
+
+   if ( (int) step > stepm1 ) {
+      heartbeat = 0.0;
+      stepm1 = (int) step;
+   } else {
+      heartbeat = heartbeat + heartbeat_inc;
+      if ( heartbeat > frac_per_step )  heartbeat = frac_per_step-0.001;  // slightly less than the next step
+      frac_done = frac_done + heartbeat;
+   } 
+
+   if (frac_done < 0.0)  frac_done = 0.0;
+   if (frac_done > 1.0)  frac_done = 1.0;
+   if (debug){
+      fprintf(stderr, "    heartbeat_inc = %.8f\n", heartbeat_inc);
+      fprintf(stderr, "    heartbeat     = %.8f\n", heartbeat );
+      double percent = frac_done*100.0;
+      fprintf(stderr, "     percent done = %.3f\n", percent);
+   }
+
+   return frac_done;
+
 }
