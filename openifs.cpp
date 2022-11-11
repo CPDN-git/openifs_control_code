@@ -40,6 +40,7 @@ std::string getTag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
 double cpu_time(long);
+double model_frac_done(double,double,int);
 
 using namespace std;
 using namespace std::chrono;
@@ -47,8 +48,8 @@ using namespace std::this_thread;
 using namespace rapidxml;
 
 int main(int argc, char** argv) {
-    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,project_path,result_name,wu_name,version;
-    std::string HORIZ_RESOLUTION,VERT_RESOLUTION,tmpstr1,tmpstr2,tmpstr3;
+    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,HORIZ_RESOLUTION,VERT_RESOLUTION;
+    std::string project_path,result_name,wu_name,version,tmpstr1,tmpstr2,tmpstr3;
     int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
     char* strFind[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
     char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
@@ -187,7 +188,7 @@ int main(int argc, char** argv) {
     fprintf(stderr,"Copying: %s to: %s\n",app_target.c_str(),app_destination.c_str());
     retval = boinc_copy(app_target.c_str(),app_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the app file to the working directory failed\n");
+       fprintf(stderr,"..Copying the app file to the working directory failed: error %i\n",retval);
        return retval;
     }
 
@@ -204,6 +205,7 @@ int main(int argc, char** argv) {
     // Remove the zip file
     else {
        std::remove(app_zip.c_str());
+       
     }
 
     // Process the Namelist/workunit file:
@@ -242,9 +244,15 @@ int main(int argc, char** argv) {
     std::string namelist_line="",nss="",delimiter="=";
     std::ifstream namelist_filestream;
 
+   // Check for the existence of the namelist
+   if( !file_exists(namelist_file) ) {
+      fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
+      return 1;        // should terminate, the model won't run.
+    }
+
     // Open the namelist file
-    if(!(namelist_file.is_open())) {
-       namelist_file.open(namelist_file);
+    if(!(namelist_filestream.is_open())) {
+       namelist_filestream.open(namelist_file);
     }
 
     // Read the namelist file
@@ -311,7 +319,7 @@ int main(int argc, char** argv) {
           fprintf(stderr,"NFRPOS: %i\n",ICM_file_interval);
        }
     }
-    namelist_file.close();
+    namelist_filestream.close();
 
 
     // Process the IC_ANCIL_FILE:
@@ -376,8 +384,7 @@ int main(int argc, char** argv) {
 
     // Process the CLIMATE_DATA_FILE:
     // Make the climate data directory
-    std::string climate_data_path = slot_path + std::string("/") + \
-                       std::to_string(HORIZ_RESOLUTION) + std::string(GRID_TYPE);
+    std::string climate_data_path = slot_path + std::string("/") + HORIZ_RESOLUTION + GRID_TYPE;
     if (mkdir(climate_data_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) \
                        fprintf(stderr,"..mkdir for the climate data folder failed\n");
 
@@ -386,7 +393,7 @@ int main(int argc, char** argv) {
 
     // Copy the climate data file to working directory
     std::string climate_data_destination = slot_path + std::string("/") + \
-                                           std::to_string(HORIZ_RESOLUTION) + std::string(GRID_TYPE) + \
+                                           HORIZ_RESOLUTION + GRID_TYPE + \
                                            std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
     fprintf(stderr,"Copying the climate data file from: %s to: %s\n",climate_data_target.c_str(),climate_data_destination.c_str());
     retval = boinc_copy(climate_data_target.c_str(),climate_data_destination.c_str());
@@ -397,11 +404,11 @@ int main(int argc, char** argv) {
 
     // Unzip the climate data zip file
     std::string climate_zip = slot_path + std::string("/") + \
-                              std::to_string(HORIZ_RESOLUTION) + std::string(GRID_TYPE) + \
+                              HORIZ_RESOLUTION + GRID_TYPE + \
                               std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
     fprintf(stderr,"Unzipping the climate data zip file: %s\n",climate_zip.c_str());
     retval = boinc_zip(UNZIP_IT,climate_zip.c_str(),\
-                       slot_path+std::string("/")+std::to_string(HORIZ_RESOLUTION)+std::string(GRID_TYPE));
+                       slot_path+std::string("/")+HORIZ_RESOLUTION+GRID_TYPE);
     if (retval) {
        fprintf(stderr,"..Unzipping the climate data file failed\n");
        return retval;
@@ -486,28 +493,6 @@ int main(int argc, char** argv) {
     }
     pathvar = getenv("OMP_STACKSIZE");
     //fprintf(stderr,"The OMP_STACKSIZE environmental variable is: %s\n",pathvar);
-
-	
-    // Check for the existence of the namelist
-    struct stat buffer;
-    if(NAMELIST != "fort.4") {
-       fprintf(stderr,"The namelist file path is: %s\n",namelist_file.c_str());
-       if (stat((char *)namelist_file.c_str(),&buffer) < 0){
-          fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
-       }
-       // Rename the namelist file to fort.4
-       std::string namelist_target = namelist_file;
-       std::string namelist_destination = slot_path + std::string("/fort.4");
-       fprintf(stderr,"Renaming the namelist file from: %s to: %s\n",namelist_target.c_str(),namelist_destination.c_str());
-       retval = boinc_copy(namelist_target.c_str(),namelist_destination.c_str());
-       if (retval) {
-          fprintf(stderr,"..Renaming the namelist file failed\n");
-          return retval;
-       }
-    }
-    if (stat((char *)namelist_file.c_str(), &buffer) < 0) {
-       fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
-    }
 
 
     // Set the core dump size to 0
@@ -600,8 +585,7 @@ int main(int argc, char** argv) {
     // seconds between upload files: upload_interval
     // seconds between ICM files: ICM_file_interval * timestep_interval
     // upload interval in steps = upload_interval / timestep_interval
-
-    //fprintf(stderr,"upload_interval x timestep_interval: %i\n",(upload_interval * timestep_interval));
+    //fprintf(stderr, "upload_interval, timestep_interval: %i, %i\n",upload_interval,timestep_interval);
 
     // Check if upload_interval x timestep_interval equal to zero
     if (upload_interval * timestep_interval == 0) {
@@ -923,23 +907,23 @@ int main(int argc, char** argv) {
           //fprintf(stderr,"current_cpu_time: %1.5f\n",current_cpu_time);
        }
 	       
-       if (!boinc_is_standalone()) {
-	  // Calculate the fraction done     
-	  total_nsteps = (num_days * 86400.0) / (double) timestep_interval;
-          fraction done = atof(iter.c_str()) / total_nsteps ;
-          if (fraction_done < 0.0) fraction_done = 0.0;
-          if (fraction_done > 1.0) fraction_done = 1.0;     
-	  //fprintf(stderr,"fraction_done: %.6f\n",fraction_done);     
-	       
-          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
-          boinc_report_app_status(current_cpu_time,current_cpu_time,fraction_done);
-	    
-          // Provide the fraction done to the BOINC client, 
-          // this is necessary for the percentage bar on the client
-          boinc_fraction_done(fraction_done);
+
+      // GC: Calculate the fraction done
+      total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // GC: this should match CUSTEP in fort.4. If it doesn't we have a problem
+      fraction_done = model_frac_done( atof(iter.c_str()), total_nsteps, atoi(nthreads.c_str()) );
+      //fprintf(stderr,"fraction done: %.6f\n", fraction_done);
+     
+
+      if (!boinc_is_standalone()) {
+         // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
+         boinc_report_app_status(current_cpu_time,current_cpu_time,fraction_done);
+
+         // Provide the fraction done to the BOINC client, 
+         // this is necessary for the percentage bar on the client
+         boinc_fraction_done(fraction_done);
 	  
-	  // Check the status of the client if not in standalone mode     
-          process_status = checkBOINCStatus(handleProcess,process_status);
+         // Check the status of the client if not in standalone mode     
+         process_status = checkBOINCStatus(handleProcess,process_status);
        }
 	
        // Check the status of the child process    
@@ -1437,4 +1421,56 @@ double cpu_time(long handleProcess) {
        //fprintf(stderr,"tv_usec: %.5f\n",(tv_usec/1000000));
        return linux_cpu_time(handleProcess);
     #endif
+}
+
+
+// returns fraction completed of model run
+// (candidate for moving into OpenIFS specific src file)
+double model_frac_done(double step, double total_steps, int nthreads ) {
+   static int     stepm1 = -1;
+   static double  heartbeat = 0.0;
+   static bool    debug = false;
+   double      frac_done, frac_per_step;
+   double      heartbeat_inc;
+
+   frac_done     = step / total_steps;	// this increments slowly, as a model step is ~30sec->2mins cpu
+   frac_per_step = 1.0 / total_steps;
+   
+   if (debug) {
+      fprintf( stderr,"get_frac_done: step = %.0f\n", step);
+      fprintf( stderr,"        total_steps = %.0f\n", total_steps );
+      fprintf( stderr,"      frac_per_step = %f\n", frac_per_step );
+   }
+   
+   // Constant below represents estimate of how many times around the mainloop
+   // before the model completes it's next step. This varies alot depending on model
+   // resolution, computer speed, etc. Tune it looking at varied runtimes & resolutions!
+   // Higher is better than lower to underestimate.
+   // 
+   // Impact of speedup due to multiple threads is accounted by below.
+   //
+   // If we want more accuracy could use the ratio of the model timestep to 1h (T159 tstep) to 
+   // provide a 'slowdown' factor for higher resolutions.
+   heartbeat_inc = (frac_per_step / (70.0 / (double)nthreads) );
+
+   if ( (int) step > stepm1 ) {
+      heartbeat = 0.0;
+      stepm1 = (int) step;
+   } else {
+      heartbeat = heartbeat + heartbeat_inc;
+      if ( heartbeat > frac_per_step )  heartbeat = frac_per_step-0.001;  // slightly less than the next step
+      frac_done = frac_done + heartbeat;
+   } 
+
+   if (frac_done < 0.0)  frac_done = 0.0;
+   if (frac_done > 1.0)  frac_done = 0.9999; // never 100% until wrapper finishes
+   if (debug){
+      fprintf(stderr, "    heartbeat_inc = %.8f\n", heartbeat_inc);
+      fprintf(stderr, "    heartbeat     = %.8f\n", heartbeat );
+      double percent = frac_done*100.0;
+      fprintf(stderr, "     percent done = %.3f\n", percent);
+   }
+
+   return frac_done;
+
 }
