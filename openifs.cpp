@@ -363,7 +363,7 @@ int main(int argc, char** argv) {
     std::string ifsdata_source = getTag(slot_path + std::string("/") + ifsdata_file + std::string(".zip"));
 
     // Copy the ifsdata_file to the working directory
-    std::string ifsdata_destination = slot_path + std::string("/ifsdata/") + ifsdata_file + std::string(".zip");
+    std::string ifsdata_destination = ifsdata_folder + std::string("/") + ifsdata_file + std::string(".zip");
     fprintf(stderr,"Copying the ifsdata_file from: %s to: %s\n",ifsdata_source.c_str(),ifsdata_destination.c_str());
     retval = boinc_copy(ifsdata_source.c_str(),ifsdata_destination.c_str());
     if (retval) {
@@ -372,9 +372,9 @@ int main(int argc, char** argv) {
     }
 
     // Unzip the ifsdata_file zip file
-    std::string ifsdata_zip = slot_path + std::string("/ifsdata/") + ifsdata_file + std::string(".zip");
-    fprintf(stderr,"Unzipping ifsdata_zip file: %s\n", ifsdata_zip.c_str());
-    retval = boinc_zip(UNZIP_IT,ifsdata_zip.c_str(),slot_path+std::string("/ifsdata/"));
+    std::string ifsdata_zip = ifsdata_folder + std::string("/") + ifsdata_file + std::string(".zip");
+    fprintf(stderr,"Unzipping the ifsdata_zip file: %s\n", ifsdata_zip.c_str());
+    retval = boinc_zip(UNZIP_IT,ifsdata_zip.c_str(),ifsdata_folder + std::string("/"));
     if (retval) {
        fprintf(stderr,"..Unzipping the ifsdata_zip file failed\n");
        return retval;
@@ -385,7 +385,7 @@ int main(int argc, char** argv) {
     }
 
 
-    // Process the CLIMATE_DATA_FILE:
+    // Process the climate_data_file:
     // Make the climate data directory
     std::string climate_data_path = slot_path + std::string("/") + horiz_resolution + grid_type;
     if (mkdir(climate_data_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) \
@@ -395,9 +395,7 @@ int main(int argc, char** argv) {
     std::string climate_data_source = getTag(slot_path + std::string("/") + climate_data_file + std::string(".zip"));
 
     // Copy the climate data file to working directory
-    std::string climate_data_destination = slot_path + std::string("/") + \
-                                           horiz_resolution + grid_type + \
-                                           std::string("/") + climate_data_file + std::string(".zip");
+    std::string climate_data_destination = climate_data_path + std::string("/") + climate_data_file + std::string(".zip");
     fprintf(stderr,"Copying the climate data file from: %s to: %s\n",climate_data_source.c_str(),climate_data_destination.c_str());
     retval = boinc_copy(climate_data_source.c_str(),climate_data_destination.c_str());
     if (retval) {
@@ -406,12 +404,9 @@ int main(int argc, char** argv) {
     }	
 
     // Unzip the climate data zip file
-    std::string climate_zip = slot_path + std::string("/") + \
-                              horiz_resolution + grid_type + \
-                              std::string("/") + climate_data_file + std::string(".zip");
+    std::string climate_zip = climate_data_destination;
     fprintf(stderr,"Unzipping the climate data zip file: %s\n",climate_zip.c_str());
-    retval = boinc_zip(UNZIP_IT,climate_zip.c_str(),\
-                       slot_path+std::string("/")+horiz_resolution+grid_type);
+    retval = boinc_zip(UNZIP_IT,climate_zip.c_str(),climate_data_path);
     if (retval) {
        fprintf(stderr,"..Unzipping the climate data file failed\n");
        return retval;
