@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 
     // Set defaults for input arguments
     std::string OIFS_EXPID;           // model experiment id, must match string in filenames
-    std::string NAMELIST="fort.4";    // NAMELIST file, this name is fixed
+    std::string namelist="fort.4";    // namelist file, this name is fixed
 
     // Initialise BOINC
     boinc_init();
@@ -242,13 +242,13 @@ int main(int argc, char** argv) {
 
 	
     // Parse the fort.4 namelist for the filenames and variables
-    std::string namelist_file = slot_path + std::string("/") + NAMELIST;
+    std::string namelist_file = slot_path + std::string("/") + namelist;
     std::string namelist_line="",nss="",delimiter="=";
     std::ifstream namelist_filestream;
 
    // Check for the existence of the namelist
    if( !file_exists(namelist_file) ) {
-      fprintf(stderr,"..The namelist file %s does not exist\n",NAMELIST.c_str());
+      fprintf(stderr,"..The namelist file %s does not exist\n",namelist.c_str());
       return 1;        // should terminate, the model won't run.
     }
 
@@ -325,11 +325,11 @@ int main(int argc, char** argv) {
 
 
     // Process the ic_ancil_file:
-    std::string ic_ancil_zip = slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip");
+    std::string ic_ancil_zip = slot_path + std::string("/") + ic_ancil_file + std::string(".zip");
 	
     // For transfer downloading, BOINC renames download files to jf_HEXADECIMAL-NUMBER, these files
     // need to be renamed back to the original name
-    // Get the name of the 'jf_' filename from a link within the IC_ANCIL_FILE
+    // Get the name of the 'jf_' filename from a link within the ic_ancil_file
     std::string ic_ancil_source = getTag(ic_ancil_zip);
 
     // Copy the IC ancils to working directory
