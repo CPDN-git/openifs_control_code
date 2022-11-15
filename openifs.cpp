@@ -48,7 +48,7 @@ using namespace std::this_thread;
 using namespace rapidxml;
 
 int main(int argc, char** argv) {
-    std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,HORIZ_RESOLUTION,VERT_RESOLUTION;
+    std::string ifsdata_file,ic_ancil_file,climate_data_file,horiz_resolution,vert_resolution,grid_type,TSTEP,NFRPOS;
     std::string project_path,result_name,wu_name,version,tmpstr1,tmpstr2,tmpstr3;
     std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
     int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
@@ -262,47 +262,47 @@ int main(int argc, char** argv) {
        std::istringstream nss(namelist_line);   //put line into stringstream
 
        if (nss.str().find("IFSDATA_FILE") != std::string::npos) {
-          IFSDATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          ifsdata_file = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          IFSDATA_FILE.erase(std::remove(IFSDATA_FILE.begin(),IFSDATA_FILE.end(),' '),IFSDATA_FILE.end());
-          fprintf(stderr,"IFSDATA_FILE: %s\n",IFSDATA_FILE.c_str());
+          ifsdata_file.erase(std::remove(ifsdata_file.begin(),ifsdata_file.end(),' '),ifsdata_file.end());
+          fprintf(stderr,"ifsdata_file: %s\n",ifsdata_file.c_str());
        }
        else if (nss.str().find("IC_ANCIL_FILE") != std::string::npos) {
-          IC_ANCIL_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          ic_ancil_file = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          IC_ANCIL_FILE.erase(std::remove(IC_ANCIL_FILE.begin(),IC_ANCIL_FILE.end(),' '),IC_ANCIL_FILE.end());
-          fprintf(stderr,"IC_ANCIL_FILE: %s\n",IC_ANCIL_FILE.c_str());
+          ic_ancil_file.erase(std::remove(ic_ancil_file.begin(),ic_ancil_file.end(),' '),ic_ancil_file.end());
+          fprintf(stderr,"ic_ancil_file: %s\n",ic_ancil_file.c_str());
        }
        else if (nss.str().find("CLIMATE_DATA_FILE") != std::string::npos) {
-          CLIMATE_DATA_FILE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          climate_data_file = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          CLIMATE_DATA_FILE.erase(std::remove(CLIMATE_DATA_FILE.begin(),CLIMATE_DATA_FILE.end(),' '),CLIMATE_DATA_FILE.end());
-          fprintf(stderr,"CLIMATE_DATA_FILE: %s\n",CLIMATE_DATA_FILE.c_str());
+          climate_data_file.erase(std::remove(climate_data_file.begin(),climate_data_file.end(),' '),climate_data_file.end());
+          fprintf(stderr,"climate_data_file: %s\n",climate_data_file.c_str());
        }
        else if (nss.str().find("HORIZ_RESOLUTION") != std::string::npos) {
-          HORIZ_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          horiz_resolution = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          HORIZ_RESOLUTION.erase(std::remove(HORIZ_RESOLUTION.begin(),HORIZ_RESOLUTION.end(),' '),HORIZ_RESOLUTION.end());
-          fprintf(stderr,"HORIZ_RESOLUTION: %s\n",HORIZ_RESOLUTION.c_str());
+          horiz_resolution.erase(std::remove(horiz_resolution.begin(),horiz_resolution.end(),' '),horiz_resolution.end());
+          fprintf(stderr,"horiz_resolution: %s\n",horiz_resolution.c_str());
        }
        else if (nss.str().find("VERT_RESOLUTION") != std::string::npos) {
-          VERT_RESOLUTION = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          vert_resolution = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          VERT_RESOLUTION.erase(std::remove(VERT_RESOLUTION.begin(),VERT_RESOLUTION.end(),' '),VERT_RESOLUTION.end());
-          fprintf(stderr,"VERT_RESOLUTION: %s\n",VERT_RESOLUTION.c_str());
+          vert_resolution.erase(std::remove(vert_resolution.begin(),vert_resolution.end(),' '),vert_resolution.end());
+          fprintf(stderr,"vert_resolution: %s\n",vert_resolution.c_str());
        }
        else if (nss.str().find("GRID_TYPE") != std::string::npos) {
-          GRID_TYPE = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          grid_type = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          GRID_TYPE.erase(std::remove(GRID_TYPE.begin(),GRID_TYPE.end(),' '),GRID_TYPE.end());
-          fprintf(stderr,"GRID_TYPE: %s\n",GRID_TYPE.c_str());
+          grid_type.erase(std::remove(grid_type.begin(),grid_type.end(),' '),grid_type.end());
+          fprintf(stderr,"grid_type: %s\n",grid_type.c_str());
        }
        else if (nss.str().find("UPLOAD_INTERVAL") != std::string::npos) {
           tmpstr1 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
           tmpstr1.erase(std::remove(tmpstr1.begin(),tmpstr1.end(),' '),tmpstr1.end());
           upload_interval=std::stoi(tmpstr1);
-          fprintf(stderr,"UPLOAD_INTERVAL: %i\n",upload_interval);
+          fprintf(stderr,"upload_interval: %i\n",upload_interval);
        }
        else if (nss.str().find("UTSTEP") != std::string::npos) {
           tmpstr2 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
 	  tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),','),tmpstr2.end());
           tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),' '),tmpstr2.end());
           timestep_interval = std::stoi(tmpstr2);
-          fprintf(stderr,"UTSTEP: %i\n",timestep_interval);
+          fprintf(stderr,"utstep: %i\n",timestep_interval);
        }
        else if (nss.str().find("!NFRPOS") != std::string::npos) {
           tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
@@ -318,13 +318,13 @@ int main(int argc, char** argv) {
           tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),','),tmpstr3.end());
           tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),' '),tmpstr3.end());
           ICM_file_interval = std::stoi(tmpstr3);
-          fprintf(stderr,"NFRPOS: %i\n",ICM_file_interval);
+          fprintf(stderr,"nfrpos: %i\n",ICM_file_interval);
        }
     }
     namelist_filestream.close();
 
 
-    // Process the IC_ANCIL_FILE:
+    // Process the ic_ancil_file:
     std::string ic_ancil_zip = slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip");
 	
     // For transfer downloading, BOINC renames download files to jf_HEXADECIMAL-NUMBER, these files
@@ -354,29 +354,29 @@ int main(int argc, char** argv) {
     }
 
 
-    // Process the IFSDATA_FILE:
+    // Process the ifsdata_file:
     // Make the ifsdata directory
     std::string ifsdata_folder = slot_path + std::string("/ifsdata");
     if (mkdir(ifsdata_folder.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) fprintf(stderr,"..mkdir for ifsdata folder failed\n");
 
-    // Get the name of the 'jf_' filename from a link within the IFSDATA_FILE
-    std::string ifsdata_source = getTag(slot_path + std::string("/") + IFSDATA_FILE + std::string(".zip"));
+    // Get the name of the 'jf_' filename from a link within the ifsdata_file
+    std::string ifsdata_source = getTag(slot_path + std::string("/") + ifsdata_file + std::string(".zip"));
 
-    // Copy the IFSDATA_FILE to working directory
-    std::string ifsdata_destination = slot_path + std::string("/ifsdata/") + IFSDATA_FILE + std::string(".zip");
-    fprintf(stderr,"Copying IFSDATA_FILE from: %s to: %s\n",ifsdata_source.c_str(),ifsdata_destination.c_str());
+    // Copy the ifsdata_file to the working directory
+    std::string ifsdata_destination = slot_path + std::string("/ifsdata/") + ifsdata_file + std::string(".zip");
+    fprintf(stderr,"Copying the ifsdata_file from: %s to: %s\n",ifsdata_source.c_str(),ifsdata_destination.c_str());
     retval = boinc_copy(ifsdata_source.c_str(),ifsdata_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the IFSDATA file to the working directory failed\n");
+       fprintf(stderr,"..Copying the ifsdata file to the working directory failed\n");
        return retval;
     }
 
-    // Unzip the IFSDATA_FILE zip file
-    std::string ifsdata_zip = slot_path + std::string("/ifsdata/") + IFSDATA_FILE + std::string(".zip");
-    fprintf(stderr,"Unzipping IFSDATA_FILE zip file: %s\n", ifsdata_zip.c_str());
+    // Unzip the ifsdata_file zip file
+    std::string ifsdata_zip = slot_path + std::string("/ifsdata/") + ifsdata_file + std::string(".zip");
+    fprintf(stderr,"Unzipping ifsdata_zip file: %s\n", ifsdata_zip.c_str());
     retval = boinc_zip(UNZIP_IT,ifsdata_zip.c_str(),slot_path+std::string("/ifsdata/"));
     if (retval) {
-       fprintf(stderr,"..Unzipping the IFSDATA file failed\n");
+       fprintf(stderr,"..Unzipping the ifsdata_zip file failed\n");
        return retval;
     }
     // Remove the zip file
@@ -387,17 +387,17 @@ int main(int argc, char** argv) {
 
     // Process the CLIMATE_DATA_FILE:
     // Make the climate data directory
-    std::string climate_data_path = slot_path + std::string("/") + HORIZ_RESOLUTION + GRID_TYPE;
+    std::string climate_data_path = slot_path + std::string("/") + horiz_resolution + grid_type;
     if (mkdir(climate_data_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) \
                        fprintf(stderr,"..mkdir for the climate data folder failed\n");
 
-    // Get the name of the 'jf_' filename from a link within the CLIMATE_DATA_FILE
-    std::string climate_data_source = getTag(slot_path + std::string("/") + CLIMATE_DATA_FILE + std::string(".zip"));
+    // Get the name of the 'jf_' filename from a link within the climate_data_file
+    std::string climate_data_source = getTag(slot_path + std::string("/") + climate_data_file + std::string(".zip"));
 
     // Copy the climate data file to working directory
     std::string climate_data_destination = slot_path + std::string("/") + \
-                                           HORIZ_RESOLUTION + GRID_TYPE + \
-                                           std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
+                                           horiz_resolution + grid_type + \
+                                           std::string("/") + climate_data_file + std::string(".zip");
     fprintf(stderr,"Copying the climate data file from: %s to: %s\n",climate_data_source.c_str(),climate_data_destination.c_str());
     retval = boinc_copy(climate_data_source.c_str(),climate_data_destination.c_str());
     if (retval) {
@@ -407,11 +407,11 @@ int main(int argc, char** argv) {
 
     // Unzip the climate data zip file
     std::string climate_zip = slot_path + std::string("/") + \
-                              HORIZ_RESOLUTION + GRID_TYPE + \
-                              std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
+                              horiz_resolution + grid_type + \
+                              std::string("/") + climate_data_file + std::string(".zip");
     fprintf(stderr,"Unzipping the climate data zip file: %s\n",climate_zip.c_str());
     retval = boinc_zip(UNZIP_IT,climate_zip.c_str(),\
-                       slot_path+std::string("/")+HORIZ_RESOLUTION+GRID_TYPE);
+                       slot_path+std::string("/")+horiz_resolution+grid_type);
     if (retval) {
        fprintf(stderr,"..Unzipping the climate data file failed\n");
        return retval;
