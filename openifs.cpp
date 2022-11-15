@@ -203,10 +203,10 @@ int main(int argc, char** argv) {
     }
     // Remove the zip file
     else {
-       std::remove(app_zip.c_str());
-       
+       std::remove(app_zip.c_str());       
     }
 
+	
     // Process the Namelist/workunit file:
     std::string namelist_zip = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
                       std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
