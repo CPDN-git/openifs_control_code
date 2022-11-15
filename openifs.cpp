@@ -183,10 +183,10 @@ int main(int argc, char** argv) {
     #endif
 
     // Copy the app file to the working directory
-    std::string app_target = project_path + app_file;
+    std::string app_source = project_path + app_file;
     std::string app_destination = slot_path + std::string("/") + app_file;
-    fprintf(stderr,"Copying: %s to: %s\n",app_target.c_str(),app_destination.c_str());
-    retval = boinc_copy(app_target.c_str(),app_destination.c_str());
+    fprintf(stderr,"Copying: %s to: %s\n",app_source.c_str(),app_destination.c_str());
+    retval = boinc_copy(app_source.c_str(),app_destination.c_str());
     if (retval) {
        fprintf(stderr,"..Copying the app file to the working directory failed: error %i\n",retval);
        return retval;
@@ -210,15 +210,15 @@ int main(int argc, char** argv) {
 
     // Process the Namelist/workunit file:
     // Get the name of the 'jf_' filename from a link within the namelist file
-    std::string wu_target = getTag(slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
+    std::string wu_source = getTag(slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
                       std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip"));
 
     // Copy the namelist files to the working directory
     std::string wu_destination = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
                       std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
-    fprintf(stderr,"Copying the namelist files from: %s to: %s\n",wu_target.c_str(),wu_destination.c_str());
+    fprintf(stderr,"Copying the namelist files from: %s to: %s\n",wu_source.c_str(),wu_destination.c_str());
 
-    retval = boinc_copy(wu_target.c_str(),wu_destination.c_str());
+    retval = boinc_copy(wu_source.c_str(),wu_destination.c_str());
     if (retval) {
        fprintf(stderr,"..Copying the namelist files to the working directory failed\n");
        return retval;
@@ -326,12 +326,12 @@ int main(int argc, char** argv) {
     // For transfer downloading, BOINC renames download files to jf_HEXADECIMAL-NUMBER, these files
     // need to be renamed back to the original name
     // Get the name of the 'jf_' filename from a link within the IC_ANCIL_FILE
-    std::string ic_ancil_target = getTag(slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip"));
+    std::string ic_ancil_source = getTag(slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip"));
 
     // Copy the IC ancils to working directory
     std::string ic_ancil_destination = slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip");
-    fprintf(stderr,"Copying IC ancils from: %s to: %s\n",ic_ancil_target.c_str(),ic_ancil_destination.c_str());
-    retval = boinc_copy(ic_ancil_target.c_str(),ic_ancil_destination.c_str());
+    fprintf(stderr,"Copying IC ancils from: %s to: %s\n",ic_ancil_source.c_str(),ic_ancil_destination.c_str());
+    retval = boinc_copy(ic_ancil_source.c_str(),ic_ancil_destination.c_str());
     if (retval) {
        fprintf(stderr,"..Copying the IC ancils to the working directory failed\n");
        return retval;
@@ -357,12 +357,12 @@ int main(int argc, char** argv) {
     if (mkdir(ifsdata_folder.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) fprintf(stderr,"..mkdir for ifsdata folder failed\n");
 
     // Get the name of the 'jf_' filename from a link within the IFSDATA_FILE
-    std::string ifsdata_target = getTag(slot_path + std::string("/") + IFSDATA_FILE + std::string(".zip"));
+    std::string ifsdata_source = getTag(slot_path + std::string("/") + IFSDATA_FILE + std::string(".zip"));
 
     // Copy the IFSDATA_FILE to working directory
     std::string ifsdata_destination = slot_path + std::string("/ifsdata/") + IFSDATA_FILE + std::string(".zip");
-    fprintf(stderr,"Copying IFSDATA_FILE from: %s to: %s\n",ifsdata_target.c_str(),ifsdata_destination.c_str());
-    retval = boinc_copy(ifsdata_target.c_str(),ifsdata_destination.c_str());
+    fprintf(stderr,"Copying IFSDATA_FILE from: %s to: %s\n",ifsdata_source.c_str(),ifsdata_destination.c_str());
+    retval = boinc_copy(ifsdata_source.c_str(),ifsdata_destination.c_str());
     if (retval) {
        fprintf(stderr,"..Copying the IFSDATA file to the working directory failed\n");
        return retval;
@@ -389,14 +389,14 @@ int main(int argc, char** argv) {
                        fprintf(stderr,"..mkdir for the climate data folder failed\n");
 
     // Get the name of the 'jf_' filename from a link within the CLIMATE_DATA_FILE
-    std::string climate_data_target = getTag(slot_path + std::string("/") + CLIMATE_DATA_FILE + std::string(".zip"));
+    std::string climate_data_source = getTag(slot_path + std::string("/") + CLIMATE_DATA_FILE + std::string(".zip"));
 
     // Copy the climate data file to working directory
     std::string climate_data_destination = slot_path + std::string("/") + \
                                            HORIZ_RESOLUTION + GRID_TYPE + \
                                            std::string("/") + CLIMATE_DATA_FILE + std::string(".zip");
-    fprintf(stderr,"Copying the climate data file from: %s to: %s\n",climate_data_target.c_str(),climate_data_destination.c_str());
-    retval = boinc_copy(climate_data_target.c_str(),climate_data_destination.c_str());
+    fprintf(stderr,"Copying the climate data file from: %s to: %s\n",climate_data_source.c_str(),climate_data_destination.c_str());
+    retval = boinc_copy(climate_data_source.c_str(),climate_data_destination.c_str());
     if (retval) {
        fprintf(stderr,"..Copying the climate data file to the working directory failed\n");
        return retval;
