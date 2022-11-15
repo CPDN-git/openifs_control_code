@@ -208,15 +208,15 @@ int main(int argc, char** argv) {
     }
 
     // Process the Namelist/workunit file:
+    std::string namelist_zip = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
+                      std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
+		
     // Get the name of the 'jf_' filename from a link within the namelist file
-    std::string wu_source = getTag(slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
-                      std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip"));
+    std::string wu_source = getTag(namelist_zip);
 
     // Copy the namelist files to the working directory
-    std::string wu_destination = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
-                      std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
+    std::string wu_destination = namelist_zip;
     fprintf(stderr,"Copying the namelist files from: %s to: %s\n",wu_source.c_str(),wu_destination.c_str());
-
     retval = boinc_copy(wu_source.c_str(),wu_destination.c_str());
     if (retval) {
        fprintf(stderr,"..Copying the namelist files to the working directory failed\n");
@@ -224,8 +224,6 @@ int main(int argc, char** argv) {
     }
 
     // Unzip the namelist zip file
-    std::string namelist_zip = slot_path + std::string("/") + app_name + std::string("_") + unique_member_id + std::string("_") + start_date +\
-                      std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
     fprintf(stderr,"Unzipping the namelist zip file: %s\n",namelist_zip.c_str());
     retval = boinc_zip(UNZIP_IT,namelist_zip.c_str(),slot_path);
     if (retval) {
