@@ -48,7 +48,7 @@ using namespace std::this_thread;
 using namespace rapidxml;
 
 int main(int argc, char** argv) {
-    std::string ifsdata_file,ic_ancil_file,climate_data_file,horiz_resolution,vert_resolution,grid_type,TSTEP,NFRPOS;
+    std::string ifsdata_file,ic_ancil_file,climate_data_file,horiz_resolution,vert_resolution,grid_type;
     std::string project_path,result_name,wu_name,version,tmpstr1,tmpstr2,tmpstr3;
     std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
     int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
