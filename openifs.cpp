@@ -51,8 +51,7 @@ int main(int argc, char** argv) {
     std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,HORIZ_RESOLUTION,VERT_RESOLUTION;
     std::string project_path,result_name,wu_name,version,tmpstr1,tmpstr2,tmpstr3;
     int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
-    char* strFind[9] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-    char strCpy[9][_MAX_PATH],strTmp[_MAX_PATH];
+    char strTmp[_MAX_PATH];
     char *pathvar;
     long handleProcess;
     double tv_sec,tv_usec,fraction_done,current_cpu_time=0,total_nsteps = 0;
