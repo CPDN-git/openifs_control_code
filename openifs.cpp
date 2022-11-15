@@ -320,13 +320,15 @@ int main(int argc, char** argv) {
 
 
     // Process the IC_ANCIL_FILE:
+    std::string ic_ancil_zip = slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip");
+	
     // For transfer downloading, BOINC renames download files to jf_HEXADECIMAL-NUMBER, these files
     // need to be renamed back to the original name
     // Get the name of the 'jf_' filename from a link within the IC_ANCIL_FILE
-    std::string ic_ancil_source = getTag(slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip"));
+    std::string ic_ancil_source = getTag(ic_ancil_zip);
 
     // Copy the IC ancils to working directory
-    std::string ic_ancil_destination = slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip");
+    std::string ic_ancil_destination = ic_ancil_zip;
     fprintf(stderr,"Copying IC ancils from: %s to: %s\n",ic_ancil_source.c_str(),ic_ancil_destination.c_str());
     retval = boinc_copy(ic_ancil_source.c_str(),ic_ancil_destination.c_str());
     if (retval) {
@@ -335,7 +337,6 @@ int main(int argc, char** argv) {
     }
 
     // Unzip the IC ancils zip file
-    std::string ic_ancil_zip = slot_path + std::string("/") + IC_ANCIL_FILE + std::string(".zip");
     fprintf(stderr,"Unzipping the IC ancils zip file: %s\n",ic_ancil_zip.c_str());
     retval = boinc_zip(UNZIP_IT,ic_ancil_zip.c_str(),slot_path);
     if (retval) {
