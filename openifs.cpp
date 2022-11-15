@@ -50,8 +50,10 @@ using namespace rapidxml;
 int main(int argc, char** argv) {
     std::string IFSDATA_FILE,IC_ANCIL_FILE,CLIMATE_DATA_FILE,GRID_TYPE,TSTEP,NFRPOS,HORIZ_RESOLUTION,VERT_RESOLUTION;
     std::string project_path,result_name,wu_name,version,tmpstr1,tmpstr2,tmpstr3;
+    std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
     int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
-    char strTmp[_MAX_PATH];
+    int current_iter=0, count=0;	
+    char strTmp[_MAX_PATH],upload_file[_MAX_PATH],result_base_name[64];
     char *pathvar;
     long handleProcess;
     double tv_sec,tv_usec,fraction_done,current_cpu_time=0,total_nsteps = 0;
@@ -59,6 +61,9 @@ int main(int argc, char** argv) {
     struct rusage usage;
     regex_t regex;
     DIR *dirp;
+    ZipFileList zfl;
+    std::ifstream ifs_stat_file;
+	
 
     // Set defaults for input arguments
     std::string OIFS_EXPID;           // model experiment id, must match string in filenames
@@ -571,13 +576,6 @@ int main(int argc, char** argv) {
     }
 	
     fraction_done = 0;
-
-    ZipFileList zfl;
-    std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
-    int current_iter=0, count=0;
-    std::ifstream ifs_stat_file;
-    char upload_file[_MAX_PATH];
-    char result_base_name[64]; 
     memset(result_base_name, 0x00, sizeof(char) * 64);
 
     // seconds between upload files: upload_interval
