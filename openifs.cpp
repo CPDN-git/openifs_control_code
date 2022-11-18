@@ -41,6 +41,7 @@ void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
 double cpu_time(long);
 double model_frac_done(double,double,int);
+std::string get_second_part(const std::string, const std::string);
 
 using namespace std;
 using namespace std::chrono;
@@ -48,15 +49,15 @@ using namespace std::this_thread;
 using namespace rapidxml;
 
 int main(int argc, char** argv) {
-    std::string ifsdata_file,ic_ancil_file,climate_data_file,horiz_resolution,vert_resolution,grid_type;
-    std::string project_path,result_name,wu_name,version,tmpstr1,tmpstr2,tmpstr3;
+    std::string ifsdata_file, ic_ancil_file, climate_data_file, horiz_resolution, vert_resolution, grid_type;
+    std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
     std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
-    int upload_interval,timestep_interval,ICM_file_interval,process_status,retval=0,i,j;
+    int upload_interval, timestep_interval, ICM_file_interval, process_status, retval=0, i, j;
     int current_iter=0, count=0;	
-    char strTmp[_MAX_PATH],upload_file[_MAX_PATH],result_base_name[64];
+    char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
     char *pathvar;
     long handleProcess;
-    double tv_sec,tv_usec,fraction_done,current_cpu_time=0,total_nsteps = 0;
+    double tv_sec, tv_usec, fraction_done, current_cpu_time=0, total_nsteps = 0;
     struct dirent *dir;
     struct rusage usage;
     regex_t regex;
@@ -666,68 +667,50 @@ int main(int argc, char** argv) {
 
           if (std::stoi(iter) != std::stoi(last_iter)) {
              // Construct file name of the ICM result file
-             second_part = "";
-             if (last_iter.length() == 1) {
-                second_part = "00000" + last_iter;
-             }
-             else if (last_iter.length() == 2) {
-                second_part = "0000" + last_iter;
-             }
-             else if (last_iter.length() == 3) {
-                second_part = "000" + last_iter;
-             }
-             else if (last_iter.length() == 4) {
-                second_part = "00" + last_iter;
-             }
-             else if (last_iter.length() == 5) {
-                second_part = "0" + last_iter;
-             }
-             else if (last_iter.length() == 6) {
-                second_part = last_iter;
-             }
+             second_part = get_second_part(last_iter, exptid);
 
              // Move the ICMGG result file to the temporary folder in the project directory
-             if(file_exists(slot_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
-                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
-                retval = boinc_copy((slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str() , \
-                                    (temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
+             if(file_exists(slot_path+std::string("/ICMGG")+second_part)) {
+                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG")+second_part).c_str());
+                retval = boinc_copy((slot_path+std::string("/ICMGG")+second_part).c_str() , \
+                                    (temp_path+std::string("/ICMGG")+second_part).c_str());
                 if (retval) {
                    fprintf(stderr,"..Copying ICMGG result file to the temp folder in the projects directory failed\n");
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
                 else {
-                   std::remove((slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
+                   std::remove((slot_path+std::string("/ICMGG")+second_part).c_str());
                 }
              }
 
              // Move the ICMSH result file to the temporary folder in the project directory
-             if(file_exists(slot_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
-                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
-                retval = boinc_copy((slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str() , \
-                                    (temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
+             if(file_exists(slot_path+std::string("/ICMSH")+second_part)) {
+                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH")+second_part).c_str());
+                retval = boinc_copy((slot_path+std::string("/ICMSH")+second_part).c_str() , \
+                                    (temp_path+std::string("/ICMSH")+second_part).c_str());
                 if (retval) {
                    fprintf(stderr,"..Copying ICMSH result file to the temp folder in the projects directory failed\n");
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
                 else {
-                   std::remove((slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
+                   std::remove((slot_path+std::string("/ICMSH")+second_part).c_str());
                 }
              }
 
              // Move the ICMUA result file to the temporary folder in the project directory (this is for 43r3 and above only)
-             if(file_exists(slot_path+std::string("/ICMUA")+exptid+"+"+second_part)) {
-                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
-                retval = boinc_copy((slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str() , \
-                                    (temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+             if(file_exists(slot_path+std::string("/ICMUA")+second_part)) {
+                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA")+second_part).c_str());
+                retval = boinc_copy((slot_path+std::string("/ICMUA")+second_part).c_str() , \
+                                    (temp_path+std::string("/ICMUA")+second_part).c_str());
                 if (retval) {
                    fprintf(stderr,"..Copying ICMUA result file to the temp folder in the projects directory failed\n");
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
                 else {
-                   std::remove((slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                   std::remove((slot_path+std::string("/ICMUA")+second_part).c_str());
                 }
              }
 		  
@@ -753,48 +736,30 @@ int main(int argc, char** argv) {
                    //fprintf(stderr,"i: %s\n",(std::to_string(i)).c_str());
 
                    // Construct file name of the ICM result file
-                   second_part = "";
-                   if (std::to_string(i).length() == 1) {
-                      second_part = "00000" + std::to_string(i);
-                   }
-                   else if (std::to_string(i).length() == 2) {
-                      second_part = "0000" + std::to_string(i);
-                   }
-                   else if (std::to_string(i).length() == 3) {
-                      second_part = "000" + std::to_string(i);
-                   }
-                   else if (std::to_string(i).length() == 4) {
-                      second_part = "00" + std::to_string(i);
-                   }
-                   else if (std::to_string(i).length() == 5) {
-                      second_part = "0" + std::to_string(i);
-                   }
-                   else if (std::to_string(i).length() == 6) {
-                      second_part = std::to_string(i);
-                   }
+                   second_part = get_second_part(std::to_string(i), exptid);
 
                    // Add ICMGG result files to zip to be uploaded
-                   if(file_exists(temp_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
-                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
-                      zfl.push_back(temp_path+std::string("/ICMGG")+exptid+"+"+second_part);
+                   if(file_exists(temp_path+std::string("/ICMGG")+second_part)) {
+                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMGG")+second_part).c_str());
+                      zfl.push_back(temp_path+std::string("/ICMGG")+second_part);
                       // Delete the file that has been added to the zip
-                      // std::remove((temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
+                      // std::remove((temp_path+std::string("/ICMGG")+second_part).c_str());
                    }
 
                    // Add ICMSH result files to zip to be uploaded
-                   if(file_exists(temp_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
-                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
-                      zfl.push_back(temp_path+std::string("/ICMSH")+exptid+"+"+second_part);
+                   if(file_exists(temp_path+std::string("/ICMSH")+second_part)) {
+                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMSH")+second_part).c_str());
+                      zfl.push_back(temp_path+std::string("/ICMSH")+second_part);
                       // Delete the file that has been added to the zip
-                      // std::remove((temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
+                      // std::remove((temp_path+std::string("/ICMSH")+second_part).c_str());
                    }
 		
                    // Add ICMUA result files to zip to be uploaded
-                   if(file_exists(temp_path+std::string("/ICMUA")+exptid+"+"+second_part)) {
-                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
-                      zfl.push_back(temp_path+std::string("/ICMUA")+exptid+"+"+second_part);
+                   if(file_exists(temp_path+std::string("/ICMUA")+second_part)) {
+                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMUA")+second_part).c_str());
+                      zfl.push_back(temp_path+std::string("/ICMUA")+second_part);
                       // Delete the file that has been added to the zip
-                      // std::remove((temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+                      // std::remove((temp_path+std::string("/ICMUA")+second_part).c_str());
                    }
                 }
 
@@ -964,68 +929,50 @@ int main(int argc, char** argv) {
 
     // We need to handle the last ICM files
     // Construct final file name of the ICM result file
-    second_part = "";
-    if (last_iter.length() == 1) {
-       second_part = "00000" + last_iter;
-    }
-    else if (last_iter.length() == 2) {
-       second_part = "0000" + last_iter;
-    }
-    else if (last_iter.length() == 3) {
-       second_part = "000" + last_iter;
-    }
-    else if (last_iter.length() == 4) {
-       second_part = "00" + last_iter;
-    }
-    else if (last_iter.length() == 5) {
-       second_part = "0" + last_iter;
-    }
-    else if (last_iter.length() == 6) {
-       second_part = last_iter;
-    }
+    second_part = get_second_part(last_iter, exptid);
 
     // Move the ICMGG result file to the temporary folder in the project directory
-    if(file_exists(slot_path+std::string("/ICMGG")+exptid+"+"+second_part)) {
-       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
-       retval = boinc_copy((slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str() , \
-                           (temp_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
+    if(file_exists(slot_path+std::string("/ICMGG")+second_part)) {
+       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG")+second_part).c_str());
+       retval = boinc_copy((slot_path+std::string("/ICMGG")+second_part).c_str() , \
+                           (temp_path+std::string("/ICMGG")+second_part).c_str());
        if (retval) {
           fprintf(stderr,"..Copying ICMGG result file to the temp folder in the projects directory failed\n");
           return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
        else {
-          std::remove((slot_path+std::string("/ICMGG")+exptid+"+"+second_part).c_str());
+          std::remove((slot_path+std::string("/ICMGG")+second_part).c_str());
        }
     }
 
     // Move the ICMSH result file to the temporary folder in the project directory
-    if(file_exists(slot_path+std::string("/ICMSH")+exptid+"+"+second_part)) {
-       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
-       retval = boinc_copy((slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str() , \
-                           (temp_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
+    if(file_exists(slot_path+std::string("/ICMSH")+second_part)) {
+       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH")+second_part).c_str());
+       retval = boinc_copy((slot_path+std::string("/ICMSH")+second_part).c_str() , \
+                           (temp_path+std::string("/ICMSH")+second_part).c_str());
        if (retval) {
           fprintf(stderr,"..Copying ICMSH result file to the temp folder in the projects directory failed\n");
           return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
        else {
-          std::remove((slot_path+std::string("/ICMSH")+exptid+"+"+second_part).c_str());
+          std::remove((slot_path+std::string("/ICMSH")+second_part).c_str());
        }
     }
 
     // Move the ICMUA result file to the temporary folder in the project directory (this is for 43r3 and above only)
-    if(file_exists(slot_path+std::string("/ICMUA")+exptid+"+"+second_part)) {
-       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
-       retval = boinc_copy((slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str() , \
-                           (temp_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+    if(file_exists(slot_path+std::string("/ICMUA")+second_part)) {
+       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA")+second_part).c_str());
+       retval = boinc_copy((slot_path+std::string("/ICMUA")+second_part).c_str() , \
+                           (temp_path+std::string("/ICMUA")+second_part).c_str());
        if (retval) {
           fprintf(stderr,"..Copying ICMUA result file to the temp folder in the projects directory failed\n");
 	  return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
        else {
-          std::remove((slot_path+std::string("/ICMUA")+exptid+"+"+second_part).c_str());
+          std::remove((slot_path+std::string("/ICMUA")+second_part).c_str());
        }
     }
     
@@ -1464,4 +1411,30 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
 
    return frac_done;
 
+}
+
+// Construct the second part of the file to be uploaded
+std::string get_second_part(string last_iter, string exptid) {
+   std::string second_part="";
+
+   if (last_iter.length() == 1) {
+      second_part = exptid +"+"+ "00000" + last_iter;
+   }
+   else if (last_iter.length() == 2) {
+      second_part = exptid +"+"+ "0000" + last_iter;
+   }
+   else if (last_iter.length() == 3) {
+      second_part = exptid +"+"+ "000" + last_iter;
+   }
+   else if (last_iter.length() == 4) {
+      second_part = exptid +"+"+ "00" + last_iter;
+   }
+   else if (last_iter.length() == 5) {
+      second_part = exptid +"+"+ "0" + last_iter;
+   }
+   else if (last_iter.length() == 6) {
+      second_part = exptid +"+"+ last_iter;
+   }
+
+   return second_part;
 }
