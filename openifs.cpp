@@ -32,11 +32,11 @@
    #define _MAX_PATH 512
 #endif
 
-const char* stripPath(const char* path);
-int checkChildStatus(long,int);
-int checkBOINCStatus(long,int);
-long launchProcess(const char*,const char*,const char*,const std::string);
-std::string getTag(const std::string &str);
+const char* strip_path(const char* path);
+int check_child_status(long,int);
+int check_boinc_status(long,int);
+long launch_process(const char*,const char*,const char*,const std::string);
+std::string get_tag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
 double cpu_time(long);
@@ -217,7 +217,7 @@ int main(int argc, char** argv) {
                       std::string("_") + std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string(".zip");
 		
     // Get the name of the 'jf_' filename from a link within the namelist file
-    std::string wu_source = getTag(namelist_zip);
+    std::string wu_source = get_tag(namelist_zip);
 
     // Copy the namelist files to the working directory
     std::string wu_destination = namelist_zip;
@@ -330,7 +330,7 @@ int main(int argc, char** argv) {
     // For transfer downloading, BOINC renames download files to jf_HEXADECIMAL-NUMBER, these files
     // need to be renamed back to the original name
     // Get the name of the 'jf_' filename from a link within the ic_ancil_file
-    std::string ic_ancil_source = getTag(ic_ancil_zip);
+    std::string ic_ancil_source = get_tag(ic_ancil_zip);
 
     // Copy the IC ancils to working directory
     std::string ic_ancil_destination = ic_ancil_zip;
@@ -360,7 +360,7 @@ int main(int argc, char** argv) {
     if (mkdir(ifsdata_folder.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) fprintf(stderr,"..mkdir for ifsdata folder failed\n");
 
     // Get the name of the 'jf_' filename from a link within the ifsdata_file
-    std::string ifsdata_source = getTag(slot_path + std::string("/") + ifsdata_file + std::string(".zip"));
+    std::string ifsdata_source = get_tag(slot_path + std::string("/") + ifsdata_file + std::string(".zip"));
 
     // Copy the ifsdata_file to the working directory
     std::string ifsdata_destination = ifsdata_folder + std::string("/") + ifsdata_file + std::string(".zip");
@@ -392,7 +392,7 @@ int main(int argc, char** argv) {
                        fprintf(stderr,"..mkdir for the climate data folder failed\n");
 
     // Get the name of the 'jf_' filename from a link within the climate_data_file
-    std::string climate_data_source = getTag(slot_path + std::string("/") + climate_data_file + std::string(".zip"));
+    std::string climate_data_source = get_tag(slot_path + std::string("/") + climate_data_file + std::string(".zip"));
 
     // Copy the climate data file to working directory
     std::string climate_data_destination = climate_data_path + std::string("/") + climate_data_file + std::string(".zip");
@@ -593,7 +593,7 @@ int main(int argc, char** argv) {
        memset(strTmp,0x00,_MAX_PATH);
        retval = boinc_resolve_filename("upload_file_0.zip",strTmp,_MAX_PATH);
        //fprintf(stderr,"strTmp: %s\n",strTmp);
-       strncpy(result_base_name, stripPath(strTmp), strlen(stripPath(strTmp))-6);
+       strncpy(result_base_name, strip_path(strTmp), strlen(strip_path(strTmp))-6);
        fprintf(stderr,"result_base_name: %s\n",result_base_name);
        if (strcmp(result_base_name,"upload_file")==0) {
           fprintf(stderr,"..Failed to get result name\n");
@@ -617,7 +617,7 @@ int main(int argc, char** argv) {
 
     // Start the OpenIFS job
     std::string strCmd = slot_path + std::string("/./master.exe");
-    handleProcess = launchProcess(slot_path,strCmd.c_str(),exptid.c_str(),app_name);
+    handleProcess = launch_process(slot_path,strCmd.c_str(),exptid.c_str(),app_name);
     if (handleProcess > 0) process_status = 0;
 
     boinc_end_critical_section();
@@ -914,11 +914,11 @@ int main(int argc, char** argv) {
          boinc_fraction_done(fraction_done);
 	  
          // Check the status of the client if not in standalone mode     
-         process_status = checkBOINCStatus(handleProcess,process_status);
+         process_status = check_boinc_status(handleProcess,process_status);
        }
 	
        // Check the status of the child process    
-       process_status = checkChildStatus(handleProcess,process_status);
+       process_status = check_child_status(handleProcess,process_status);
     }
 
 
@@ -1165,7 +1165,7 @@ int main(int argc, char** argv) {
 
 
 
-const char* stripPath(const char* path) {
+const char* strip_path(const char* path) {
     int jj;
     for (jj = (int) strlen(path);
     jj > 0 && path[jj-1] != '/' && path[jj-1] != '\\'; jj--);
@@ -1173,7 +1173,7 @@ const char* stripPath(const char* path) {
 }
 
 
-int checkChildStatus(long handleProcess, int process_status) {
+int check_child_status(long handleProcess, int process_status) {
     int stat;
     //fprintf(stderr,"waitpid: %i\n",waitpid(handleProcess,0,WNOHANG));
 
@@ -1203,7 +1203,7 @@ int checkChildStatus(long handleProcess, int process_status) {
 }
 
 
-int checkBOINCStatus(long handleProcess, int process_status) {
+int check_boinc_status(long handleProcess, int process_status) {
     BOINC_STATUS status;
     boinc_get_status(&status);
 
@@ -1271,7 +1271,7 @@ int checkBOINCStatus(long handleProcess, int process_status) {
     }
 }
 
-long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, const std::string app_name) {
+long launch_process(const char* slot_path,const char* strCmd,const char* exptid, const std::string app_name) {
     int retval = 0;
     long handleProcess;
 
@@ -1328,7 +1328,7 @@ long launchProcess(const char* slot_path,const char* strCmd,const char* exptid, 
 }
 
 // Open a file and return the string contained between the arrow tags
-std::string getTag(const std::string &filename) {
+std::string get_tag(const std::string &filename) {
     std::ifstream file(filename);
     if (file.is_open()) {
        std::string line;
@@ -1421,8 +1421,8 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
    static int     stepm1 = -1;
    static double  heartbeat = 0.0;
    static bool    debug = false;
-   double      frac_done, frac_per_step;
-   double      heartbeat_inc;
+   double         frac_done, frac_per_step;
+   double         heartbeat_inc;
 
    frac_done     = step / total_steps;	// this increments slowly, as a model step is ~30sec->2mins cpu
    frac_per_step = 1.0 / total_steps;
@@ -1430,7 +1430,7 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
    if (debug) {
       fprintf( stderr,"get_frac_done: step = %.0f\n", step);
       fprintf( stderr,"        total_steps = %.0f\n", total_steps );
-      fprintf( stderr,"      frac_per_step = %f\n", frac_per_step );
+      fprintf( stderr,"      frac_per_step = %f\n",   frac_per_step );
    }
    
    // Constant below represents estimate of how many times around the mainloop
@@ -1449,7 +1449,7 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
       stepm1 = (int) step;
    } else {
       heartbeat = heartbeat + heartbeat_inc;
-      if ( heartbeat > frac_per_step )  heartbeat = frac_per_step-0.001;  // slightly less than the next step
+      if ( heartbeat > frac_per_step )  heartbeat = frac_per_step - 0.001;  // slightly less than the next step
       frac_done = frac_done + heartbeat;
    } 
 
@@ -1458,7 +1458,7 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
    if (debug){
       fprintf(stderr, "    heartbeat_inc = %.8f\n", heartbeat_inc);
       fprintf(stderr, "    heartbeat     = %.8f\n", heartbeat );
-      double percent = frac_done*100.0;
+      double percent = frac_done * 100.0;
       fprintf(stderr, "     percent done = %.3f\n", percent);
    }
 
