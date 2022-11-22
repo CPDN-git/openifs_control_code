@@ -239,6 +239,15 @@ if __name__ == "__main__":
                  zgamma = str(parameter.getElementsByTagName('zgamma')[0].childNodes[0].nodeValue)
                  zchar = str(parameter.getElementsByTagName('zchar')[0].childNodes[0].nodeValue)
                     
+            # If perturbed surface
+            if options.app_name == 'oifs_43r3_ps':
+              for parameter in parameters:
+                 zuncerta = str(parameter.getElementsByTagName('zuncerta')[0].childNodes[0].nodeValue)
+                 zuncertb = str(parameter.getElementsByTagName('zuncertb')[0].childNodes[0].nodeValue)
+                 zuncertc = str(parameter.getElementsByTagName('zuncertc')[0].childNodes[0].nodeValue)
+                 zuncertd = str(parameter.getElementsByTagName('zuncertd')[0].childNodes[0].nodeValue)
+                 zuncerte = str(parameter.getElementsByTagName('zuncerte')[0].childNodes[0].nodeValue)
+                    
             # This section can be used to resubmit particular workunits from an XML file
             # To use this, provide a file containing a list of umids that are contained within the XML 
             # This section will then check whether workunit is in the list and resubmit, and will exit loop if not listed
@@ -530,6 +539,13 @@ if __name__ == "__main__":
                   line = line.replace('_ZRH0',zrh0)
                   line = line.replace('_ZGAMMA',zgamma)
                   line = line.replace('_ZCHAR',zchar)
+                # If perturbed surface
+                if options.app_name == 'oifs_43r3_ps':
+                  line = line.replace('_ZUNCERTA',zuncerta)
+                  line = line.replace('_ZUNCERTB',zuncertb)
+                  line = line.replace('_ZUNCERTC',zuncertc)
+                  line = line.replace('_ZUNCERTD',zuncertd)
+                  line = line.replace('_ZUNCERTE',zuncerte)
                 # Remove commented lines
                 if not line.startswith('!!'):
                   template_file.append(line)
@@ -865,14 +881,45 @@ if __name__ == "__main__":
                                              %('186',zchar,'0',wuid)
                cursor.execute(query)
                db.commit()
-        
-        
+  
+            # If perturbed surface enter values for parameters into parameter table
+            if options.app_name == 'oifs_43r3_ps':
 
+               # Enter the zuncerta details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('187',zuncerta,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+               # Enter the zuncertb details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('188',zuncertb,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+               # Enter the zuncertc details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('189',zuncertc,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+               # Enter the zuncertd details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('190',zuncertd,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+               # Enter the zuncerte details of the submitted workunit into the parameter table
+               query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
+                                             values(%s,'%s',%s,%s)""" \
+                                             %('191',zuncerte,'0',wuid)
+               cursor.execute(query)
+               db.commit()
+            
             # Remove the contents of the temp_openifs_submission_files directory
             args = ['rm','-rf','temp_openifs_submission_files/*']
             p = subprocess.Popen(args)
             p.wait()
-  
 
         # Check if class is openifs
         if not non_openifs_class:
