@@ -647,7 +647,7 @@ if __name__ == "__main__":
               "   <rsc_fpops_bound>"+fpops_est+"0</rsc_fpops_bound>\n" +\
               "   <rsc_memory_bound>"+memory_bound+"</rsc_memory_bound>\n" +\
               "   <rsc_disk_bound>"+disk_bound+"</rsc_disk_bound>\n" +\
-              "   <delay_bound>121.000</delay_bound>\n" +\
+              "   <delay_bound>2629743</delay_bound>\n" +\
               "   <min_quorum>1</min_quorum>\n" +\
               "   <target_nresults>1</target_nresults>\n" +\
               "   <max_error_results>1</max_error_results>\n" +\
