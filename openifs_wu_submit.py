@@ -227,11 +227,12 @@ if __name__ == "__main__":
             start_month = int(workunit.getElementsByTagName('start_month')[0].childNodes[0].nodeValue)
             start_year = int(workunit.getElementsByTagName('start_year')[0].childNodes[0].nodeValue)
             unique_member_id = str(workunit.getElementsByTagName('unique_member_id')[0].childNodes[0].nodeValue)
+            parameters = workunit.getElementsByTagName('parameters')
 
             # If baroclinic wave simulation
             if options.app_name == 'oifs_43r3_bl':
               for parameter in parameters:
-                 zn = int(parameter.getElementsByTagName('zn')[0].childNodes[0].nodeValue)
+                 zn = str(parameter.getElementsByTagName('zn')[0].childNodes[0].nodeValue)
                  zb = str(parameter.getElementsByTagName('zb')[0].childNodes[0].nodeValue)
                  zt0 = str(parameter.getElementsByTagName('zt0')[0].childNodes[0].nodeValue)
                  zu0 = str(parameter.getElementsByTagName('zu0')[0].childNodes[0].nodeValue)
