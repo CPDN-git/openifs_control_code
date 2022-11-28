@@ -651,7 +651,7 @@ if __name__ == "__main__":
               "   <min_quorum>1</min_quorum>\n" +\
               "   <target_nresults>1</target_nresults>\n" +\
               "   <max_error_results>3</max_error_results>\n" +\
-              "   <max_total_results>1</max_total_results>\n" +\
+              "   <max_total_results>3</max_total_results>\n" +\
               "   <max_success_results>1</max_success_results>\n" +\
               "</workunit>\n"+\
               "</input_template>"
