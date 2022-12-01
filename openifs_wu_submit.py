@@ -388,18 +388,30 @@ if __name__ == "__main__":
             p.wait()
 
             # Set the memory bound
+            # Model memory requirements are taken from measurements by G.Carver and listed at:
+            #  https://docs.google.com/document/d/1AxLzZ6-m2owRscf_9SCv2TwRAcMl1pzbxFfbm6qeSL4/edit?usp=sharing
+            # Add another 0.5Gb to task mem to allow for wrapper plus bit extra in case of leaks.
+            # Ordered by the 'N' number: N80 & up.
             if int(horiz_resolution) == 63 and int(vert_resolution) == 91:
               memory_bound = str(5370000000)
+            elif int(horiz_resolution) == 159 and int(vert_resolution) == 60 and grid_type == 'l_2':
+              memory_bound = str(6010000000)
+            elif int(horiz_resolution) == 159 and int(vert_resolution) == 91 and grid_type == 'l_2':
+              memory_bound = str(8804000000)
             elif int(horiz_resolution) == 95 and int(vert_resolution) == 91:
-              memory_bound = str(5370000000)
-            elif int(horiz_resolution) == 159 and int(vert_resolution) == 60:
-              memory_bound = str(5370000000)
-            elif int(horiz_resolution) == 159 and int(vert_resolution) == 91:
-              memory_bound = str(5370000000)
+              memory_bound = str(10844000000)
             elif int(horiz_resolution) == 255 and int(vert_resolution) == 60:
-              memory_bound = str(8500000000)
+              memory_bound = str(13786000000)
             elif int(horiz_resolution) == 255 and int(vert_resolution) == 91:
-              memory_bound = str(15000000000)
+              memory_bound = str(20400000000)
+            elif int(horiz_resolution) == 319 and int(vert_resolution) == 60:
+              memory_bound = str(21300000000)
+            elif int(horiz_resolution) == 319 and int(vert_resolution) == 91:
+              memory_bound = str(31675000000)
+            elif int(horiz_resolution) == 159 and int(vert_resolution) == 60 and grid_type == '_4':
+              memory_bound = str(17810000000)
+            elif int(horiz_resolution) == 159 and int(vert_resolution) == 91 and grid_type == '_4':
+              memory_bound = str(26300000000)
 
             # Set the disk bound
             if options.app_name == 'oifs_43r3_arm':
