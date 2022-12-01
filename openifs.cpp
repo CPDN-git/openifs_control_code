@@ -2,6 +2,7 @@
 // Control code for the OpenIFS application in the climateprediction.net project
 //
 // Written by Andy Bowery (Oxford eResearch Centre, Oxford University) November 2022
+// Contributions from Glenn Carver (ex-ECMWF), 2022->
 //
 
 #include <string>
@@ -617,7 +618,7 @@ int main(int argc, char** argv) {
 	
 
     // Start the OpenIFS job
-    std::string strCmd = slot_path + std::string("/./master.exe");
+    std::string strCmd = slot_path + std::string("/./openifs.exe");
     handleProcess = launch_process(slot_path,strCmd.c_str(),exptid.c_str(),app_name);
     if (handleProcess > 0) process_status = 0;
 
