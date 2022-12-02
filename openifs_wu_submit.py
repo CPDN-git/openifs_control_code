@@ -480,18 +480,19 @@ if __name__ == "__main__":
             # Add 'extra' to account for climate files, executables etc in workunit. TODO: This is resolution dependent!
             extra_wu_gb = 5
             total_wu_gb = extra_wu_gb + num_days * fields_per_output * (gribfield_size/(1024*1014))
-            disk_bound_gb = math.ceil(total_wu_gb))
+            disk_bound_gb = math.ceil(total_wu_gb)
             disk_bound    = str(disk_bound_gb * 1024**3 )
 
-            number_of_uploads = int(math.ceil(float(num_timesteps) / float(upload_interval)))
+            # Throw an error if not cleanly divisible
+            number_of_uploads = float(num_timesteps) / float(upload_interval)
+            if int(number_of_uploads) != number_of_uploads:
+              raise ValueError('The total number of timesteps does not divide equally by the upload interval')
+
+            number_of_uploads = int(number_of_uploads)
 
             print "upload_interval: "+str(upload_interval)
             print "number_of_uploads: "+str(number_of_uploads)
             print "disk_bound, disk_bound (Gb): "+disk_bound+", "+str(disk_bound_gb)
-            
-            # Throw an error if not cleanly divisible
-            if not(isinstance(number_of_uploads,int)):
-              raise ValueError('The total number of timesteps does not divide equally by the upload interval')
  
 
             # Set the fpops_est and fpops_bound for the workunit
