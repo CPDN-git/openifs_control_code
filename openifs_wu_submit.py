@@ -31,7 +31,7 @@ if __name__ == "__main__":
     print "got lock\n"
 
     project_dir = <PROJECT_DIRECTORY>
-    input_directory = project_dir+ <INCOMING_XML_FOLDER>
+    input_directory = project_dir+'oifs_workgen/incoming_xmls'
     oifs_ancil_dir = <ANCILS_LOCATION> + '/oifs_ancil_files/'
     
     # Set the regionid as global
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     cursor = db.cursor()
 
     # Find the last batch id
-    query = 'select max(id) from BATCH_TABLE'
+    query = 'select max(id) from cpdn_batch'
     cursor.execute(query)
     last_batchid = cursor.fetchone()
 
@@ -173,7 +173,7 @@ if __name__ == "__main__":
           os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
             
           # Find the project id
-          query = """select id from PROJECT_TABLE where name ='%s'""" %(project_name)
+          query = """select id from cpdn_project where name ='%s'""" %(project_name)
           cursor.execute(query)
           projectid = cursor.fetchone()[0]
 
@@ -188,7 +188,7 @@ if __name__ == "__main__":
           #print "projectid: "+str(projectid)
 
           # Parse the config xmlfile
-          xmldoc2 = minidom.parse(project_dir+MODEL_CONFIG_FOLDER)
+          xmldoc2 = minidom.parse(project_dir+'oifs_workgen/config_dir/'+model_config)
           model_configs = xmldoc2.getElementsByTagName('model_config')
           for model_config in model_configs:
             horiz_resolution = str(model_config.getElementsByTagName('horiz_resolution')[0].childNodes[0].nodeValue)
@@ -738,9 +738,9 @@ if __name__ == "__main__":
               run_years = 0
             
             # Enter the details of the submitted workunit into the workunit_table
-            query = """insert into WORKUNIT_TABLE(wuid,cpdn_batch,umid,name,start_year,run_years,appid) \
-                                                values(%s,%s,'%s','%s',%s,%s,%s)""" \
-                                                %(wuid,batchid,unique_member_id,workunit_name,start_year,run_years,appid)
+            query = """insert into cpdn_workunit(wuid,cpdn_batch,umid,name,start_year,run_years,appid) \
+                                                 values(%s,%s,'%s','%s',%s,%s,%s)""" \
+                                                 %(wuid,batchid,unique_member_id,workunit_name,start_year,run_years,appid)
             cursor.execute(query)
             db.commit()
             
@@ -955,7 +955,7 @@ if __name__ == "__main__":
             os.remove(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile))
 
           # Enter the details of the new batch into the batch_table
-          query = """insert into BATCH_TABLE(id,name,description,first_start_year,appid,server_cgi,owner,ul_files,tech_info,\
+          query = """insert into cpdn_batch(id,name,description,first_start_year,appid,server_cgi,owner,ul_files,tech_info,\
                      umid_start,umid_end,projectid,last_start_year,number_of_workunits,max_results_per_workunit,regionid) \
                      values(%i,'%s','%s',%i,%i,'%s','%s',%i,'%s','%s','%s',%i,%i,%i,%i,%i);""" \
                      %(batchid,batch_name,batch_desc,first_start_year,appid,server_cgi,batch_owner,number_of_uploads,tech_info,\
