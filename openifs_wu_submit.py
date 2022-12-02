@@ -57,15 +57,21 @@ if __name__ == "__main__":
     if primary_db == "cpdnboinc_dev":
       batch_prefix = "d"
       secondary_db = 'cpdnexpt_dev'
+      project_url = 'https://dev.cpdn.org/'
+      database_port = 33001
     elif primary_db == "cpdnboinc_alpha":
-      batch_prefix = "d"
+      batch_prefix = "a"
       secondary_db = 'cpdnexpt_alpha'
+      project_url = 'https://alpha.cpdn.org/'
+      database_port = 33001
     elif primary_db == "cpdnboinc":
       batch_prefix = ""
       secondary_db = 'cpdnexpt'
+      project_url = 'https://www.cpdn.org/'
+      database_port = 3306
     
     # Open cursor and connection to primary_db
-    db = MySQLdb.connect(db_host,db_user,db_passwd,primary_db,port=33001)
+    db = MySQLdb.connect(db_host,db_user,db_passwd,primary_db,port=database_port)
     cursor = db.cursor()
 
     # Find the appid
@@ -93,7 +99,7 @@ if __name__ == "__main__":
     wuid=last_id
 
     # Open cursor and connection to secondary_db
-    db = MySQLdb.connect(db_host,db_user,db_passwd,secondary_db,port=33001)
+    db = MySQLdb.connect(db_host,db_user,db_passwd,secondary_db,port=database_port)
     cursor = db.cursor()
 
     # Find the last batch id
@@ -676,7 +682,7 @@ if __name__ == "__main__":
             # Change back to the project directory
             os.chdir(project_dir)
 
-            workunit_url = 'https://dev.cpdn.org/download/batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+".zip"
+            workunit_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip'
 
             # Get the md5 checksum of the workunit zip file
             workunit_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip','rb').read()).hexdigest()
@@ -687,7 +693,7 @@ if __name__ == "__main__":
             print "workunit_zip_size = "+str(workunit_zip_size)
 
 
-            ic_ancil_url = 'https://dev.cpdn.org/download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip)
+            ic_ancil_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip)
 
             # Get the md5 checksum of the ic_ancil zip file
             ic_ancil_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip),'rb').read()).hexdigest()
@@ -698,7 +704,7 @@ if __name__ == "__main__":
             print "ic_ancil_zip_size = "+str(ic_ancil_zip_size)
 
 
-            ifsdata_url = 'https://dev.cpdn.org/download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip)
+            ifsdata_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip)
 
             # Get the md5 checksum of the ifsdata zip file
             ifsdata_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip),'rb').read()).hexdigest()
@@ -709,7 +715,7 @@ if __name__ == "__main__":
             print "ifsdata_zip_size = "+str(ifsdata_zip_size)
 
 
-            climate_data_url = 'https://dev.cpdn.org/download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip)
+            climate_data_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip)
 
             # Get the md5 checksum of the climate_data zip file
             climate_data_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip),'rb').read()).hexdigest()
