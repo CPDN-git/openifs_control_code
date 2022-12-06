@@ -174,9 +174,13 @@ if __name__ == "__main__":
 
           # Create the batch folder structure in the download directory
           download_dir = project_dir + "/download/"
-          os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/')
-          os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')
-          os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
+          # If folders do not exist, create them
+          if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/')):
+            os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/')
+          if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')):
+            os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')
+          if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')):
+            os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
             
           # Find the project id
           query = """select id from cpdn_project where name ='%s'""" %(project_name)
