@@ -1439,3 +1439,33 @@ std::string get_second_part(string last_iter, string exptid) {
 
    return second_part;
 }
+
+
+bool check_stoi(std::string& cin) {
+    //  check input string is convertable to an integer by checking for any letters
+    //  nb. stoi() will convert leading digits if alphanumeric but we know step must be all digits.
+    //  Glenn Carver
+
+    int step;
+
+    if (std::any_of(cin.begin(), cin.end(), ::isalpha)) {
+        cerr << "Invalid characters in stoi string: " << cin << "\n";
+        return false;
+    }
+
+    //  check stoi standard exceptions
+    //  n.b. still need to check step <= max_step
+    try {
+        step = std::stoi(cin);
+        cerr << "step converted is : " << step << "\n";
+        return true;
+    }
+    catch (const std::invalid_argument &excep) {
+        cerr << "Invalid input argument for stoi : " << excep.what() << "\n";
+        return false;
+    }
+    catch (const std::out_of_range &excep) {
+        cerr << "Out of range value for stoi : " << excep.what() << "\n";
+        return false;
+    }
+}
