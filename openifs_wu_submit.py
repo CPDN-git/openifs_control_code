@@ -412,37 +412,46 @@ if __name__ == "__main__":
             p = subprocess.Popen(args)
             p.wait()
 
-            # Set the memory bound
-            # Model memory requirements are taken from measurements by G.Carver and listed at:
+            # GC: Set the memory bound & esimated output instance filesizes
+            # These are taken from measurements by G.Carver and listed at:
             #  https://docs.google.com/document/d/1AxLzZ6-m2owRscf_9SCv2TwRAcMl1pzbxFfbm6qeSL4/edit?usp=sharing
             # Add another 0.5Gb to task mem to allow for wrapper plus bit extra in case of leaks.
             # Ordered by the 'N' number: N80 & up.
+            # gribfield_size is approximate as not all GRIB fields are packed to the same precision.
+
+            fields_per_output = 200       # assume scientist typically has this total no. of fields per output instance
+                                          # also assume output every day TODO: improve by reading NFRPOS from namelist
+
             if int(horiz_resolution) == 63 and int(vert_resolution) == 91:
               memory_bound = str(5370000000)
+              gribfield_size = 70.0            # approx value of single GRIB field output (Kb - converted below)
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 60 and grid_type == 'l_2':
               memory_bound = str(6010000000)
+              gribfield_size = 70.0
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 91 and grid_type == 'l_2':
               memory_bound = str(8804000000)
+              gribfield_size = 70.0
             elif int(horiz_resolution) == 95 and int(vert_resolution) == 91:
               memory_bound = str(10844000000)
+              gribfield_size = 80.0
             elif int(horiz_resolution) == 255 and int(vert_resolution) == 60:
               memory_bound = str(13786000000)
+              gribfield_size = 90.0
             elif int(horiz_resolution) == 255 and int(vert_resolution) == 91:
               memory_bound = str(20400000000)
+              gribfield_size = 90.0
             elif int(horiz_resolution) == 319 and int(vert_resolution) == 60:
               memory_bound = str(21300000000)
+              gribfield_size = 170.0
             elif int(horiz_resolution) == 319 and int(vert_resolution) == 91:
               memory_bound = str(31675000000)
+              gribfield_size = 170.0
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 60 and grid_type == '_4':
               memory_bound = str(17810000000)
+              gribfield_size = 130.0
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 91 and grid_type == '_4':
               memory_bound = str(26300000000)
-
-            # Set the disk bound
-            if options.app_name == 'oifs_43r3_arm':
-              disk_bound = str(1000000000)   # 954MB
-            else:
-              disk_bound = str(40000000000)  # 38147MB
+              gribfield_size = 130.0
             
             # Calculate the number of timesteps from the number of days of the simulation
             if fclen_units == 'days':
@@ -472,7 +481,6 @@ if __name__ == "__main__":
             
               # Set the name of the workunit (days)
               workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_'+str(num_days)+'_'+batch_prefix+str(batchid)+'_'+str(wuid)
-
             
             elif fclen_units == 'hours':
               num_timesteps = (int(fclen) * 3600)/int(timestep)
@@ -492,10 +500,19 @@ if __name__ == "__main__":
               # Set the name of the workunit (hours)
               workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_0_'+batch_prefix+str(batchid)+'_'+str(wuid)
             
+            # Compute disk_bound assuming worse case where none of the trickles can be uploaded until run is complete
+            # i.e. estimate total size of model output assuming 1 output per model day.
+            # Add 'extra' to account for climate files, executables etc in workunit. TODO: This is resolution dependent!
+            extra_wu_gb = 5
+            total_wu_gb = extra_wu_gb + num_days * fields_per_output * (gribfield_size/(1024*1014))
+            disk_bound_gb = math.ceil(total_wu_gb)
+            disk_bound    = str(disk_bound_gb * 1024**3 )
+
             number_of_uploads = int(math.ceil(float(num_timesteps) / float(upload_interval)))
 
             print "upload_interval: "+str(upload_interval)
             print "number_of_uploads: "+str(number_of_uploads)
+            print "disk_bound, disk_bound (Gb): "+disk_bound+", "+str(disk_bound_gb)
             
             # Throw an error if not cleanly divisible
             if not(isinstance(number_of_uploads,int)):
