@@ -477,15 +477,15 @@ if __name__ == "__main__":
               # Set the name of the workunit (hours)
               workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_0_'+batch_prefix+str(batchid)+'_'+str(wuid)
             
-            number_of_uploads = int(math.ceil(float(num_timesteps) / float(upload_interval)))
+            number_of_uploads = float(num_timesteps) / float(upload_interval)
+
+            # Throw an error if not cleanly divisible
+            if int(number_of_uploads) != number_of_uploads:
+              raise ValueError('The total number of timesteps does not divide equally by the upload interval')
 
             print "upload_interval: "+str(upload_interval)
             print "number_of_uploads: "+str(number_of_uploads)
             
-            # Throw an error if not cleanly divisible
-            if not(isinstance(number_of_uploads,int)):
-              raise ValueError('The total number of timesteps does not divide equally by the upload interval')
- 
 
             # Set the fpops_est and fpops_bound for the workunit
             fpops_est = str(flops_factor * int(float(num_days)))
