@@ -38,7 +38,7 @@ if __name__ == "__main__":
     regionid = 15
 
     # Set the max_results_per_workunit
-    max_results_per_workunit = 1
+    max_results_per_workunit = 3
 
     # Set the flops factor (for the progress bar)
     flops_factor = 12800000000000
@@ -703,8 +703,8 @@ if __name__ == "__main__":
               "   <delay_bound>2592000</delay_bound>\n" +\
               "   <min_quorum>1</min_quorum>\n" +\
               "   <target_nresults>1</target_nresults>\n" +\
-              "   <max_error_results>3</max_error_results>\n" +\
-              "   <max_total_results>3</max_total_results>\n" +\
+              "   <max_error_results>"+str(max_results_per_workunit)+"</max_error_results>\n" +\
+              "   <max_total_results>"+str(max_results_per_workunit)+"</max_total_results>\n" +\
               "   <max_success_results>1</max_success_results>\n" +\
               "</workunit>\n"+\
               "</input_template>"
