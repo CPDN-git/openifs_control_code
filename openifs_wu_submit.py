@@ -92,11 +92,11 @@ if __name__ == "__main__":
 
     # Catch the case of no workunits in the database
     if last_wuid[0] == None:
-       last_id=0
+       last_id = 0
     else:
-       last_id=last_wuid[0]
+       last_id = last_wuid[0]
     print "Last workunit id: "+str(last_id)
-    wuid=last_id
+    wuid = last_id
 
     # Open cursor and connection to secondary_db
     db = MySQLdb.connect(db_host,db_user,db_passwd,secondary_db,port=database_port)
@@ -109,11 +109,11 @@ if __name__ == "__main__":
 
     # Catch the case of no batches in the database
     if last_batchid[0] == None:
-      last_id_2=0
+      last_id_2 = 0
     else:
-      last_id_2=last_batchid[0]
+      last_id_2 = last_batchid[0]
     print "Last batch id: "+str(last_id_2)
-    batchid=last_id_2
+    batch_count = last_id_2
 
     print ""
     print "--------------------------------------"
@@ -139,7 +139,7 @@ if __name__ == "__main__":
         batches = xmldoc.getElementsByTagName('batch')
         for batch in batches:
 
-          batchid = batchid + 1
+          batch_count = batch_count + 1  
           number_of_workunits = 0
 
           # Check model_class and if it is not openifs then exit loop and move on to the next xml file
@@ -149,7 +149,7 @@ if __name__ == "__main__":
           if model_class != 'openifs': 
             non_openifs_class = True
             print "The model class of the XML is not openifs, so moving on to the next XML file\n"
-            batchid = batchid - 1
+            batch_count = batch_count - 1
             break
 
           model_config = str(batch.getElementsByTagName('model_config')[0].childNodes[0].nodeValue)
@@ -171,6 +171,21 @@ if __name__ == "__main__":
             tech_info = str(batch_info.getElementsByTagName('tech_info')[0].childNodes[0].nodeValue)
             umid_end = str(batch_info.getElementsByTagName('umid_end')[0].childNodes[0].nodeValue)
             umid_start = str(batch_info.getElementsByTagName('umid_start')[0].childNodes[0].nodeValue)
+            xml_batchid = str(batch_info.getElementsByTagName('batchid')[0].childNodes[0].nodeValue)
+
+          # Set batchid to batch_count
+          batchid = batch_count
+
+          # Check whether the XML is containing workunits to add to an existing batch
+          # First, check whether xml_batchid is a numerical value
+          if xml_batchid.isdigit():
+            # Second, check whether xml_batchid is contained in the cpdn_batch table
+            #print "xml_batchid: "+xml_batchid
+            query = """select 1 from cpdn_batch where id = '%s'""" % (xml_batchid)
+            cursor.execute(query)
+            # If xml_batchid contained in the cpdn_batch table then overwrite batchid with xml_batchid
+            if cursor.fetchone():
+              batchid = int(xml_batchid)
 
           # Create the batch folder structure in the download directory
           download_dir = project_dir + "/download/"
