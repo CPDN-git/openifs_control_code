@@ -33,13 +33,13 @@ if __name__ == "__main__":
     project_dir = <PROJECT_DIRECTORY>
     input_directory = project_dir+'oifs_workgen/incoming_xmls'
     oifs_ancil_dir = <ANCILS_LOCATION> + '/oifs_ancil_files/'
-    
+
     # Set the regionid as global
     regionid = 15
 
     # Set the max_results_per_workunit
     max_results_per_workunit = 1
-    
+
     # Set the flops factor (for the progress bar)
     flops_factor = 12800000000000
     # flops_factor = 1078000000000 # Original
@@ -69,7 +69,7 @@ if __name__ == "__main__":
       secondary_db = 'cpdnexpt'
       project_url = 'https://www.cpdn.org/'
       database_port = 3306
-    
+
     # Open cursor and connection to primary_db
     db = MySQLdb.connect(db_host,db_user,db_passwd,primary_db,port=database_port)
     cursor = db.cursor()
@@ -120,11 +120,11 @@ if __name__ == "__main__":
     print "Starting submission run: "+str(datetime.datetime.now())
     print "--------------------------------------"
     print ""
-    
+
     # Make a temporary directory for reorganising the files required by the workunit
     if not os.path.isdir(project_dir+"temp_openifs_submission_files"):
       os.mkdir(project_dir+"temp_openifs_submission_files")
-    
+
     # Iterate over the xmlfile in the input directory
     for input_xmlfile in os.listdir(input_directory):
       if input_xmlfile.endswith(".xml"):
@@ -154,14 +154,14 @@ if __name__ == "__main__":
 
           model_config = str(batch.getElementsByTagName('model_config')[0].childNodes[0].nodeValue)
           print "model_config: "+model_config
-        
+
           fullpos_namelist_file = str(batch.getElementsByTagName('fullpos_namelist')[0].childNodes[0].nodeValue)
           fullpos_namelist = oifs_ancil_dir + 'fullpos_namelist/' + fullpos_namelist_file
           print "fullpos_namelist: "+fullpos_namelist
-        
+
           nthreads = str(batch.getElementsByTagName('num_threads')[0].childNodes[0].nodeValue)
           print "num_threads: "+nthreads
-        
+
           batch_infos = batch.getElementsByTagName('batch_info')
           for batch_info in batch_infos:
             batch_desc = str(batch_info.getElementsByTagName('desc')[0].childNodes[0].nodeValue)
@@ -196,7 +196,7 @@ if __name__ == "__main__":
             os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')
           if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')):
             os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
-            
+
           # Find the project id
           query = """select id from cpdn_project where name ='%s'""" %(project_name)
           cursor.execute(query)
@@ -224,7 +224,7 @@ if __name__ == "__main__":
             upload_frequency = str(model_config.getElementsByTagName('upload_frequency')[0].childNodes[0].nodeValue)
             namelist_template = str(model_config.getElementsByTagName('namelist_template_global')[0].childNodes[0].nodeValue)
             wam_namelist_template = str(model_config.getElementsByTagName('wam_template_global')[0].childNodes[0].nodeValue)
-            
+
             #print "horiz_resolution: "+horiz_resolution
             #print "vert_resolution: "+vert_resolution
             #print "grid_type: "+grid_type
@@ -233,7 +233,7 @@ if __name__ == "__main__":
             #print "upload_frequency: "+upload_frequency
             print "namelist_template: "+namelist_template
             print "wam_namelist_template: "+wam_namelist_template
-            
+
           first_wuid = wuid + 1
           first_start_year = 9999
           last_start_year = 0
@@ -264,7 +264,7 @@ if __name__ == "__main__":
                  zrh0 = str(parameter.getElementsByTagName('zrh0')[0].childNodes[0].nodeValue)
                  zgamma = str(parameter.getElementsByTagName('zgamma')[0].childNodes[0].nodeValue)
                  zchar = str(parameter.getElementsByTagName('zchar')[0].childNodes[0].nodeValue)
-                    
+
             # If perturbed surface
             if options.app_name == 'oifs_43r3_ps':
               for parameter in parameters:
@@ -273,7 +273,7 @@ if __name__ == "__main__":
                  zuncertc = str(parameter.getElementsByTagName('zuncertc')[0].childNodes[0].nodeValue)
                  zuncertd = str(parameter.getElementsByTagName('zuncertd')[0].childNodes[0].nodeValue)
                  zuncerte = str(parameter.getElementsByTagName('zuncerte')[0].childNodes[0].nodeValue)
-                    
+
             # This section can be used to resubmit particular workunits from an XML file
             # To use this, provide a file containing a list of umids that are contained within the XML 
             # This section will then check whether workunit is in the list and resubmit, and will exit loop if not listed
@@ -285,7 +285,7 @@ if __name__ == "__main__":
             ##      umid_present = 1
             ##if umid_present == 0:
             ##  continue
-            
+
             # Set the first_start_year
             if start_year < first_start_year:
               first_start_year = start_year
@@ -340,12 +340,11 @@ if __name__ == "__main__":
                start_date = start_date + '00'
             elif start_hour > 0 and start_hour < 25:
                start_date = start_date + str(start_hour).zfill(2)
-            
-            
+
             # Construct ancil_file_location
             ancil_file_location = oifs_ancil_dir
             ic_ancil_location = oifs_ancil_dir +"ic_ancil/"+str(exptid)+"/"+str(start_date)+"/"+str(analysis_member_number)+"/"
-           
+
             ic_ancils = workunit.getElementsByTagName('ic_ancil')
             for ic_ancil in ic_ancils:
               ic_ancil_zip_in = str(ic_ancil.getElementsByTagName('ic_ancil_zip')[0].childNodes[0].nodeValue)
@@ -389,10 +388,10 @@ if __name__ == "__main__":
             os.remove(project_dir+"temp_openifs_submission_files/"+GHG_zip)
             os.remove(project_dir+"temp_openifs_submission_files/"+radiation_zip)
             os.remove(project_dir+"temp_openifs_submission_files/"+SO4_zip)
-            
+
             # Zip together the ifsdata files
             shutil.make_archive(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/ifsdata_'+str(wuid), 'zip', project_dir+"temp_openifs_submission_files/")
-            
+
             # Change the working path
             os.chdir(project_dir)
 
@@ -452,7 +451,7 @@ if __name__ == "__main__":
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 91 and grid_type == '_4':
               memory_bound = str(26300000000)
               gribfield_size = 130.0
-            
+
             # Calculate the number of timesteps from the number of days of the simulation
             if fclen_units == 'days':
               num_timesteps = (int(fclen) * 86400)/int(timestep)
@@ -460,7 +459,7 @@ if __name__ == "__main__":
               #print "num_timesteps: "+str(num_timesteps)
               num_hours = int(fclen) * 24
               num_days = fclen
-            
+
               # Throw an error if not cleanly divisible
               if not(isinstance(num_timesteps,int)):
                 raise ValueError('Length of simulation (in days) does not divide equally by timestep')
@@ -478,17 +477,17 @@ if __name__ == "__main__":
               # Throw an error if not cleanly divisible
               if not(isinstance(upload_interval,int)):
                 raise ValueError('The number of time steps does not divide equally by the upload frequency')
-            
+
               # Set the name of the workunit (days)
               workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_'+str(num_days)+'_'+batch_prefix+str(batchid)+'_'+str(wuid)
-            
+
             elif fclen_units == 'hours':
               num_timesteps = (int(fclen) * 3600)/int(timestep)
               num_hours = int(fclen)
               num_days = str('{0:.3f}'.format(int(fclen) * 0.041666667)) # Convert to days and round to three decimals figures
               # print "num_days: "+num_days
               # print "fclen: "+fclen
-            
+
               # Throw an error if not cleanly divisible
               if not(isinstance(num_timesteps,int)):
                 raise ValueError('Length of simulation (in hours) does not divide equally by timestep')
@@ -499,7 +498,7 @@ if __name__ == "__main__":
 
               # Set the name of the workunit (hours)
               workunit_name = str(options.app_name)+'_'+str(unique_member_id)+'_'+str(start_date)+'_0_'+batch_prefix+str(batchid)+'_'+str(wuid)
-            
+
             # Compute disk_bound assuming worse case where none of the trickles can be uploaded until run is complete
             # i.e. estimate total size of model output assuming 1 output per model day.
             # Add 'extra' to account for climate files, executables etc in workunit. TODO: This is resolution dependent!
@@ -513,18 +512,18 @@ if __name__ == "__main__":
             print "upload_interval: "+str(upload_interval)
             print "number_of_uploads: "+str(number_of_uploads)
             print "disk_bound, disk_bound (Gb): "+disk_bound+", "+str(disk_bound_gb)
-            
+
             # Throw an error if not cleanly divisible
             if not(isinstance(number_of_uploads,int)):
               raise ValueError('The total number of timesteps does not divide equally by the upload interval')
- 
+
 
             # Set the fpops_est and fpops_bound for the workunit
             fpops_est = str(flops_factor * int(float(num_days)))
             fpops_bound = str(flops_factor * int(float(num_days)) * 10)
             #print "fpops_est: "+fpops_est
             #print "fpops_bound: "+fpops_bound
-            
+
             upload_infos = batch.getElementsByTagName('upload_info')
             for upload_info in upload_infos:
               upload_handler = str(upload_info.getElementsByTagName('upload_handler')[0].childNodes[0].nodeValue)
@@ -562,11 +561,11 @@ if __name__ == "__main__":
               OUTPUT=open(project_dir+result_template,"w")
               # Create the result_template
               print >> OUTPUT, output_string
-              OUTPUT.close()  
-                
+              OUTPUT.close()
+
             # Set the server_cgi from the upload_handler string
-            server_cgi = upload_handler[:-19]  
-                
+            server_cgi = upload_handler[:-19]
+
             # Read in the namelist template file
             with open(project_dir+'oifs_workgen/namelist_template_files/'+namelist_template, 'r') as namelist_file :
               template_file = []
@@ -760,7 +759,7 @@ if __name__ == "__main__":
             # Calculate the size of the climate_data zip in bytes
             climate_data_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip))
             print "climate_data_zip_size = "+str(climate_data_zip_size)
-            
+
             # Run the create_work script to create the workunit
             args = ["./bin/create_work","-appname",str(options.app_name),"-wu_name",str(workunit_name),"-wu_template",\
                     "templates/"+str(options.app_name)+"_in_"+str(wuid),"-result_template",result_template,\
@@ -778,14 +777,14 @@ if __name__ == "__main__":
               run_years = 0.00274 * int(fclen)
             else:
               run_years = 0
-            
+
             # Enter the details of the submitted workunit into the workunit_table
             query = """insert into cpdn_workunit(wuid,cpdn_batch,umid,name,start_year,run_years,appid) \
                                                  values(%s,%s,'%s','%s',%s,%s,%s)""" \
                                                  %(wuid,batchid,unique_member_id,workunit_name,start_year,run_years,appid)
             cursor.execute(query)
             db.commit()
-            
+
             # Enter the fullpos_namelist details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
@@ -841,7 +840,7 @@ if __name__ == "__main__":
                                              %('166',str(start_month),'0',wuid)
             cursor.execute(query)
             db.commit()
-            
+
             # Enter the start_year details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
@@ -883,7 +882,7 @@ if __name__ == "__main__":
                                              %('172',climate_data_zip_in,'0',wuid)
             cursor.execute(query)
             db.commit()
- 
+
 
             # If baroclinic wave simulation enter values for parameters into parameter table
             if options.app_name == 'oifs_43r3_bl':
@@ -936,7 +935,7 @@ if __name__ == "__main__":
                                              %('186',zchar,'0',wuid)
                cursor.execute(query)
                db.commit()
-  
+
             # If perturbed surface enter values for parameters into parameter table
             if options.app_name == 'oifs_43r3_ps':
 
@@ -970,7 +969,7 @@ if __name__ == "__main__":
                                              %('191',zuncerte,'0',wuid)
                cursor.execute(query)
                db.commit()
-            
+
             # Remove the contents of the temp_openifs_submission_files directory
             args = ['rm','-rf','temp_openifs_submission_files/*']
             p = subprocess.Popen(args)
@@ -995,7 +994,7 @@ if __name__ == "__main__":
           # Remove the processed input xml file from the incoming folder
           if os.path.exists(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile)):
             os.remove(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile))
-            
+
           # Copy the sent XML into the batch folder and gzip  
           f_in = open(project_dir+"oifs_workgen/sent_xmls/sent-"+input_xmlfile)
           f_out = gzip.open(download_dir+'batch_'+batch_prefix+str(batchid)+'/batch_'+batch_prefix+str(batchid)+'_workunit_submission.xml.gz','wb')
@@ -1013,10 +1012,10 @@ if __name__ == "__main__":
             #print query
             cursor.execute(query)
             db.commit()
-        
+
     # Change back to the project directory
     os.chdir(project_dir)
-        
+
     # Delete the temp_openifs_submission_files folder
     args = ['rm','-rf','temp_openifs_submission_files']
     p = subprocess.Popen(args)
