@@ -1465,7 +1465,7 @@ bool check_stoi(std::string& cin) {
     //  n.b. still need to check step <= max_step
     try {
         step = std::stoi(cin);
-        cerr << "step converted is : " << step << "\n";
+        //cerr << "step converted is : " << step << "\n";
         return true;
     }
     catch (const std::invalid_argument &excep) {
