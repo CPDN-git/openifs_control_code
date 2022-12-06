@@ -7,7 +7,7 @@
 if __name__ == "__main__":
 
     #import fileinput
-    import os, zipfile, shutil, datetime, calendar, math, MySQLdb, fcntl, hashlib
+    import os, zipfile, shutil, datetime, calendar, math, MySQLdb, fcntl, hashlib, gzip
     import json, argparse, subprocess, time, sys, xml.etree.ElementTree as ET
     from email.mime.text import MIMEText
     from subprocess import Popen, PIPE
@@ -959,16 +959,24 @@ if __name__ == "__main__":
           # Remove the processed input xml file from the incoming folder
           if os.path.exists(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile)):
             os.remove(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile))
+            
+          # Copy the sent XML into the batch folder and gzip  
+          f_in = open(project_dir+"oifs_workgen/sent_xmls/sent-"+input_xmlfile)
+          f_out = gzip.open(download_dir+'batch_'+batch_prefix+str(batchid)+'/batch_'+batch_prefix+str(batchid)+'_workunit_submission.xml.gz','wb')
+          f_out.writelines(f_in)
+          f_out.close()
+          f_in.close()
 
-          # Enter the details of the new batch into the batch_table
-          query = """insert into cpdn_batch(id,name,description,first_start_year,appid,server_cgi,owner,ul_files,tech_info,\
-                     umid_start,umid_end,projectid,last_start_year,number_of_workunits,max_results_per_workunit,regionid) \
-                     values(%i,'%s','%s',%i,%i,'%s','%s',%i,'%s','%s','%s',%i,%i,%i,%i,%i);""" \
-                     %(batchid,batch_name,batch_desc,first_start_year,appid,server_cgi,batch_owner,number_of_uploads,tech_info,\
-                       umid_start,umid_end,projectid,last_start_year,number_of_workunits,max_results_per_workunit,regionid)
-          #print query
-          cursor.execute(query)
-          db.commit()
+          # If a new batch then enter the details of this new batch into the cpdn_batch table
+          if not(xml_batchid.isdigit()):
+            query = """insert into cpdn_batch(id,name,description,first_start_year,appid,server_cgi,owner,ul_files,tech_info,\
+                       umid_start,umid_end,projectid,last_start_year,number_of_workunits,max_results_per_workunit,regionid) \
+                       values(%i,'%s','%s',%i,%i,'%s','%s',%i,'%s','%s','%s',%i,%i,%i,%i,%i);""" \
+                       %(batchid,batch_name,batch_desc,first_start_year,appid,server_cgi,batch_owner,number_of_uploads,tech_info,\
+                         umid_start,umid_end,projectid,last_start_year,number_of_workunits,max_results_per_workunit,regionid)
+            #print query
+            cursor.execute(query)
+            db.commit()
         
     # Change back to the project directory
     os.chdir(project_dir)
