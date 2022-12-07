@@ -515,7 +515,7 @@ int main(int argc, char** argv) {
     // last_upload is the time of the last upload file (in seconds)
 
     // Define the name and location of the progress file
-    std::string progress_file = temp_path+std::string("/progress_file_")+wuid+std::string(".xml");
+    std::string progress_file = slot_path+std::string("/progress_file_")+wuid+std::string(".xml");
     std::ofstream progress_file_out(progress_file);
     std::ifstream progress_file_in(progress_file);
     std::stringstream progress_file_buffer;
@@ -1081,8 +1081,7 @@ int main(int argc, char** argv) {
         process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);     
     }
 
-    // Now task has finished, remove the progress file and temp folder
-    std::remove(progress_file.c_str());
+    // Now task has finished, remove the temp folder
     std::remove(temp_path.c_str());
 
     sleep_until(system_clock::now() + seconds(120));
