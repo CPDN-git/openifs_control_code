@@ -619,7 +619,7 @@ int main(int argc, char** argv) {
 	
 
     // Start the OpenIFS job
-    std::string strCmd = slot_path + std::string("/./master.exe");
+    std::string strCmd = slot_path + std::string("/oifs_43r3_model.exe");
     handleProcess = launch_process(slot_path,strCmd.c_str(),exptid.c_str(),app_name);
     if (handleProcess > 0) process_status = 0;
 
