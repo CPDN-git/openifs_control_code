@@ -43,6 +43,7 @@ bool file_exists(const std::string &str);
 double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
+bool check_stoi(std::string& cin);
 
 using namespace std;
 using namespace std::chrono;
@@ -618,7 +619,7 @@ int main(int argc, char** argv) {
 	
 
     // Start the OpenIFS job
-    std::string strCmd = slot_path + std::string("/./openifs_43r3.exe");
+    std::string strCmd = slot_path + std::string("/oifs_43r3_model.exe");
     handleProcess = launch_process(slot_path,strCmd.c_str(),exptid.c_str(),app_name);
     if (handleProcess > 0) process_status = 0;
 
@@ -665,6 +666,12 @@ int main(int argc, char** argv) {
           // to the files for that iteration, those files can now be moved and uploaded
           //fprintf(stderr,"iter: %i\n",std::stoi(iter));
           //fprintf(stderr,"last_iter: %i\n",std::stoi(last_iter));
+
+          // GC: Check for garbage in the retrieved string first, otherwise stoi will kill this process.
+          if (!check_stoi(iter)) {
+            fprintf(stderr,"Unable to update iter, resetting to last_iter.\n");
+            iter = last_iter;
+          }
 
           if (std::stoi(iter) != std::stoi(last_iter)) {
              // Construct file name of the ICM result file
@@ -1438,4 +1445,35 @@ std::string get_second_part(string last_iter, string exptid) {
    }
 
    return second_part;
+}
+
+
+bool check_stoi(std::string& cin) {
+    //  check input string is convertable to an integer by checking for any letters
+    //  nb. stoi() will convert leading digits if alphanumeric but we know step must be all digits.
+    //  Returns true on success, false if non-numeric data in input string.
+    //  Glenn Carver
+
+    int step;
+
+    if (std::any_of(cin.begin(), cin.end(), ::isalpha)) {
+        cerr << "Invalid characters in stoi string: " << cin << "\n";
+        return false;
+    }
+
+    //  check stoi standard exceptions
+    //  n.b. still need to check step <= max_step
+    try {
+        step = std::stoi(cin);
+        //cerr << "step converted is : " << step << "\n";
+        return true;
+    }
+    catch (const std::invalid_argument &excep) {
+        cerr << "Invalid input argument for stoi : " << excep.what() << "\n";
+        return false;
+    }
+    catch (const std::out_of_range &excep) {
+        cerr << "Out of range value for stoi : " << excep.what() << "\n";
+        return false;
+    }
 }
