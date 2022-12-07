@@ -524,6 +524,7 @@ int main(int argc, char** argv) {
     // Model progress is held in the progress file
     // First check if a file is not already present from an unscheduled shutdown
     if(file_exists(progress_file) && progress_file_in.tellg() > 0) {
+       fprintf(stderr,"Located progress_file\n");
        // If present parse file and extract values
        progress_file_in.open(progress_file);
        progress_file_buffer << progress_file_in.rdbuf();
@@ -552,6 +553,7 @@ int main(int argc, char** argv) {
        //printf("model_completed: %i\n",model_completed);
     }
     else {
+       fprintf(stderr,"progress_file not present, creating progress file\n");
        // Progress file not present, so create a progress file
        // Set the initial values
        last_cpu_time = 0;
