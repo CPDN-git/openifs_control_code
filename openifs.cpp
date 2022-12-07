@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
     std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
     int upload_interval, timestep_interval, ICM_file_interval, process_status, retval=0, i, j;
-    int current_iter=0, count=0;	
+    int current_iter=0, count=0, trickle_upload_count;	
     char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
     char *pathvar;
     long handleProcess;
@@ -577,6 +577,7 @@ int main(int argc, char** argv) {
 	
     fraction_done = 0;
     memset(result_base_name, 0x00, sizeof(char) * 64);
+    trickle_upload_count = 0;
 
     // seconds between upload files: upload_interval
     // seconds between ICM files: ICM_file_interval * timestep_interval
@@ -807,9 +808,13 @@ int main(int argc, char** argv) {
                       if (!retval) {
                          fprintf(stderr,"Finished the upload of the intermediate file: %s\n",upload_file_name.c_str());
                       }
-			
-                      // Produce trickle
-                      process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+		      
+		      trickle_upload_count++;
+		      if (trickle_upload_count = 10) {   
+                        // Produce trickle
+                        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+		        trickle_upload_count = 0;
+		      }
                    }
                    last_upload = current_iter; 
                 }
@@ -841,9 +846,14 @@ int main(int argc, char** argv) {
                       }
                    }
                    last_upload = current_iter;
-		     
-	           // Produce trickle
-                   process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+		
+                   trickle_upload_count++;
+		   if (trickle_upload_count = 10) {   
+                      // Produce trickle
+                      process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+		      trickle_upload_count = 0;
+		   }
+
                 }
                 boinc_end_critical_section();
                 upload_file_number++;
