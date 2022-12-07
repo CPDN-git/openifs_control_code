@@ -546,11 +546,11 @@ int main(int argc, char** argv) {
        last_upload = std::stoi(last_upload_node->value());
        model_completed = std::stoi(model_completed_node->value());
 
-       //printf("last_cpu_time: %i\n",last_cpu_time);
-       //printf("upload_file_number: %i\n",upload_file_number);
-       //printf("last_iter: %s\n",last_iter.c_str());
-       //printf("last_upload: %i\n",last_upload);
-       //printf("model_completed: %i\n",model_completed);
+       fprintf(stderr,"last_cpu_time: %i\n",last_cpu_time);
+       fprintf(stderr,"upload_file_number: %i\n",upload_file_number);
+       fprintf(stderr,"last_iter: %s\n",last_iter.c_str());
+       fprintf(stderr,"last_upload: %i\n",last_upload);
+       fprintf(stderr,"model_completed: %i\n",model_completed);
     }
     else {
        fprintf(stderr,"progress_file not present, creating progress file\n");
