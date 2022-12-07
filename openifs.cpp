@@ -898,7 +898,7 @@ int main(int argc, char** argv) {
 
 
     // Time delay to ensure final ICM are complete
-    sleep_until(system_clock::now() + seconds(90));	
+    sleep_until(system_clock::now() + seconds(60));	
 
 	
     // Check whether model completed successfully
