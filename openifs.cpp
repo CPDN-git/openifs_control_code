@@ -574,12 +574,6 @@ int main(int argc, char** argv) {
        restart_iter = stoi(last_iter);
        restart_iter = restart_iter - restart_iter % restart_interval - 1;   // -1 because the model will continue from restart_iter.
        last_iter = to_string(restart_iter); 
-
-       fprintf(stderr,"last_cpu_time: %i\n",last_cpu_time);
-       fprintf(stderr,"upload_file_number: %i\n",upload_file_number);
-       fprintf(stderr,"last_iter: %s\n",last_iter.c_str());
-       fprintf(stderr,"last_upload: %i\n",last_upload);
-       fprintf(stderr,"model_completed: %i\n",model_completed);
     }
     else {
        fprintf(stderr,"Progress_file not present, creating new progress file: %s\n",progress_file);
@@ -611,7 +605,7 @@ int main(int argc, char** argv) {
     fprintf(stderr,"last_upload: %i\n",last_upload);
     fprintf(stderr,"model_completed: %i\n",model_completed);
 
-	
+
     fraction_done = 0;
     memset(result_base_name, 0x00, sizeof(char) * 64);
     trickle_upload_count = 0;
