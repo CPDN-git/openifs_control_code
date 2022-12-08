@@ -6,7 +6,7 @@ TARGET  = openifs_$(VERSION)_x86_64-pc-linux-gnu
 SRC     = openifs.cpp
 
 CC       = g++
-CFLAGS   = -g -pthread -std=c++17 -Wall
+CFLAGS   = -g -static -pthread -std=c++17 -Wall
 INCLUDES = -I../boinc-install/include
 LIBS     = -L../boinc-install/lib -lboinc_api -lboinc_zip -lboinc
 
