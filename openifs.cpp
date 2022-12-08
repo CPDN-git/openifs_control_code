@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <filesystem>
 #include <exception>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,9 +24,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/resource.h>
-#include "boinc/api/boinc_api.h"
-#include "boinc/zip/boinc_zip.h"
-#include "boinc/lib/util.h"
+//#include "boinc/api/boinc_api.h"
+//#include "boinc/zip/boinc_zip.h"
+//#include "boinc/lib/util.h"
+#include "boinc/boinc_api.h"
+#include "boinc/boinc_zip.h"
+#include "boinc/util.h"
 #include "rapidxml.hpp"
 #include <algorithm>
 
@@ -40,6 +44,7 @@ long launch_process(const char*,const char*,const char*,const std::string);
 std::string get_tag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
+bool file_is_empty(std::string &str);
 double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
@@ -53,9 +58,9 @@ using namespace rapidxml;
 int main(int argc, char** argv) {
     std::string ifsdata_file, ic_ancil_file, climate_data_file, horiz_resolution, vert_resolution, grid_type;
     std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
-    std::string ifs_line="", iter="-1", ifs_word="", second_part, upload_file_name, last_line="";
+    std::string ifs_line="", iter="0", ifs_word="", second_part, upload_file_name, last_line="";
     int upload_interval, timestep_interval, ICM_file_interval, process_status, retval=0, i, j;
-    int current_iter=0, count=0, trickle_upload_count;	
+    int restart_interval, current_iter=0, count=0, trickle_upload_count;	
     char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
     char *pathvar;
     long handleProcess;
@@ -323,8 +328,24 @@ int main(int argc, char** argv) {
           ICM_file_interval = std::stoi(tmpstr3);
           fprintf(stderr,"nfrpos: %i\n",ICM_file_interval);
        }
+       else if (nss.str().find("NFRRES") != std::string::npos) {     // frequency of model output: +ve steps, -ve in hours.
+          tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
+          // Remove any whitespace and commas
+          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),','),tmpstr3.end());
+          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),' '),tmpstr3.end());
+          if ( check_stoi(tmpstr3) ) {
+            restart_interval = stoi(tmpstr3);
+          } else {
+            fprintf(stderr,"Warning. Unable to read restart interval. Setting to zero. Got string: %s\n",tmpstr3.c_str());
+            restart_interval = 0;
+          }
+       }
     }
     namelist_filestream.close();
+
+    // restart frequency might be in units of hrs, convert to model steps
+    if ( restart_interval < 0 )   restart_interval = abs(restart_interval)*3600 / timestep_interval;
+    fprintf(stderr,"nfrres: restart dump frequency (steps) %i\n",restart_interval);
 
 
     // Process the ic_ancil_file:
@@ -509,26 +530,48 @@ int main(int argc, char** argv) {
        if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) fprintf(stderr,"..Setting the stack limit to unlimited failed\n");
     #endif
 
-    int last_cpu_time, upload_file_number, last_upload, model_completed;
-    std::string last_iter;
+    int last_cpu_time, upload_file_number, last_upload, model_completed, restart_iter;
+    std::string last_iter = "0";
 
     // last_upload is the time of the last upload file (in seconds)
 
     // Define the name and location of the progress file
     std::string progress_file = slot_path+std::string("/progress_file_")+wuid+std::string(".xml");
-    std::ofstream progress_file_out(progress_file);
+    //std::ofstream progress_file_out(progress_file);  // DO NOT DECLARE THIS HERE!! IT EMPTIES THE FILE!!  NOw DECLARED BELOW
     std::ifstream progress_file_in(progress_file);
     std::stringstream progress_file_buffer;
     xml_document<> doc;
+
+    bool prog_exist = file_exists(progress_file);
+    bool prog_ok = false;
 	
     // Model progress is held in the progress file
     // First check if a file is not already present from an unscheduled shutdown
-    if(file_exists(progress_file) && progress_file_in.tellg() > 0) {
-       fprintf(stderr,"Located progress_file\n");
+
+    cerr << "Checking for progress XML file: " << progress_file << "\n";
+
+    if ( prog_exist ) {
+      if ( file_is_empty(progress_file) ) {
+         cerr << "Warning. Progress file found but zero bytes. Ignoring: " << progress_file << "\n";
+      } else {
+         prog_ok = true;
+         cerr << "Found progress file ok: " << progress_file << "\n";
+
+         // make a backup because it will be overwritten below
+         std::ifstream  src(progress_file,          std::ios::binary);
+         std::ofstream  dst(progress_file+".old",   std::ios::binary);
+         dst << src.rdbuf();
+      }
+    }
+
+    if( prog_ok ) {
        // If present parse file and extract values
+       //system("pwd; ls -l; cat progress_file_10294.xml");
        progress_file_in.open(progress_file);
+       cerr << "Opened progress file ok " << progress_file << endl << std::flush;
        progress_file_buffer << progress_file_in.rdbuf();
        progress_file_in.close();
+       cerr << "Closed progress file ok." << endl << std::flush;
 	    
        // Parse XML progress file
        doc.parse<0>(&progress_file_buffer.str()[0]);
@@ -546,6 +589,15 @@ int main(int argc, char** argv) {
        last_upload = std::stoi(last_upload_node->value());
        model_completed = std::stoi(model_completed_node->value());
 
+       // Adjust last_iter to the step of the previous model restart dump step.
+       // This is always a multiple of the restart frequency
+
+       cerr << "-- Model is restarting --\n";
+       cerr << "Adjusting last_iter, " << last_iter << ", to previous restart step.\n";
+       restart_iter = stoi(last_iter);
+       restart_iter = restart_iter - restart_iter % restart_interval - 1;   // -1 because the model will continue from restart_iter.
+       last_iter = to_string(restart_iter); 
+
        fprintf(stderr,"last_cpu_time: %i\n",last_cpu_time);
        fprintf(stderr,"upload_file_number: %i\n",upload_file_number);
        fprintf(stderr,"last_iter: %s\n",last_iter.c_str());
@@ -561,19 +613,28 @@ int main(int argc, char** argv) {
        last_iter = "0";
        last_upload = 0;
        model_completed = 0;
-	    
-       // Write out the initial progress file	
-       progress_file_out.open(progress_file);
-       progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
-       progress_file_out <<"<running_values>"<< std::endl;
-       progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
-       progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
-       progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
-       progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
-       progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
-       progress_file_out <<"</running_values>"<< std::endl;
-       progress_file_out.close();
     }
+	    
+    // Write out the progress file. Note this truncates progress_file to zero bytes if it already exists
+    std::ofstream progress_file_out(progress_file);
+
+    progress_file_out.open(progress_file);
+    progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
+    progress_file_out <<"<running_values>"<< std::endl;
+    progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
+    progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
+    progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
+    progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
+    progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
+    progress_file_out <<"</running_values>"<< std::endl;
+    progress_file_out.close();
+
+    fprintf(stderr,"last_cpu_time: %i\n",last_cpu_time);
+    fprintf(stderr,"upload_file_number: %i\n",upload_file_number);
+    fprintf(stderr,"last_iter: %s\n",last_iter.c_str());
+    fprintf(stderr,"last_upload: %i\n",last_upload);
+    fprintf(stderr,"model_completed: %i\n",model_completed);
+
 	
     fraction_done = 0;
     memset(result_base_name, 0x00, sizeof(char) * 64);
@@ -645,35 +706,41 @@ int main(int argc, char** argv) {
 
        // Check every 10 seconds whether an upload point has been reached
        if(count==10) {   
-          if(!(ifs_stat_file.is_open())) {
-             //fprintf(stderr,"Opening ifs.stat file\n");
-             ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
-          }
+          if ( file_exists(slot_path + std::string("/ifs.stat")) ) {
+            if(!(ifs_stat_file.is_open())) {
+               //fprintf(stderr,"Opening ifs.stat file\n");
+               ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
+            }
 
-          // Read last completed ICM file from ifs.stat file
-          while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
-             //fprintf(stderr,"Reading ifs.stat file\n");
+            // Read last completed ICM file from ifs.stat file
+            // Note the VERY first line from the model has a step count of '....  CNT3      -999 ....'
+            while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
+               //cerr << "Reading ifs.stat file, line: " << ifs_line << endl;
 
-             std::istringstream iss(ifs_line);  //put line into stringstream
-             int ifs_word_count=0;
-             // Read fourth column from file
-             while(iss >> ifs_word) {  //read word by word
-                ifs_word_count++;
-                if (ifs_word_count==4) iter = ifs_word;
-                //fprintf(stderr,"count: %i\n",ifs_word_count);
-                //fprintf(stderr,"iter: %s\n",iter.c_str());
-             }
-          }
+               std::istringstream iss(ifs_line);  //put line into stringstream
+               int ifs_word_count=0;
+               // Read fourth column from file
+               while(iss >> ifs_word) {  //read word by word
+                  ifs_word_count++;
+                  if (ifs_word_count==4) iter = ifs_word;
+                  //fprintf(stderr,"count: %i\n",ifs_word_count);
+                  //fprintf(stderr,"iter: %s\n",iter.c_str());
+               }
+            }
 
-          // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
-          // to the files for that iteration, those files can now be moved and uploaded
-          //fprintf(stderr,"iter: %i\n",std::stoi(iter));
-          //fprintf(stderr,"last_iter: %i\n",std::stoi(last_iter));
+            // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
+            // to the files for that iteration, those files can now be moved and uploaded
+            //fprintf(stderr,"iter: %i\n",std::stoi(iter));
+            //fprintf(stderr,"last_iter: %i\n",std::stoi(last_iter));
 
-          // GC: Check for garbage in the retrieved string first, otherwise stoi will kill this process.
-          if (!check_stoi(iter)) {
-            fprintf(stderr,"Unable to update iter, resetting to last_iter.\n");
-            iter = last_iter;
+            // GC: Check for garbage in the retrieved string first, otherwise stoi will kill this process.
+            if (!check_stoi(iter)) {
+               fprintf(stderr,"Unable to update iter, resetting to last_iter.\n");
+               cerr << "ifs_line = " << ifs_line << endl;
+               iter = last_iter;
+            }
+          } else {
+            iter = last_iter;    //  model just started and not yet created ifs.stat file
           }
 
           if (std::stoi(iter) != std::stoi(last_iter)) {
@@ -1357,6 +1424,15 @@ bool file_exists(const std::string& filename)
     std::ifstream infile(filename.c_str());
     return infile.good();
 }
+
+// Check whether file is zero bytes long
+// from: https://stackoverflow.com/questions/2390912/checking-for-an-empty-file-in-c
+// returns True if file is zero bytes, otherwise False.
+bool file_is_empty(std::string& fpath) {
+   cerr << "file_is_empty: " << fpath << endl;
+   return (std::filesystem::file_size(fpath) == 0);
+}
+
 
 // Calculate the cpu_time
 double cpu_time(long handleProcess) {
