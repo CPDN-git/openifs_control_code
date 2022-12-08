@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <filesystem>  // required by file_is_empty
 #include <exception>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,6 +44,7 @@ long launch_process(const char*,const char*,const char*,const std::string);
 std::string get_tag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
+bool file_is_empty(std::string &str);
 double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
@@ -543,10 +545,10 @@ int main(int argc, char** argv) {
     // First check if a file is not already present from an unscheduled shutdown
     cerr << "Checking for progress XML file: " << progress_file << "\n";
 
-    if (file_exists(progress_file) && progress_file_in.tellg() > 0) {
+    if ( file_exists(progress_file) && !file_is_empty(progress_file) ) {
        // If present parse file and extract values
        progress_file_in.open(progress_file);
-       cerr << "Opened progress file ok : " << progress_file << endl;
+       cerr << "Opened progress file ok : " << progress_file << "\n";
        progress_file_buffer << progress_file_in.rdbuf();
        progress_file_in.close();
 	    
@@ -576,7 +578,6 @@ int main(int argc, char** argv) {
        last_iter = to_string(restart_iter); 
     }
     else {
-       fprintf(stderr,"Progress_file not present, creating new progress file: %s\n",progress_file);
        // Set the initial values for start of model run
        last_cpu_time = 0;
        upload_file_number = 0;
@@ -587,6 +588,7 @@ int main(int argc, char** argv) {
 	    
     // Write out the new progress file. Note this truncates progress_file to zero bytes if it already exists (as in a model restart)
     std::ofstream progress_file_out(progress_file);
+    fprintf(stderr, "Creating progress file: %s\n",progress_file.c_str());
 
     progress_file_out.open(progress_file);
     progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
@@ -1393,6 +1395,13 @@ bool file_exists(const std::string& filename)
 {
     std::ifstream infile(filename.c_str());
     return infile.good();
+}
+
+// Check whether file is zero bytes long
+// from: https://stackoverflow.com/questions/2390912/checking-for-an-empty-file-in-c
+// returns True if file is zero bytes, otherwise False.
+bool file_is_empty(std::string& fpath) {
+   return (std::filesystem::file_size(fpath) == 0);
 }
 
 // Calculate the cpu_time
