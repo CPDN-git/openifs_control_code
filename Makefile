@@ -1,7 +1,7 @@
 #
 #  Makefile to generate the openifs wrapper
 
-VERSION = 1.00
+VERSION = 1.08
 TARGET  = openifs_$(VERSION)_x86_64-pc-linux-gnu
 SRC     = openifs.cpp
 
