@@ -11,7 +11,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <filesystem>
 #include <exception>
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,7 +43,6 @@ long launch_process(const char*,const char*,const char*,const std::string);
 std::string get_tag(const std::string &str);
 void process_trickle(double,const char*,const char*,const char*,int);
 bool file_exists(const std::string &str);
-bool file_is_empty(std::string &str);
 double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
@@ -60,7 +58,7 @@ int main(int argc, char** argv) {
     std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
     std::string ifs_line="", iter="0", ifs_word="", second_part, upload_file_name, last_line="";
     int upload_interval, timestep_interval, ICM_file_interval, process_status, retval=0, i, j;
-    int restart_interval, current_iter=0, count=0, trickle_upload_count;	
+    int restart_interval, current_iter=0, count=0, trickle_upload_count;
     char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
     char *pathvar;
     long handleProcess;
@@ -537,41 +535,20 @@ int main(int argc, char** argv) {
 
     // Define the name and location of the progress file
     std::string progress_file = slot_path+std::string("/progress_file_")+wuid+std::string(".xml");
-    //std::ofstream progress_file_out(progress_file);  // DO NOT DECLARE THIS HERE!! IT EMPTIES THE FILE!!  NOw DECLARED BELOW
     std::ifstream progress_file_in(progress_file);
     std::stringstream progress_file_buffer;
     xml_document<> doc;
-
-    bool prog_exist = file_exists(progress_file);
-    bool prog_ok = false;
 	
     // Model progress is held in the progress file
     // First check if a file is not already present from an unscheduled shutdown
-
     cerr << "Checking for progress XML file: " << progress_file << "\n";
 
-    if ( prog_exist ) {
-      if ( file_is_empty(progress_file) ) {
-         cerr << "Warning. Progress file found but zero bytes. Ignoring: " << progress_file << "\n";
-      } else {
-         prog_ok = true;
-         cerr << "Found progress file ok: " << progress_file << "\n";
-
-         // make a backup because it will be overwritten below
-         std::ifstream  src(progress_file,          std::ios::binary);
-         std::ofstream  dst(progress_file+".old",   std::ios::binary);
-         dst << src.rdbuf();
-      }
-    }
-
-    if( prog_ok ) {
+    if (file_exists(progress_file) && progress_file_in.tellg() > 0) {
        // If present parse file and extract values
-       //system("pwd; ls -l; cat progress_file_10294.xml");
        progress_file_in.open(progress_file);
-       cerr << "Opened progress file ok " << progress_file << endl << std::flush;
+       cerr << "Opened progress file ok : " << progress_file << endl;
        progress_file_buffer << progress_file_in.rdbuf();
        progress_file_in.close();
-       cerr << "Closed progress file ok." << endl << std::flush;
 	    
        // Parse XML progress file
        doc.parse<0>(&progress_file_buffer.str()[0]);
@@ -593,7 +570,7 @@ int main(int argc, char** argv) {
        // This is always a multiple of the restart frequency
 
        cerr << "-- Model is restarting --\n";
-       cerr << "Adjusting last_iter, " << last_iter << ", to previous restart step.\n";
+       cerr << "Adjusting last_iter, " << last_iter << ", to previous model restart step.\n";
        restart_iter = stoi(last_iter);
        restart_iter = restart_iter - restart_iter % restart_interval - 1;   // -1 because the model will continue from restart_iter.
        last_iter = to_string(restart_iter); 
@@ -605,9 +582,8 @@ int main(int argc, char** argv) {
        fprintf(stderr,"model_completed: %i\n",model_completed);
     }
     else {
-       fprintf(stderr,"progress_file not present, creating progress file\n");
-       // Progress file not present, so create a progress file
-       // Set the initial values
+       fprintf(stderr,"Progress_file not present, creating new progress file: %s\n",progress_file);
+       // Set the initial values for start of model run
        last_cpu_time = 0;
        upload_file_number = 0;
        last_iter = "0";
@@ -615,7 +591,7 @@ int main(int argc, char** argv) {
        model_completed = 0;
     }
 	    
-    // Write out the progress file. Note this truncates progress_file to zero bytes if it already exists
+    // Write out the new progress file. Note this truncates progress_file to zero bytes if it already exists (as in a model restart)
     std::ofstream progress_file_out(progress_file);
 
     progress_file_out.open(progress_file);
@@ -1424,15 +1400,6 @@ bool file_exists(const std::string& filename)
     std::ifstream infile(filename.c_str());
     return infile.good();
 }
-
-// Check whether file is zero bytes long
-// from: https://stackoverflow.com/questions/2390912/checking-for-an-empty-file-in-c
-// returns True if file is zero bytes, otherwise False.
-bool file_is_empty(std::string& fpath) {
-   cerr << "file_is_empty: " << fpath << endl;
-   return (std::filesystem::file_size(fpath) == 0);
-}
-
 
 // Calculate the cpu_time
 double cpu_time(long handleProcess) {
