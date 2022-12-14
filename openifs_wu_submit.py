@@ -503,7 +503,7 @@ if __name__ == "__main__":
             # i.e. estimate total size of model output assuming 1 output per model day.
             # Add 'extra' to account for climate files, executables etc in workunit. TODO: This is resolution dependent!
             extra_wu_gb = 5
-            total_wu_gb = extra_wu_gb + num_days * fields_per_output * (gribfield_size/(1024*1014))
+            total_wu_gb = extra_wu_gb + float(num_days) * fields_per_output * (gribfield_size/(1024*1014))
             disk_bound_gb = math.ceil(total_wu_gb)
             disk_bound    = str(disk_bound_gb * 1024**3 )
 
