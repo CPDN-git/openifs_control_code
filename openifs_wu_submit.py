@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     project_dir = <PROJECT_DIRECTORY>
     input_directory = project_dir+'oifs_workgen/incoming_xmls'
-    oifs_ancil_dir = <ANCILS_LOCATION> + '/oifs_ancil_files/'
+    oifs_ancil_dir = '/storage/cpdn_ancil_files/oifs_ancil_files/'
 
     # Set the regionid as global
     regionid = 15
