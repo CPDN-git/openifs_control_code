@@ -417,6 +417,8 @@ if __name__ == "__main__":
             # Add another 0.5Gb to task mem to allow for wrapper plus bit extra in case of leaks.
             # Ordered by the 'N' number: N80 & up.
             # gribfield_size is approximate as not all GRIB fields are packed to the same precision.
+            # Updated: jan/23, add in size of model restarts which become significant with higher resolution
+            #   and scale as square of resolution.
 
             fields_per_output = 200       # assume scientist typically has this total no. of fields per output instance
                                           # also assume output every day TODO: improve by reading NFRPOS from namelist
@@ -424,33 +426,43 @@ if __name__ == "__main__":
             if int(horiz_resolution) == 63 and int(vert_resolution) == 91:
               memory_bound = str(5370000000)
               gribfield_size = 70.0            # approx value of single GRIB field output (Kb - converted below)
+              restart_size   = 0.7             # approx value of single set of restart files (Gb).
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 60 and grid_type == 'l_2':
               memory_bound = str(6010000000)
               gribfield_size = 70.0
+              restart_size   = 0.7
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 91 and grid_type == 'l_2':
               memory_bound = str(8804000000)
               gribfield_size = 70.0
+              restart_size   = 1.0
             elif int(horiz_resolution) == 95 and int(vert_resolution) == 91:
               memory_bound = str(10844000000)
               gribfield_size = 80.0
+              restart_size   = 1.4
             elif int(horiz_resolution) == 255 and int(vert_resolution) == 60:
               memory_bound = str(13786000000)
               gribfield_size = 90.0
+              restart_size   = 2.0
             elif int(horiz_resolution) == 255 and int(vert_resolution) == 91:
               memory_bound = str(20400000000)
               gribfield_size = 90.0
+              restart_size   = 2.6
             elif int(horiz_resolution) == 319 and int(vert_resolution) == 60:
               memory_bound = str(21300000000)
               gribfield_size = 170.0
+              restart_size   = 3.2
             elif int(horiz_resolution) == 319 and int(vert_resolution) == 91:
               memory_bound = str(31675000000)
               gribfield_size = 170.0
+              restart_size   = 4.0
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 60 and grid_type == '_4':
               memory_bound = str(17810000000)
               gribfield_size = 130.0
+              restart_size   = 3.2
             elif int(horiz_resolution) == 159 and int(vert_resolution) == 91 and grid_type == '_4':
               memory_bound = str(26300000000)
               gribfield_size = 130.0
+              restart_size   = 4.0
 
             # Calculate the number of timesteps from the number of days of the simulation
             if fclen_units == 'days':
@@ -502,8 +514,9 @@ if __name__ == "__main__":
             # Compute disk_bound assuming worse case where none of the trickles can be uploaded until run is complete
             # i.e. estimate total size of model output assuming 1 output per model day.
             # Add 'extra' to account for climate files, executables etc in workunit. TODO: This is resolution dependent!
+            # Allow space for several sets of restart files; some may be kept by the model during the run
             extra_wu_gb = 5
-            total_wu_gb = extra_wu_gb + float(num_days) * fields_per_output * (gribfield_size/(1024*1024))
+            total_wu_gb = extra_wu_gb + 3*restart_size + float(num_days) * fields_per_output * (gribfield_size/(1024*1024))
             disk_bound_gb = math.ceil(total_wu_gb)
             disk_bound    = str(disk_bound_gb * 1024**3 )
 
