@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     # Check if a lockfile is present from an ongoing submission
     lockfile='/tmp/lockfile_workgen'
-    print "Waiting for lock...",
+    print "Waiting for lock...\n"
     f=open(lockfile,'w')
     fcntl.lockf(f,fcntl.LOCK_EX)
     print "got lock\n"
