@@ -1187,34 +1187,30 @@ const char* strip_path(const char* path) {
 
 
 int check_child_status(long handleProcess, int process_status) {
-    int stat,pid;
+    int stat;
+    //fprintf(stderr,"waitpid: %i\n",waitpid(handleProcess,0,WNOHANG));
 
-    // Check whether child processed has exited 
-    // waitpid will return process id of zombie (finished) process; zero if still running
-    if ( (pid=waitpid(handleProcess,&stat,WNOHANG)) > 0 ) {
+    // Check whether child processed has exited
+    if (waitpid(handleProcess,&stat,WNOHANG)==-1) {
        process_status = 1;
-       // Child exited normally but model might still have failed
+       // Child exited normally
        if (WIFEXITED(stat)) {
           process_status = 1;
-          cerr << "..The child process terminated with status: " << WEXITSTATUS(stat) << endl;
+          fprintf(stderr,"The child process terminated with status: %d\n",WEXITSTATUS(stat));
+          fflush(stderr);
        }
-       // Child process has exited due to signal that was not caught
-       // n.b. OpenIFS has its own signal handler so unlikely to come here.
+       // Child process has exited
        else if (WIFSIGNALED(stat)) {
-          process_status = 3;  
-          cerr << "..The child process has been killed with signal: " << WTERMSIG(stat) << endl;
+          process_status = 3;
+          fprintf(stderr,"..The child process has been killed with signal: %d\n",WTERMSIG(stat));
+          fflush(stderr);
        }
        // Child is stopped
        else if (WIFSTOPPED(stat)) {
           process_status = 4;
-          cerr << "..The child process has stopped with signal: " << WSTOPSIG(stat) << endl;
+          fprintf(stderr,"..The child process has stopped with signal: %d\n",WSTOPSIG(stat));
+          fflush(stderr);
        }
-    }
-    else if ( pid == -1) {
-      // should not get here, it means the child could not be found
-      process_status = 5;
-      cerr << "Unable to retrieve status of child process " << endl;
-      perror("waitpid() error");
     }
     return process_status;
 }
