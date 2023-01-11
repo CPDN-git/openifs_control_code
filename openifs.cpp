@@ -980,6 +980,7 @@ int main(int argc, char** argv) {
          print_last_lines("waminfo",17);          // wave model restart control
          print_last_lines(progress_file,8);
          fprintf(stderr,"..Failed, model did not complete successfully\n");
+         fflush(stderr);
          return 1;
        }
     }
