@@ -668,7 +668,6 @@ int main(int argc, char** argv) {
     // process_status = 2 stopped with quit request from BOINC
     // process_status = 3 stopped with child process being killed
     // process_status = 4 stopped with child process being stopped
-    // process_status = 5 child process not found by waitpid()
 
 
     // Main loop:	
