@@ -948,10 +948,12 @@ int main(int argc, char** argv) {
     }
 
 
-    // Time delay to ensure final ICM are complete
-    sleep_until(system_clock::now() + seconds(60));	
+    // Time delay to ensure model files are all flushed to disk
+    sleep_until(system_clock::now() + seconds(60));
 
-	
+    // Print content of key model files to help with diagnosing problems
+    print_last_lines("NODE.001_01", 100);    //  main model output log	
+
     // Check whether model completed successfully
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
        if(!(ifs_stat_file.is_open())) {
@@ -974,8 +976,12 @@ int main(int argc, char** argv) {
           }
        }
        if (last_line!="CNT0") {
-          fprintf(stderr,"..Failed, model did not complete successfully\n");
-          return 1;
+         // print extra files to help diagnose fail
+         print_last_lines("rcf",11);              // openifs restart control
+         print_last_lines("waminfo",17);          // wave model restart control
+         print_last_lines(progress_file,8);
+         fprintf(stderr,"..Failed, model did not complete successfully\n");
+         return 1;
        }
     }
     // ifs.stat has not been produced, then model did not start
