@@ -49,6 +49,7 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
+int  print_last_lines(std::string filename, int nlines);
 
 using namespace std;
 using namespace std::chrono;
@@ -1533,4 +1534,36 @@ bool check_stoi(std::string& cin) {
         cerr << "Out of range value for stoi : " << excep.what() << "\n";
         return false;
     }
+}
+
+int print_last_lines(string filename, int inlines) {
+   // Opens a file if exists and uses circular buffer to read & print last 'nlines' of file to stderr.
+   // Returns: zero : either can't open file or file is empty
+   //          > 0  : no. of lines in file (may be less than nlines)
+   //  Glenn
+
+   int     maxlines = 100;
+   int     count = 0;
+   int     start, end;
+   string  lines[maxlines];
+   ifstream filein(filename);
+
+   if ( filein.is_open() ) {
+      while ( getline(filein, lines[count%maxlines]) )
+         count++;
+   }
+
+   if ( count > 0 ) {
+      // find the oldest lines first in the buffer, will not be at start if count > maxlines
+      start = count > maxlines ? (count%maxlines) : 0;
+      end   = min(maxlines,count);
+
+      cerr << ">>> Printing last " << end << " lines from file: " << filename << '\n';
+      for ( int i=0; i<end; i++ ) {
+         cerr << lines[ (start+i)%maxlines ] << '\n';
+      }
+      cerr << "------------------------------------------------" << '\n';
+   }
+
+   return count;
 }
