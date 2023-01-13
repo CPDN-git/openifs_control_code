@@ -1549,7 +1549,7 @@ int print_last_lines(string filename, int inlines) {
    //          > 0  : no. of lines in file (may be less than nlines)
    //  Glenn
 
-   int     maxlines = 100;
+   int     maxlines = 200;
    int     count = 0;
    int     start, end;
    string  lines[maxlines];
