@@ -951,7 +951,7 @@ int main(int argc, char** argv) {
     sleep_until(system_clock::now() + seconds(60));
 
     // Print content of key model files to help with diagnosing problems
-    print_last_lines("NODE.001_01", 100);    //  main model output log	
+    print_last_lines("NODE.001_01", 150);    //  main model output log	
 
     // Check whether model completed successfully
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
