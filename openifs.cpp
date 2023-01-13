@@ -49,6 +49,7 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
+int get_oifs_step(int& step);
 
 using namespace std;
 using namespace std::chrono;
@@ -1533,4 +1534,63 @@ bool check_stoi(std::string& cin) {
         cerr << "Out of range value for stoi : " << excep.what() << "\n";
         return false;
     }
+}
+
+
+int get_oifs_step(int& step) {
+   // Opens 'ifs.stat' file and keeps it open to parse the step count from the last line.
+   // Note 1:  this fn never closes the file once opened.
+   // Note 2:  it's the responsibility of the caller to not call this fn too frequently!
+   //
+   // Returns:
+   //    0 : on success and arg 'step' updated to latest integer step value.
+   //    1 : fail. file can't be opened, doesn't exist.
+   //    2 : fail. could not convert input string to an integer; probable corrupt file or wrong file.
+   //
+   //     Glenn
+
+    string      logFile("ifs.stat");
+    ifstream    ifs(logFile.c_str());
+    string      stepCount;         // 4th element of ifs.stat file lines
+    string      logline;
+    streamoff   p = 0;             // stream offset position
+    istringstream tokens;
+    int retval = 0;        // non-zero in case of error
+
+    if ( !ifs.is_open() ) {
+        cerr << "get_oifs_step: Error. Could not open file : " << logFile << endl;
+        retval = 1;
+        return retval;
+    }
+
+    ifs.seekg(p);
+    while (getline(ifs, logline)) {
+        //cout << logline << endl;
+
+        //  split input, 4th field is step count unless file is corrupted
+        tokens.str(logline);
+        for (int i=0; i<4; ++i)
+            tokens >> stepCount;
+
+        if ( ifs.tellg() == -1 )
+           p = p + logline.size();
+        else
+           p = ifs.tellg();
+
+        // empty stringstream, release memory, and clear any error state
+        // see: https://stackoverflow.com/questions/20731/how-do-you-clear-a-stringstream-variable
+        istringstream().swap(tokens);
+    }
+    ifs.clear();           // must clear stream error before attempting to read again
+
+    //  check for garbage from ifs.stat
+    cout << "get_oifs_step: stepCount : " << stepCount << "\n";
+    if (check_stoi(stepCount)) {
+        step = stoi(stepCount.c_str());
+    } else {
+        cerr << "get_oifs_step: Can't update stepCount. Unable to convert string to integer : " << stepCount << '\n';
+        retval = 2;
+    }
+
+    return retval;
 }
