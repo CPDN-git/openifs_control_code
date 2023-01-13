@@ -1053,6 +1053,8 @@ int main(int argc, char** argv) {
     zfl.push_back(node_file);
     std::string ifsstat_file = slot_path + std::string("/ifs.stat");
     zfl.push_back(ifsstat_file);
+    cerr << "Adding to the zip: " << node_file << '\n';
+    cerr << "Adding to the zip: " << ifsstat_file << '\n';
 
     // Read the remaining list of files from the slots directory and add the matching files to the list of files for the zip
     dirp = opendir(temp_path.c_str());
