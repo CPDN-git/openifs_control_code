@@ -49,7 +49,7 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
-int get_oifs_step(int& step);
+bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index=4);
 
 using namespace std;
 using namespace std::chrono;
@@ -678,43 +678,33 @@ int main(int argc, char** argv) {
        count++;
 
        // Check every 10 seconds whether an upload point has been reached
-       if(count==10) {   
-          if ( file_exists(slot_path + std::string("/ifs.stat")) ) {
-            if(!(ifs_stat_file.is_open())) {
-               //fprintf(stderr,"Opening ifs.stat file\n");
-               ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
-            }
+       if(count==10) {
+         
+          iter = last_iter;
+          if( file_exists(slot_path + std::string("/ifs.stat")) ) {
 
-            // Read last completed ICM file from ifs.stat file
-            // Note the VERY first line from the model has a step count of '....  CNT3      -999 ....'
-            while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
-               //cerr << "Reading ifs.stat file, line: " << ifs_line << endl;
+             //  To reduce I/O, open file once only and use get_oifs_step() to parse the step count
+             if( !(ifs_stat_file.is_open()) ) {
+                ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
+             } 
+             if( ifs_stat_file.is_open() ) {
 
-               std::istringstream iss(ifs_line);  //put line into stringstream
-               int ifs_word_count=0;
-               // Read fourth column from file
-               while(iss >> ifs_word) {  //read word by word
-                  ifs_word_count++;
-                  if (ifs_word_count==4) iter = ifs_word;
-                  //fprintf(stderr,"count: %i\n",ifs_word_count);
-                  //fprintf(stderr,"iter: %s\n",iter.c_str());
-               }
-            }
+                // Read & parse step from last completed model step from ifs.stat file.
+                // Note the first line from the model has a step count of '....  CNT3      -999 ....'
+                // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
+                // to the output files for that iteration, those files can now be moved and uploaded.
 
-            // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
-            // to the files for that iteration, those files can now be moved and uploaded
-            //fprintf(stderr,"iter: %i\n",std::stoi(iter));
-            //fprintf(stderr,"last_iter: %i\n",std::stoi(last_iter));
-
-            // GC: Check for garbage in the retrieved string first, otherwise stoi will kill this process.
-            if (!check_stoi(iter)) {
-               fprintf(stderr,"Unable to update iter, resetting to last_iter.\n");
-               cerr << "ifs_line = " << ifs_line << endl;
-               iter = last_iter;
-            }
-          } else {
-            iter = last_iter;    //  model just started and not yet created ifs.stat file
-          }
+                if ( oifs_parse_ifsstat(ifs_stat_file, iter) ) {          // updates iter if parse successful
+                   if (!check_stoi(iter)) {
+                      cerr << "Invalid characters in stoi string, unable to covert to integer step: " << iter << '\n';
+                      iter = last_iter;      // reset to previous known good step; usually a temporary bad read
+                   }
+                   if (stoi(iter)<0) {
+                     iter = last_iter;
+                   }
+                }
+             }
+          } 
 
           if (std::stoi(iter) != std::stoi(last_iter)) {
              // Construct file name of the ICM result file
@@ -901,8 +891,7 @@ int main(int argc, char** argv) {
           }
           last_iter = iter;
           count = 0;
-          // Closing ifs.stat file access
-          ifs_stat_file.close();     
+    
 	       
           // Update the progress file	
           progress_file_out.open(progress_file);
@@ -1537,60 +1526,57 @@ bool check_stoi(std::string& cin) {
 }
 
 
-int get_oifs_step(int& step) {
-   // Opens 'ifs.stat' file and keeps it open to parse the step count from the last line.
-   // Note 1:  this fn never closes the file once opened.
-   // Note 2:  it's the responsibility of the caller to not call this fn too frequently!
+bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index) {   // index=4 default
+   // Parse content of ifs.stat and return *valid* step count as string.
+   // ONLY changes step if newlines have been added to ifs.stat since previous call.
+   // Updates stream offset between calls to prevent completely re-reading the file,
+   // to reduce file I/O on the volunteer's machine.
    //
-   // Returns:
-   //    0 : on success and arg 'step' updated to latest integer step value.
-   //    1 : fail. file can't be opened, doesn't exist.
-   //    2 : fail. could not convert input string to an integer; probable corrupt file or wrong file.
+   // Returns: True if step was changed, 
+   //          False if file not open, line did not parse, or step value did not change.
+   //
+   // TODO: not enough time but ideally this should be part of a small class that
+   // inherits from ifstream to manage & read ifs.stat, because it relies on trust that the
+   // callee has not opened & closed this file inbetween calls.
    //
    //     Glenn
 
-    string      logFile("ifs.stat");
-    ifstream    ifs(logFile.c_str());
-    string      stepCount;         // 4th element of ifs.stat file lines
-    string      logline;
-    streamoff   p = 0;             // stream offset position
+    string      statstr = "";         // default: 4th element of ifs.stat file lines
+    string      logline = "";
+    static streamoff   p = 0;             // stream offset position
     istringstream tokens;
-    int retval = 0;        // non-zero in case of error
 
-    if ( !ifs.is_open() ) {
-        cerr << "get_oifs_step: Error. Could not open file : " << logFile << endl;
-        retval = 1;
-        return retval;
+    if ( !ifs_stat.is_open() ) {
+        cerr << "oifs_parse_ifsstat: Error. ifs.stat file is not open" << endl;
+        p = 0;
+        return false;
     }
 
-    ifs.seekg(p);
-    while (getline(ifs, logline)) {
-        //cout << logline << endl;
+    ifs_stat.seekg(p);
+    while ( std::getline(ifs_stat, logline) ) {
+        cerr << "oifs_parse_ifsstat: " << logline << endl;
 
-        //  split input, 4th field is step count unless file is corrupted
+        //  split input, get token specified by 'column' unless file is corrupted
         tokens.str(logline);
-        for (int i=0; i<4; ++i)
-            tokens >> stepCount;
+        for (int i=0; i<index; ++i)
+            tokens >> statstr;
 
-        if ( ifs.tellg() == -1 )
+        if ( ifs_stat.tellg() == -1 )     // set p to end of file for next read
            p = p + logline.size();
         else
-           p = ifs.tellg();
+           p = ifs_stat.tellg();
 
         // empty stringstream, release memory, and clear any error state
         // see: https://stackoverflow.com/questions/20731/how-do-you-clear-a-stringstream-variable
         istringstream().swap(tokens);
     }
-    ifs.clear();           // must clear stream error before attempting to read again
+    ifs_stat.clear();           // must clear stream error before attempting to read again as file remains open
 
-    //  check for garbage from ifs.stat
-    cout << "get_oifs_step: stepCount : " << stepCount << "\n";
-    if (check_stoi(stepCount)) {
-        step = stoi(stepCount.c_str());
+    if ( statstr.empty() ){
+      return false;
     } else {
-        cerr << "get_oifs_step: Can't update stepCount. Unable to convert string to integer : " << stepCount << '\n';
-        retval = 2;
+      stat_column = statstr;
+      cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
+      return true;
     }
-
-    return retval;
 }
