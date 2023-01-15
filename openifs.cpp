@@ -939,28 +939,12 @@ int main(int argc, char** argv) {
     sleep_until(system_clock::now() + seconds(60));	
 
 	
-    // Check whether model completed successfully
+    // To check whether model completed successfully, look for 'CNT0' in 3rd column of ifs.stat
+    // This will always be the last line of a successful model forecast.
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
-       if(!(ifs_stat_file.is_open())) {
-          //fprintf(stderr,"Opening ifs.stat file\n");
-          ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
-       }
-
-       // Read last line from ifs.stat file
-       while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
-          //fprintf(stderr,"Reading ifs.stat file\n");
-
-          std::istringstream iss2(ifs_line);  //put line into stringstream
-          int ifs_word_count=0;
-          // Read fourth column from file
-          while(iss2 >> ifs_word) {  //read word by word
-             ifs_word_count++;
-             if (ifs_word_count==3) last_line = ifs_word;
-             //fprintf(stderr,"count: %i\n",ifs_word_count);
-             //fprintf(stderr,"last_line: %s\n",last_line.c_str());
-          }
-       }
-       if (last_line!="CNT0") {
+       ifs_word="";
+       oifs_parse_ifsstat(ifs_stat_file,ifs_word,3);
+       if (ifs_word!="CNT0") {
           fprintf(stderr,"..Failed, model did not complete successfully\n");
           return 1;
        }
