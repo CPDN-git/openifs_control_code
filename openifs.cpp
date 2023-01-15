@@ -50,6 +50,7 @@ double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
 bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index=4);
+bool oifs_valid_step(std::string&,int);
 
 using namespace std;
 using namespace std::chrono;
@@ -347,6 +348,9 @@ int main(int argc, char** argv) {
     // restart frequency might be in units of hrs, convert to model steps
     if ( restart_interval < 0 )   restart_interval = abs(restart_interval)*3600 / timestep_interval;
     fprintf(stderr,"nfrres: restart dump frequency (steps) %i\n",restart_interval);
+
+    // GC: this should match CUSTEP in fort.4. If it doesn't we have a problem
+    total_nsteps = (num_days * 86400.0) / (double) timestep_interval;
 
 
     // Process the ic_ancil_file:
@@ -689,17 +693,13 @@ int main(int argc, char** argv) {
              } 
              if( ifs_stat_file.is_open() ) {
 
-                // Read & parse step from last completed model step from ifs.stat file.
+                // Read & parse completed step from last line of ifs.stat file.
                 // Note the first line from the model has a step count of '....  CNT3      -999 ....'
                 // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
                 // to the output files for that iteration, those files can now be moved and uploaded.
 
-                if ( oifs_parse_ifsstat(ifs_stat_file, iter) ) {          // updates iter if parse successful
-                   if (!check_stoi(iter)) {
-                      cerr << "Invalid characters in stoi string, unable to covert to integer step: " << iter << '\n';
-                      iter = last_iter;      // reset to previous known good step; usually a temporary bad read
-                   }
-                   if (stoi(iter)<0) {
+                if ( oifs_parse_ifsstat(ifs_stat_file, iter) ) {          // updates iter, nb. assumes file is never closed!
+                   if ( !oifs_valid_step(iter,total_nsteps) ) {
                      iter = last_iter;
                    }
                 }
@@ -914,7 +914,6 @@ int main(int argc, char** argv) {
 	       
 
       // GC: Calculate the fraction done
-      total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // GC: this should match CUSTEP in fort.4. If it doesn't we have a problem
       fraction_done = model_frac_done( atof(iter.c_str()), total_nsteps, atoi(nthreads.c_str()) );
       //fprintf(stderr,"fraction done: %.6f\n", fraction_done);
      
@@ -1579,4 +1578,24 @@ bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int i
       cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
       return true;
     }
+}
+
+bool oifs_valid_step(std::string& step, int nsteps) {
+   //  checks for a valid step count in arg 'step'
+   //  Returns :   true if step is valid, otherwise false
+   //      Glenn
+
+   // make sure step is valid integer
+   if (!check_stoi(step)) {
+      cerr << "oifs_valid_step: Invalid characters in stoi string, unable to convert step to int: " << step << '\n';
+      return false;
+   } else {
+      // check step is in valid range: 0 -> total no. of steps
+      if (stoi(step)<0) {
+         return false;
+      } else if (stoi(step) > nsteps) {
+         return false;
+      }
+   }
+   return true;
 }
