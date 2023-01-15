@@ -1537,7 +1537,7 @@ bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int i
 
     ifs_stat.seekg(p);
     while ( std::getline(ifs_stat, logline) ) {
-        cerr << "oifs_parse_ifsstat: " << logline << endl;
+        //cerr << "oifs_parse_ifsstat: " << logline << endl;
 
         //  split input, get token specified by 'column' unless file is corrupted
         tokens.str(logline);
@@ -1559,7 +1559,7 @@ bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int i
       return false;
     } else {
       stat_column = statstr;
-      cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
+      //cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
       return true;
     }
 }
