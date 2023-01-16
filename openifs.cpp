@@ -49,6 +49,8 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
+bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index=4);
+bool oifs_valid_step(std::string&,int);
 int  print_last_lines(std::string filename, int nlines);
 
 using namespace std;
@@ -347,6 +349,9 @@ int main(int argc, char** argv) {
     // restart frequency might be in units of hrs, convert to model steps
     if ( restart_interval < 0 )   restart_interval = abs(restart_interval)*3600 / timestep_interval;
     fprintf(stderr,"nfrres: restart dump frequency (steps) %i\n",restart_interval);
+
+    // this should match CUSTEP in fort.4. If it doesn't we have a problem
+    total_nsteps = (num_days * 86400.0) / (double) timestep_interval;
 
 
     // Process the ic_ancil_file:
@@ -679,43 +684,29 @@ int main(int argc, char** argv) {
        count++;
 
        // Check every 10 seconds whether an upload point has been reached
-       if(count==10) {   
-          if ( file_exists(slot_path + std::string("/ifs.stat")) ) {
-            if(!(ifs_stat_file.is_open())) {
-               //fprintf(stderr,"Opening ifs.stat file\n");
-               ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
-            }
+       if(count==10) {
+         
+          iter = last_iter;
+          if( file_exists(slot_path + std::string("/ifs.stat")) ) {
 
-            // Read last completed ICM file from ifs.stat file
-            // Note the VERY first line from the model has a step count of '....  CNT3      -999 ....'
-            while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
-               //cerr << "Reading ifs.stat file, line: " << ifs_line << endl;
+             //  To reduce I/O, open file once only and use get_parse_ifsstat() to parse the step count
+             if( !(ifs_stat_file.is_open()) ) {
+                ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
+             } 
+             if( ifs_stat_file.is_open() ) {
 
-               std::istringstream iss(ifs_line);  //put line into stringstream
-               int ifs_word_count=0;
-               // Read fourth column from file
-               while(iss >> ifs_word) {  //read word by word
-                  ifs_word_count++;
-                  if (ifs_word_count==4) iter = ifs_word;
-                  //fprintf(stderr,"count: %i\n",ifs_word_count);
-                  //fprintf(stderr,"iter: %s\n",iter.c_str());
-               }
-            }
+                // Read completed step from last line of ifs.stat file.
+                // Note the first line from the model has a step count of '....  CNT3      -999 ....'
+                // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
+                // to the output files for that iteration, those files can now be moved and uploaded.
 
-            // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
-            // to the files for that iteration, those files can now be moved and uploaded
-            //fprintf(stderr,"iter: %i\n",std::stoi(iter));
-            //fprintf(stderr,"last_iter: %i\n",std::stoi(last_iter));
-
-            // GC: Check for garbage in the retrieved string first, otherwise stoi will kill this process.
-            if (!check_stoi(iter)) {
-               fprintf(stderr,"Unable to update iter, resetting to last_iter.\n");
-               cerr << "ifs_line = " << ifs_line << endl;
-               iter = last_iter;
-            }
-          } else {
-            iter = last_iter;    //  model just started and not yet created ifs.stat file
-          }
+                if ( oifs_parse_ifsstat(ifs_stat_file, iter) ) {          // updates iter, nb. assumes file is never closed!
+                   if ( !oifs_valid_step(iter,total_nsteps) ) {
+                     iter = last_iter;
+                   }
+                }
+             }
+          } 
 
           if (std::stoi(iter) != std::stoi(last_iter)) {
              // Construct file name of the ICM result file
@@ -902,8 +893,6 @@ int main(int argc, char** argv) {
           }
           last_iter = iter;
           count = 0;
-          // Closing ifs.stat file access
-          ifs_stat_file.close();     
 	       
           // Update the progress file	
           progress_file_out.open(progress_file);
@@ -925,8 +914,7 @@ int main(int argc, char** argv) {
        }
 	       
 
-      // GC: Calculate the fraction done
-      total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // GC: this should match CUSTEP in fort.4. If it doesn't we have a problem
+      // Calculate the fraction done
       fraction_done = model_frac_done( atof(iter.c_str()), total_nsteps, atoi(nthreads.c_str()) );
       //fprintf(stderr,"fraction done: %.6f\n", fraction_done);
      
@@ -954,34 +942,17 @@ int main(int argc, char** argv) {
     // Print content of key model files to help with diagnosing problems
     print_last_lines("NODE.001_01", 150);    //  main model output log	
 
-    // Check whether model completed successfully
+    // To check whether model completed successfully, look for 'CNT0' in 3rd column of ifs.stat
+    // This will always be the last line of a successful model forecast.
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
-       if(!(ifs_stat_file.is_open())) {
-          //fprintf(stderr,"Opening ifs.stat file\n");
-          ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
-       }
-
-       // Read last line from ifs.stat file
-       while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
-          //fprintf(stderr,"Reading ifs.stat file\n");
-
-          std::istringstream iss2(ifs_line);  //put line into stringstream
-          int ifs_word_count=0;
-          // Read fourth column from file
-          while(iss2 >> ifs_word) {  //read word by word
-             ifs_word_count++;
-             if (ifs_word_count==3) last_line = ifs_word;
-             //fprintf(stderr,"count: %i\n",ifs_word_count);
-             //fprintf(stderr,"last_line: %s\n",last_line.c_str());
-          }
-       }
-       if (last_line!="CNT0") {
+       ifs_word="";
+       oifs_parse_ifsstat(ifs_stat_file,ifs_word,3);
+       if (ifs_word!="CNT0") {
          // print extra files to help diagnose fail
          print_last_lines("rcf",11);              // openifs restart control
          print_last_lines("waminfo",17);          // wave model restart control
          print_last_lines(progress_file,8);
-         fprintf(stderr,"..Failed, model did not complete successfully\n");
-         fflush(stderr);
+         cerr << "..Failed, model did not complete successfully" << endl;
          return 1;
        }
     }
@@ -1549,6 +1520,83 @@ bool check_stoi(std::string& cin) {
         return false;
     }
 }
+
+
+bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index) {   // index=4 default
+   // Parse content of ifs.stat and return *valid* step count as string.
+   // ONLY changes step if newlines have been added to ifs.stat since previous call.
+   // Updates stream offset between calls to prevent completely re-reading the file,
+   // to reduce file I/O on the volunteer's machine.
+   //
+   // Returns: True if step was changed, 
+   //          False if file not open, line did not parse, or step value did not change.
+   //
+   // TODO: not enough time but ideally this should be part of a small class that
+   // inherits from ifstream to manage & read ifs.stat, because it relies on trust that the
+   // callee has not opened & closed this file inbetween calls.
+   //
+   //     Glenn
+
+    string      statstr = "";         // default: 4th element of ifs.stat file lines
+    string      logline = "";
+    static streamoff   p = 0;             // stream offset position
+    istringstream tokens;
+
+    if ( !ifs_stat.is_open() ) {
+        cerr << "oifs_parse_ifsstat: Error. ifs.stat file is not open" << endl;
+        p = 0;
+        return false;
+    }
+
+    ifs_stat.seekg(p);
+    while ( std::getline(ifs_stat, logline) ) {
+        //cerr << "oifs_parse_ifsstat: " << logline << endl;
+
+        //  split input, get token specified by 'column' unless file is corrupted
+        tokens.str(logline);
+        for (int i=0; i<index; ++i)
+            tokens >> statstr;
+
+        if ( ifs_stat.tellg() == -1 )     // set p to end of file for next read
+           p = p + logline.size();
+        else
+           p = ifs_stat.tellg();
+
+        // empty stringstream, release memory, and clear any error state
+        // see: https://stackoverflow.com/questions/20731/how-do-you-clear-a-stringstream-variable
+        istringstream().swap(tokens);
+    }
+    ifs_stat.clear();           // must clear stream error before attempting to read again as file remains open
+
+    if ( statstr.empty() ){
+      return false;
+    } else {
+      stat_column = statstr;
+      //cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
+      return true;
+    }
+}
+
+bool oifs_valid_step(std::string& step, int nsteps) {
+   //  checks for a valid step count in arg 'step'
+   //  Returns :   true if step is valid, otherwise false
+   //      Glenn
+
+   // make sure step is valid integer
+   if (!check_stoi(step)) {
+      cerr << "oifs_valid_step: Invalid characters in stoi string, unable to convert step to int: " << step << '\n';
+      return false;
+   } else {
+      // check step is in valid range: 0 -> total no. of steps
+      if (stoi(step)<0) {
+         return false;
+      } else if (stoi(step) > nsteps) {
+         return false;
+      }
+   }
+   return true;
+}
+
 
 int print_last_lines(string filename, int inlines) {
    // Opens a file if exists and uses circular buffer to read & print last 'nlines' of file to stderr.
