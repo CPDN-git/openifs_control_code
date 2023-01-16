@@ -507,6 +507,15 @@ int main(int argc, char** argv) {
     pathvar = getenv("EC_MEMINFO");
     //fprintf(stderr, "The EC_MEMINFO environment variable is: %s\n, pathvar);
 
+    // Disable Heap memory stats at end of run; do not work for CPDN version of OpenIFS
+    std::string EC_PROFILE_HEAP("EC_PROFILE_HEAP=0");
+    if (putenv((char *)EC_PROFILE_HEAP.c_str())) {
+       fprintf(stderr,"..Setting the EC_PROFILE_HEAP environment variable failed\n");
+       return 1;
+    }
+    pathvar = getenv("EC_PROFILE_HEAP");
+    //fprintf(stderr, "The EC_PROFILE_HEAP environment variable is: %s\n",pathvar);
+
     // Set the OMP_STACKSIZE environmental variable, OpenIFS needs more stack memory per process
     std::string OMP_STACK_var = std::string("OMP_STACKSIZE=128M");
     if (putenv((char *)OMP_STACK_var.c_str())) {
