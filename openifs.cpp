@@ -1539,7 +1539,6 @@ bool check_stoi(std::string& cin) {
     }
 }
 
-
 bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index) {   // index=4 default
    // Parse content of ifs.stat and return *valid* step count as string.
    // ONLY changes step if newlines have been added to ifs.stat since previous call.
@@ -1616,13 +1615,12 @@ bool oifs_valid_step(std::string& step, int nsteps) {
 }
 
 
-int print_last_lines(string filename, int inlines) {
-   // Opens a file if exists and uses circular buffer to read & print last 'nlines' of file to stderr.
+int print_last_lines(string filename, int maxlines) {
+   // Opens a file if exists and uses circular buffer to read & print last lines of file to stderr.
    // Returns: zero : either can't open file or file is empty
-   //          > 0  : no. of lines in file (may be less than nlines)
+   //          > 0  : no. of lines in file (may be less than maxlines)
    //  Glenn
 
-   int     maxlines = 200;
    int     count = 0;
    int     start, end;
    string  lines[maxlines];
