@@ -49,6 +49,7 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
+int  print_last_lines(std::string filename, int nlines);
 
 using namespace std;
 using namespace std::chrono;
@@ -947,10 +948,12 @@ int main(int argc, char** argv) {
     }
 
 
-    // Time delay to ensure final ICM are complete
-    sleep_until(system_clock::now() + seconds(60));	
+    // Time delay to ensure model files are all flushed to disk
+    sleep_until(system_clock::now() + seconds(60));
 
-	
+    // Print content of key model files to help with diagnosing problems
+    print_last_lines("NODE.001_01", 150);    //  main model output log	
+
     // Check whether model completed successfully
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
        if(!(ifs_stat_file.is_open())) {
@@ -973,8 +976,13 @@ int main(int argc, char** argv) {
           }
        }
        if (last_line!="CNT0") {
-          fprintf(stderr,"..Failed, model did not complete successfully\n");
-          return 1;
+         // print extra files to help diagnose fail
+         print_last_lines("rcf",11);              // openifs restart control
+         print_last_lines("waminfo",17);          // wave model restart control
+         print_last_lines(progress_file,8);
+         fprintf(stderr,"..Failed, model did not complete successfully\n");
+         fflush(stderr);
+         return 1;
        }
     }
     // ifs.stat has not been produced, then model did not start
@@ -1046,6 +1054,8 @@ int main(int argc, char** argv) {
     zfl.push_back(node_file);
     std::string ifsstat_file = slot_path + std::string("/ifs.stat");
     zfl.push_back(ifsstat_file);
+    cerr << "Adding to the zip: " << node_file << '\n';
+    cerr << "Adding to the zip: " << ifsstat_file << '\n';
 
     // Read the remaining list of files from the slots directory and add the matching files to the list of files for the zip
     dirp = opendir(temp_path.c_str());
@@ -1192,7 +1202,7 @@ int check_child_status(long handleProcess, int process_status) {
           cerr << "..The child process terminated with status: " << WEXITSTATUS(stat) << endl;
        }
        // Child process has exited due to signal that was not caught
-       // n.b. OpenIFS has its own signal handler so unlikely to come here.
+       // n.b. OpenIFS has its own signal handler.
        else if (WIFSIGNALED(stat)) {
           process_status = 3;
           cerr << "..The child process has been killed with signal: " << WTERMSIG(stat) << endl;
@@ -1538,4 +1548,36 @@ bool check_stoi(std::string& cin) {
         cerr << "Out of range value for stoi : " << excep.what() << "\n";
         return false;
     }
+}
+
+int print_last_lines(string filename, int inlines) {
+   // Opens a file if exists and uses circular buffer to read & print last 'nlines' of file to stderr.
+   // Returns: zero : either can't open file or file is empty
+   //          > 0  : no. of lines in file (may be less than nlines)
+   //  Glenn
+
+   int     maxlines = 200;
+   int     count = 0;
+   int     start, end;
+   string  lines[maxlines];
+   ifstream filein(filename);
+
+   if ( filein.is_open() ) {
+      while ( getline(filein, lines[count%maxlines]) )
+         count++;
+   }
+
+   if ( count > 0 ) {
+      // find the oldest lines first in the buffer, will not be at start if count > maxlines
+      start = count > maxlines ? (count%maxlines) : 0;
+      end   = min(maxlines,count);
+
+      cerr << ">>> Printing last " << end << " lines from file: " << filename << '\n';
+      for ( int i=0; i<end; i++ ) {
+         cerr << lines[ (start+i)%maxlines ] << '\n';
+      }
+      cerr << "------------------------------------------------" << '\n';
+   }
+
+   return count;
 }
