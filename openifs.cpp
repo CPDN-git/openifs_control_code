@@ -1545,13 +1545,12 @@ bool check_stoi(std::string& cin) {
     }
 }
 
-int print_last_lines(string filename, int inlines) {
-   // Opens a file if exists and uses circular buffer to read & print last 'nlines' of file to stderr.
+int print_last_lines(string filename, int maxlines) {
+   // Opens a file if exists and uses circular buffer to read & print last lines of file to stderr.
    // Returns: zero : either can't open file or file is empty
-   //          > 0  : no. of lines in file (may be less than nlines)
+   //          > 0  : no. of lines in file (may be less than maxlines)
    //  Glenn
 
-   int     maxlines = 200;
    int     count = 0;
    int     start, end;
    string  lines[maxlines];
