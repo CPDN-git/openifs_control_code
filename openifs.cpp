@@ -444,7 +444,7 @@ int main(int argc, char** argv) {
     // Set the environmental variables:
     // Set the OIFS_DUMMY_ACTION environmental variable, this controls what OpenIFS does if it goes into a dummy subroutine
     // Possible values are: 'quiet', 'verbose' or 'abort'
-    std::string OIFS_var = std::string("OIFS_DUMMY_ACTION=abort");
+    std::string OIFS_var("OIFS_DUMMY_ACTION=abort");
     if (putenv((char *)OIFS_var.c_str())) {
       fprintf(stderr,"..Setting the OIFS_DUMMY_ACTION environmental variable failed\n");
       return 1;
@@ -462,7 +462,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The OMP_NUM_THREADS environmental variable is: %s\n",pathvar);
 
     // Set the OMP_SCHEDULE environmental variable, this enforces static thread scheduling
-    std::string OMP_SCHED_var = std::string("OMP_SCHEDULE=STATIC");
+    std::string OMP_SCHED_var("OMP_SCHEDULE=STATIC");
     if (putenv((char *)OMP_SCHED_var.c_str())) {
       fprintf(stderr,"..Setting the OMP_SCHEDULE environmental variable failed\n");
       return 1;
@@ -471,7 +471,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The OMP_SCHEDULE environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK environmental variable, this controls the tracing facility in OpenIFS, off=0 and on=1
-    std::string DR_HOOK_var = std::string("DR_HOOK=1");
+    std::string DR_HOOK_var("DR_HOOK=1");
     if (putenv((char *)DR_HOOK_var.c_str())) {
       fprintf(stderr,"..Setting the DR_HOOK environmental variable failed\n");
       return 1;
@@ -480,7 +480,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The DR_HOOK environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK_HEAPCHECK environmental variable, this ensures the heap size statistics are reported
-    std::string DR_HOOK_HEAP_var = std::string("DR_HOOK_HEAPCHECK=no");
+    std::string DR_HOOK_HEAP_var("DR_HOOK_HEAPCHECK=no");
     if (putenv((char *)DR_HOOK_HEAP_var.c_str())) {
       fprintf(stderr,"..Setting the DR_HOOK_HEAPCHECK environmental variable failed\n");
       return 1;
@@ -489,7 +489,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The DR_HOOK_HEAPCHECK environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK_STACKCHECK environmental variable, this ensures the stack size statistics are reported
-    std::string DR_HOOK_STACK_var = std::string("DR_HOOK_STACKCHECK=no");
+    std::string DR_HOOK_STACK_var("DR_HOOK_STACKCHECK=no");
     if (putenv((char *)DR_HOOK_STACK_var.c_str())) {
       fprintf(stderr,"..Setting the DR_HOOK_STACKCHECK environmental variable failed\n");
       return 1;
@@ -499,7 +499,7 @@ int main(int argc, char** argv) {
 	
     // Set the EC_MEMINFO environment variable, only applies to OpenIFS 43r3.
     // Disable EC_MEMINFO to remove the useless EC_MEMINFO messages to the stdout file to reduce filesize.
-    std::string EC_MEMINFO = std::string("EC_MEMINFO=0");
+    std::string EC_MEMINFO("EC_MEMINFO=0");
     if (putenv((char *)EC_MEMINFO.c_str())) {
        fprintf(stderr,"..Setting the EC_MEMINFO environment variable failed\n");
        return 1;
@@ -517,7 +517,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr, "The EC_PROFILE_HEAP environment variable is: %s\n",pathvar);
 
     // Set the OMP_STACKSIZE environmental variable, OpenIFS needs more stack memory per process
-    std::string OMP_STACK_var = std::string("OMP_STACKSIZE=128M");
+    std::string OMP_STACK_var("OMP_STACKSIZE=128M");
     if (putenv((char *)OMP_STACK_var.c_str())) {
       fprintf(stderr,"..Setting the OMP_STACKSIZE environmental variable failed\n");
       return 1;
