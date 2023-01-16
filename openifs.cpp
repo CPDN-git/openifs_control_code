@@ -505,7 +505,7 @@ int main(int argc, char** argv) {
        return 1;
     }
     pathvar = getenv("EC_MEMINFO");
-    //fprintf(stderr, "The EC_MEMINFO environment variable is: %s\n, pathvar);
+    //fprintf(stderr, "The EC_MEMINFO environment variable is: %s\n", pathvar);
 
     // Disable Heap memory stats at end of run; do not work for CPDN version of OpenIFS
     std::string EC_PROFILE_HEAP("EC_PROFILE_HEAP=0");
