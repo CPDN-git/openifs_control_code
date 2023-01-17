@@ -958,7 +958,7 @@ int main(int argc, char** argv) {
     sleep_until(system_clock::now() + seconds(60));
 
     // Print content of key model files to help with diagnosing problems
-    print_last_lines("NODE.001_01", 150);    //  main model output log	
+    print_last_lines("NODE.001_01", 70);    //  main model output log	
 
     // To check whether model completed successfully, look for 'CNT0' in 3rd column of ifs.stat
     // This will always be the last line of a successful model forecast.
