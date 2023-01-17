@@ -939,7 +939,7 @@ int main(int argc, char** argv) {
 
       if (!boinc_is_standalone()) {
 	 // If the current iteration is at a restart iteration     
-	 if(! iter%restart_interval) restart_cpu_time = current_cpu_time     
+	 if (!(std::stoi(iter)%restart_interval)) restart_cpu_time = current_cpu_time;
 	      
          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
          boinc_report_app_status(current_cpu_time,restart_cpu_time,fraction_done);
