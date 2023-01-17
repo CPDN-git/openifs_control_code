@@ -49,6 +49,9 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
+bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index=4);
+bool oifs_valid_step(std::string&,int);
+int  print_last_lines(std::string filename, int nlines);
 
 using namespace std;
 using namespace std::chrono;
@@ -347,6 +350,9 @@ int main(int argc, char** argv) {
     if ( restart_interval < 0 )   restart_interval = abs(restart_interval)*3600 / timestep_interval;
     fprintf(stderr,"nfrres: restart dump frequency (steps) %i\n",restart_interval);
 
+    // this should match CUSTEP in fort.4. If it doesn't we have a problem
+    total_nsteps = (num_days * 86400.0) / (double) timestep_interval;
+
 
     // Process the ic_ancil_file:
     std::string ic_ancil_zip = slot_path + std::string("/") + ic_ancil_file + std::string(".zip");
@@ -444,7 +450,7 @@ int main(int argc, char** argv) {
     // Set the environmental variables:
     // Set the OIFS_DUMMY_ACTION environmental variable, this controls what OpenIFS does if it goes into a dummy subroutine
     // Possible values are: 'quiet', 'verbose' or 'abort'
-    std::string OIFS_var = std::string("OIFS_DUMMY_ACTION=abort");
+    std::string OIFS_var("OIFS_DUMMY_ACTION=abort");
     if (putenv((char *)OIFS_var.c_str())) {
       fprintf(stderr,"..Setting the OIFS_DUMMY_ACTION environmental variable failed\n");
       return 1;
@@ -462,7 +468,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The OMP_NUM_THREADS environmental variable is: %s\n",pathvar);
 
     // Set the OMP_SCHEDULE environmental variable, this enforces static thread scheduling
-    std::string OMP_SCHED_var = std::string("OMP_SCHEDULE=STATIC");
+    std::string OMP_SCHED_var("OMP_SCHEDULE=STATIC");
     if (putenv((char *)OMP_SCHED_var.c_str())) {
       fprintf(stderr,"..Setting the OMP_SCHEDULE environmental variable failed\n");
       return 1;
@@ -471,7 +477,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The OMP_SCHEDULE environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK environmental variable, this controls the tracing facility in OpenIFS, off=0 and on=1
-    std::string DR_HOOK_var = std::string("DR_HOOK=1");
+    std::string DR_HOOK_var("DR_HOOK=1");
     if (putenv((char *)DR_HOOK_var.c_str())) {
       fprintf(stderr,"..Setting the DR_HOOK environmental variable failed\n");
       return 1;
@@ -480,7 +486,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The DR_HOOK environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK_HEAPCHECK environmental variable, this ensures the heap size statistics are reported
-    std::string DR_HOOK_HEAP_var = std::string("DR_HOOK_HEAPCHECK=no");
+    std::string DR_HOOK_HEAP_var("DR_HOOK_HEAPCHECK=no");
     if (putenv((char *)DR_HOOK_HEAP_var.c_str())) {
       fprintf(stderr,"..Setting the DR_HOOK_HEAPCHECK environmental variable failed\n");
       return 1;
@@ -489,7 +495,7 @@ int main(int argc, char** argv) {
     //fprintf(stderr,"The DR_HOOK_HEAPCHECK environmental variable is: %s\n",pathvar);
 
     // Set the DR_HOOK_STACKCHECK environmental variable, this ensures the stack size statistics are reported
-    std::string DR_HOOK_STACK_var = std::string("DR_HOOK_STACKCHECK=no");
+    std::string DR_HOOK_STACK_var("DR_HOOK_STACKCHECK=no");
     if (putenv((char *)DR_HOOK_STACK_var.c_str())) {
       fprintf(stderr,"..Setting the DR_HOOK_STACKCHECK environmental variable failed\n");
       return 1;
@@ -499,16 +505,34 @@ int main(int argc, char** argv) {
 	
     // Set the EC_MEMINFO environment variable, only applies to OpenIFS 43r3.
     // Disable EC_MEMINFO to remove the useless EC_MEMINFO messages to the stdout file to reduce filesize.
-    std::string EC_MEMINFO = std::string("EC_MEMINFO=0");
+    std::string EC_MEMINFO("EC_MEMINFO=0");
     if (putenv((char *)EC_MEMINFO.c_str())) {
        fprintf(stderr,"..Setting the EC_MEMINFO environment variable failed\n");
        return 1;
     }
     pathvar = getenv("EC_MEMINFO");
-    //fprintf(stderr, "The EC_MEMINFO environment variable is: %s\n, pathvar);
+    //fprintf(stderr, "The EC_MEMINFO environment variable is: %s\n", pathvar);
+
+    // Disable Heap memory stats at end of run; does not work for CPDN version of OpenIFS
+    std::string EC_PROFILE_HEAP("EC_PROFILE_HEAP=0");
+    if (putenv((char *)EC_PROFILE_HEAP.c_str())) {
+       fprintf(stderr,"..Setting the EC_PROFILE_HEAP environment variable failed\n");
+       return 1;
+    }
+    pathvar = getenv("EC_PROFILE_HEAP");
+    //fprintf(stderr, "The EC_PROFILE_HEAP environment variable is: %s\n",pathvar);
+
+    // Disable all memory stats at end of run; does not work for CPDN version of OpenIFS
+    std::string EC_PROFILE_MEM("EC_PROFILE_MEM=0");
+    if (putenv((char *)EC_PROFILE_MEM.c_str())) {
+       fprintf(stderr,"..Setting the EC_PROFILE_MEM environment variable failed\n");
+       return 1;
+    }
+    pathvar = getenv("EC_PROFILE_MEM");
+    //fprintf(stderr, "The EC_PROFILE_MEM environment variable is: %s\n",pathvar);
 
     // Set the OMP_STACKSIZE environmental variable, OpenIFS needs more stack memory per process
-    std::string OMP_STACK_var = std::string("OMP_STACKSIZE=128M");
+    std::string OMP_STACK_var("OMP_STACKSIZE=128M");
     if (putenv((char *)OMP_STACK_var.c_str())) {
       fprintf(stderr,"..Setting the OMP_STACKSIZE environmental variable failed\n");
       return 1;
@@ -667,6 +691,7 @@ int main(int argc, char** argv) {
     // process_status = 2 stopped with quit request from BOINC
     // process_status = 3 stopped with child process being killed
     // process_status = 4 stopped with child process being stopped
+    // process_status = 5 child process not found by waitpid()
 
 
     // Main loop:	
@@ -677,43 +702,29 @@ int main(int argc, char** argv) {
        count++;
 
        // Check every 10 seconds whether an upload point has been reached
-       if(count==10) {   
-          if ( file_exists(slot_path + std::string("/ifs.stat")) ) {
-            if(!(ifs_stat_file.is_open())) {
-               //fprintf(stderr,"Opening ifs.stat file\n");
-               ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
-            }
+       if(count==10) {
+         
+          iter = last_iter;
+          if( file_exists(slot_path + std::string("/ifs.stat")) ) {
 
-            // Read last completed ICM file from ifs.stat file
-            // Note the VERY first line from the model has a step count of '....  CNT3      -999 ....'
-            while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
-               //cerr << "Reading ifs.stat file, line: " << ifs_line << endl;
+             //  To reduce I/O, open file once only and use get_parse_ifsstat() to parse the step count
+             if( !(ifs_stat_file.is_open()) ) {
+                ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
+             } 
+             if( ifs_stat_file.is_open() ) {
 
-               std::istringstream iss(ifs_line);  //put line into stringstream
-               int ifs_word_count=0;
-               // Read fourth column from file
-               while(iss >> ifs_word) {  //read word by word
-                  ifs_word_count++;
-                  if (ifs_word_count==4) iter = ifs_word;
-                  //fprintf(stderr,"count: %i\n",ifs_word_count);
-                  //fprintf(stderr,"iter: %s\n",iter.c_str());
-               }
-            }
+                // Read completed step from last line of ifs.stat file.
+                // Note the first line from the model has a step count of '....  CNT3      -999 ....'
+                // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
+                // to the output files for that iteration, those files can now be moved and uploaded.
 
-            // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
-            // to the files for that iteration, those files can now be moved and uploaded
-            //fprintf(stderr,"iter: %i\n",std::stoi(iter));
-            //fprintf(stderr,"last_iter: %i\n",std::stoi(last_iter));
-
-            // GC: Check for garbage in the retrieved string first, otherwise stoi will kill this process.
-            if (!check_stoi(iter)) {
-               fprintf(stderr,"Unable to update iter, resetting to last_iter.\n");
-               cerr << "ifs_line = " << ifs_line << endl;
-               iter = last_iter;
-            }
-          } else {
-            iter = last_iter;    //  model just started and not yet created ifs.stat file
-          }
+                if ( oifs_parse_ifsstat(ifs_stat_file, iter) ) {          // updates iter, nb. assumes file is never closed!
+                   if ( !oifs_valid_step(iter,total_nsteps) ) {
+                     iter = last_iter;
+                   }
+                }
+             }
+          } 
 
           if (std::stoi(iter) != std::stoi(last_iter)) {
              // Construct file name of the ICM result file
@@ -900,8 +911,6 @@ int main(int argc, char** argv) {
           }
           last_iter = iter;
           count = 0;
-          // Closing ifs.stat file access
-          ifs_stat_file.close();     
 	       
           // Update the progress file	
           progress_file_out.open(progress_file);
@@ -923,8 +932,7 @@ int main(int argc, char** argv) {
        }
 	       
 
-      // GC: Calculate the fraction done
-      total_nsteps = (num_days * 86400.0) / (double) timestep_interval;    // GC: this should match CUSTEP in fort.4. If it doesn't we have a problem
+      // Calculate the fraction done
       fraction_done = model_frac_done( atof(iter.c_str()), total_nsteps, atoi(nthreads.c_str()) );
       //fprintf(stderr,"fraction done: %.6f\n", fraction_done);
      
@@ -946,34 +954,24 @@ int main(int argc, char** argv) {
     }
 
 
-    // Time delay to ensure final ICM are complete
-    sleep_until(system_clock::now() + seconds(60));	
+    // Time delay to ensure model files are all flushed to disk
+    sleep_until(system_clock::now() + seconds(60));
 
-	
-    // Check whether model completed successfully
+    // Print content of key model files to help with diagnosing problems
+    print_last_lines("NODE.001_01", 150);    //  main model output log	
+
+    // To check whether model completed successfully, look for 'CNT0' in 3rd column of ifs.stat
+    // This will always be the last line of a successful model forecast.
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
-       if(!(ifs_stat_file.is_open())) {
-          //fprintf(stderr,"Opening ifs.stat file\n");
-          ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
-       }
-
-       // Read last line from ifs.stat file
-       while(std::getline(ifs_stat_file, ifs_line)) {  //get 1 row as a string
-          //fprintf(stderr,"Reading ifs.stat file\n");
-
-          std::istringstream iss2(ifs_line);  //put line into stringstream
-          int ifs_word_count=0;
-          // Read fourth column from file
-          while(iss2 >> ifs_word) {  //read word by word
-             ifs_word_count++;
-             if (ifs_word_count==3) last_line = ifs_word;
-             //fprintf(stderr,"count: %i\n",ifs_word_count);
-             //fprintf(stderr,"last_line: %s\n",last_line.c_str());
-          }
-       }
-       if (last_line!="CNT0") {
-          fprintf(stderr,"..Failed, model did not complete successfully\n");
-          return 1;
+       ifs_word="";
+       oifs_parse_ifsstat(ifs_stat_file,ifs_word,3);
+       if (ifs_word!="CNT0") {
+         // print extra files to help diagnose fail
+         print_last_lines("rcf",11);              // openifs restart control
+         print_last_lines("waminfo",17);          // wave model restart control
+         print_last_lines(progress_file,8);
+         cerr << "..Failed, model did not complete successfully" << endl;
+         return 1;
        }
     }
     // ifs.stat has not been produced, then model did not start
@@ -1045,6 +1043,8 @@ int main(int argc, char** argv) {
     zfl.push_back(node_file);
     std::string ifsstat_file = slot_path + std::string("/ifs.stat");
     zfl.push_back(ifsstat_file);
+    cerr << "Adding to the zip: " << node_file << '\n';
+    cerr << "Adding to the zip: " << ifsstat_file << '\n';
 
     // Read the remaining list of files from the slots directory and add the matching files to the list of files for the zip
     dirp = opendir(temp_path.c_str());
@@ -1179,30 +1179,34 @@ const char* strip_path(const char* path) {
 
 
 int check_child_status(long handleProcess, int process_status) {
-    int stat;
-    //fprintf(stderr,"waitpid: %i\n",waitpid(handleProcess,0,WNOHANG));
+    int stat,pid;
 
     // Check whether child processed has exited
-    if (waitpid(handleProcess,&stat,WNOHANG)==-1) {
+    // waitpid will return process id of zombie (finished) process; zero if still running
+    if ( (pid=waitpid(handleProcess,&stat,WNOHANG)) > 0 ) {
        process_status = 1;
-       // Child exited normally
+       // Child exited normally but model might still have failed
        if (WIFEXITED(stat)) {
-	  process_status = 1;
-          fprintf(stderr,"The child process terminated with status: %d\n",WEXITSTATUS(stat));
-          fflush(stderr);
+          process_status = 1;
+          cerr << "..The child process terminated with status: " << WEXITSTATUS(stat) << endl;
        }
-       // Child process has exited
+       // Child process has exited due to signal that was not caught
+       // n.b. OpenIFS has its own signal handler.
        else if (WIFSIGNALED(stat)) {
-	  process_status = 3;  
-          fprintf(stderr,"..The child process has been killed with signal: %d\n",WTERMSIG(stat));
-          fflush(stderr);
+          process_status = 3;
+          cerr << "..The child process has been killed with signal: " << WTERMSIG(stat) << endl;
        }
        // Child is stopped
        else if (WIFSTOPPED(stat)) {
-	  process_status = 4;
-          fprintf(stderr,"..The child process has stopped with signal: %d\n",WSTOPSIG(stat));
-          fflush(stderr);
+          process_status = 4;
+          cerr << "..The child process has stopped with signal: " << WSTOPSIG(stat) << endl;
        }
+    }
+    else if ( pid == -1) {
+      // should not get here, it means the child could not be found
+      process_status = 5;
+      cerr << "Unable to retrieve status of child process " << endl;
+      perror("waitpid() error");
     }
     return process_status;
 }
@@ -1533,4 +1537,111 @@ bool check_stoi(std::string& cin) {
         cerr << "Out of range value for stoi : " << excep.what() << "\n";
         return false;
     }
+}
+
+bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index) {   // index=4 default
+   // Parse content of ifs.stat and return *valid* step count as string.
+   // ONLY changes step if newlines have been added to ifs.stat since previous call.
+   // Updates stream offset between calls to prevent completely re-reading the file,
+   // to reduce file I/O on the volunteer's machine.
+   //
+   // Returns: True if step was changed, 
+   //          False if file not open, line did not parse, or step value did not change.
+   //
+   // TODO: not enough time but ideally this should be part of a small class that
+   // inherits from ifstream to manage & read ifs.stat, because it relies on trust that the
+   // callee has not opened & closed this file inbetween calls.
+   //
+   //     Glenn
+
+    string      statstr = "";         // default: 4th element of ifs.stat file lines
+    string      logline = "";
+    static streamoff   p = 0;             // stream offset position
+    istringstream tokens;
+
+    if ( !ifs_stat.is_open() ) {
+        cerr << "oifs_parse_ifsstat: Error. ifs.stat file is not open" << endl;
+        p = 0;
+        return false;
+    }
+
+    ifs_stat.seekg(p);
+    while ( std::getline(ifs_stat, logline) ) {
+        //cerr << "oifs_parse_ifsstat: " << logline << endl;
+
+        //  split input, get token specified by 'column' unless file is corrupted
+        tokens.str(logline);
+        for (int i=0; i<index; ++i)
+            tokens >> statstr;
+
+        if ( ifs_stat.tellg() == -1 )     // set p to end of file for next read
+           p = p + logline.size();
+        else
+           p = ifs_stat.tellg();
+
+        // empty stringstream, release memory, and clear any error state
+        // see: https://stackoverflow.com/questions/20731/how-do-you-clear-a-stringstream-variable
+        istringstream().swap(tokens);
+    }
+    ifs_stat.clear();           // must clear stream error before attempting to read again as file remains open
+
+    if ( statstr.empty() ){
+      return false;
+    } else {
+      stat_column = statstr;
+      //cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
+      return true;
+    }
+}
+
+bool oifs_valid_step(std::string& step, int nsteps) {
+   //  checks for a valid step count in arg 'step'
+   //  Returns :   true if step is valid, otherwise false
+   //      Glenn
+
+   // make sure step is valid integer
+   if (!check_stoi(step)) {
+      cerr << "oifs_valid_step: Invalid characters in stoi string, unable to convert step to int: " << step << '\n';
+      return false;
+   } else {
+      // check step is in valid range: 0 -> total no. of steps
+      if (stoi(step)<0) {
+         return false;
+      } else if (stoi(step) > nsteps) {
+         return false;
+      }
+   }
+   return true;
+}
+
+
+int print_last_lines(string filename, int maxlines) {
+   // Opens a file if exists and uses circular buffer to read & print last lines of file to stderr.
+   // Returns: zero : either can't open file or file is empty
+   //          > 0  : no. of lines in file (may be less than maxlines)
+   //  Glenn
+
+   int     count = 0;
+   int     start, end;
+   string  lines[maxlines];
+   ifstream filein(filename);
+
+   if ( filein.is_open() ) {
+      while ( getline(filein, lines[count%maxlines]) )
+         count++;
+   }
+
+   if ( count > 0 ) {
+      // find the oldest lines first in the buffer, will not be at start if count > maxlines
+      start = count > maxlines ? (count%maxlines) : 0;
+      end   = min(maxlines,count);
+
+      cerr << ">>> Printing last " << end << " lines from file: " << filename << '\n';
+      for ( int i=0; i<end; i++ ) {
+         cerr << lines[ (start+i)%maxlines ] << '\n';
+      }
+      cerr << "------------------------------------------------" << '\n';
+   }
+
+   return count;
 }
