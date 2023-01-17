@@ -554,7 +554,7 @@ int main(int argc, char** argv) {
        if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) fprintf(stderr,"..Setting the stack limit to unlimited failed\n");
     #endif
 
-    int last_cpu_time, upload_file_number, last_upload, model_completed, restart_iter;
+    int last_cpu_time, restart_cpu_time = 0, upload_file_number, last_upload, model_completed, restart_iter;
     std::string last_iter = "0";
 
     // last_upload is the time of the last upload file (in seconds)
@@ -938,8 +938,11 @@ int main(int argc, char** argv) {
      
 
       if (!boinc_is_standalone()) {
+	 // If the current iteration is at a restart iteration     
+	 if(! iter%restart_interval) restart_cpu_time = current_cpu_time     
+	      
          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
-         boinc_report_app_status(current_cpu_time,current_cpu_time,fraction_done);
+         boinc_report_app_status(current_cpu_time,restart_cpu_time,fraction_done);
 
          // Provide the fraction done to the BOINC client, 
          // this is necessary for the percentage bar on the client
