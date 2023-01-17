@@ -598,7 +598,7 @@ int main(int argc, char** argv) {
        cerr << "-- Model is restarting --\n";
        cerr << "Adjusting last_iter, " << last_iter << ", to previous model restart step.\n";
        restart_iter = stoi(last_iter);
-       restart_iter = restart_iter - restart_iter % restart_interval - 1;   // -1 because the model will continue from restart_iter.
+       restart_iter = restart_iter - ((restart_iter % restart_interval) - 1);   // -1 because the model will continue from restart_iter.
        last_iter = to_string(restart_iter); 
     }
     else {
