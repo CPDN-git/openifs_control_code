@@ -1061,6 +1061,7 @@ int main(int argc, char** argv) {
             fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/")+dir->d_name).c_str());
           }
         }
+        regfree(&regex);
         closedir(dirp);
     }
 
