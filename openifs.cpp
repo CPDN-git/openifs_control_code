@@ -1054,7 +1054,6 @@ int main(int argc, char** argv) {
     if (dirp) {
         while ((dir = readdir(dirp)) != NULL) {
           //fprintf(stderr,"In temp folder: %s\n",dir->d_name);
-          regcomp(&regex,"^[ICM+]",0);
           regcomp(&regex,"\\+",0);
 
           if (!regexec(&regex,dir->d_name,(size_t) 0,NULL,0)) {
