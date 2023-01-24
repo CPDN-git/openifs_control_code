@@ -1052,9 +1052,9 @@ int main(int argc, char** argv) {
     // Read the remaining list of files from the slots directory and add the matching files to the list of files for the zip
     dirp = opendir(temp_path.c_str());
     if (dirp) {
+        regcomp(&regex,"\\+",0);
         while ((dir = readdir(dirp)) != NULL) {
           //fprintf(stderr,"In temp folder: %s\n",dir->d_name);
-          regcomp(&regex,"\\+",0);
 
           if (!regexec(&regex,dir->d_name,(size_t) 0,NULL,0)) {
             zfl.push_back(temp_path+std::string("/")+dir->d_name);
