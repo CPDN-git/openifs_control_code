@@ -1395,6 +1395,7 @@ void process_trickle(double current_cpu_time,const char* wu_name,const char* res
           fclose(trickle_file);
        }
     }
+    delete [] trickle;
 }
 
 // Check whether a file exists
