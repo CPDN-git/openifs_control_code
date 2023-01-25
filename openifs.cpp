@@ -62,6 +62,7 @@ int main(int argc, char** argv) {
     std::string ifsdata_file, ic_ancil_file, climate_data_file, horiz_resolution, vert_resolution, grid_type;
     std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
     std::string ifs_line="", iter="0", ifs_word="", second_part, upload_file_name, last_line="";
+    std::string upfile("");
     int upload_interval, timestep_interval, ICM_file_interval, process_status, retval=0, i, j;
     int restart_interval, current_iter=0, count=0, trickle_upload_count;
     char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
@@ -834,7 +835,9 @@ int main(int argc, char** argv) {
                       std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
 
                       fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file);
-                      retval = boinc_zip(ZIP_IT,upload_file,&zfl);
+                      upfile = string(upload_file);
+                      retval = boinc_zip(ZIP_IT,upfile,&zfl);  // n.b. pass std::string to avoid copy-on-call
+                      upfile.clear();
 
                       if (retval) {
                          fprintf(stderr,"..Zipping up the intermediate file failed\n");
@@ -880,7 +883,9 @@ int main(int argc, char** argv) {
                    memset(upload_file, 0x00, sizeof(upload_file));
                    std::sprintf(upload_file,"%s%s",project_path.c_str(),upload_file_name.c_str());
                    if (zfl.size() > 0){
-                      retval = boinc_zip(ZIP_IT,upload_file,&zfl);
+                      upfile = string(upload_file);
+                      retval = boinc_zip(ZIP_IT,upfile,&zfl);
+                      upfile.clear();
 
                       if (retval) {
                          fprintf(stderr,"..Creating the zipped upload file failed\n");
@@ -1074,7 +1079,9 @@ int main(int argc, char** argv) {
           std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
 
           fprintf(stderr,"Zipping up the final file: %s\n",upload_file);
-          retval = boinc_zip(ZIP_IT,upload_file,&zfl);
+          upfile = string(upload_file);
+          retval = boinc_zip(ZIP_IT,upfile,&zfl);
+          upfile.clear();
 
           if (retval) {
              fprintf(stderr,"..Zipping up the final file failed\n");
@@ -1115,7 +1122,9 @@ int main(int argc, char** argv) {
        memset(upload_file, 0x00, sizeof(upload_file));
        std::sprintf(upload_file,"%s%s",project_path.c_str(),upload_file_name.c_str());
        if (zfl.size() > 0){
-          retval = boinc_zip(ZIP_IT,upload_file,&zfl);
+          upfile = string(upload_file);
+          retval = boinc_zip(ZIP_IT,upfile,&zfl);
+          upfile.clear();
           if (retval) {
              fprintf(stderr,"..Creating the zipped upload file failed\n");
              boinc_end_critical_section();
