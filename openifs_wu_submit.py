@@ -18,10 +18,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # app_name is either oifs_43r3, oifs_43r3_arm, oifs_43r3_bl or oifs_43r3_ps
     parser.add_argument("--app_name",help="application name",default="oifs_43r3")
+    # submission_test is either true of false
+    parser.add_argument("--submission_test",help="submission script test",default="false")
     options = parser.parse_args()
     if options.app_name not in ('oifs_43r3','oifs_43r3_arm','oifs_43r3_bl','oifs_43r3_ps'):
       raise ValueError('Incorrect app_name')
     print "Application name: "+options.app_name
+    if options.submission_test not in ('true','false'):
+      raise ValueError('Submission script test must be either true or false')
+    #print "Submission script test: "+options.submission_test
+    
 
     # Check if a lockfile is present from an ongoing submission
     lockfile='/tmp/lockfile_workgen'
@@ -70,25 +76,28 @@ if __name__ == "__main__":
       project_url = 'https://www.cpdn.org/'
       database_port = 3306
 
-    # Open cursor and connection to primary_db
-    db = MySQLdb.connect(db_host,db_user,db_passwd,primary_db,port=database_port)
-    cursor = db.cursor()
+    # If submission_test is not true, query the database 
+    if not(options.submission_test):
+      # Open cursor and connection to primary_db
+      db = MySQLdb.connect(db_host,db_user,db_passwd,primary_db,port=database_port)
+      cursor = db.cursor()
 
-    # Find the appid
-    query = """select id from app where name = '%s'""" % (options.app_name)
-    cursor.execute(query)
-    appid = cursor.fetchone()[0]
+      # Find the appid
+      query = """select id from app where name = '%s'""" % (options.app_name)
+      cursor.execute(query)
+      appid = cursor.fetchone()[0]
+      print "appid: "+str(appid)
 
-    print "appid: "+str(appid)
+      # Find the last workunit id
+      query = 'select max(id) from workunit'
+      cursor.execute(query)
+      last_wuid = cursor.fetchone()
 
-    # Find the last workunit id
-    query = 'select max(id) from workunit'
-    cursor.execute(query)
-    last_wuid = cursor.fetchone()
-
-    # Close cursor and connection to primary_db
-    cursor.close()
-    db.close()
+      # Close cursor and connection to primary_db
+      cursor.close()
+      db.close()
+    else:
+      last_wuid = 0
 
     # Catch the case of no workunits in the database
     if last_wuid[0] == None:
@@ -98,14 +107,18 @@ if __name__ == "__main__":
     print "Last workunit id: "+str(last_id)
     wuid = last_id
 
-    # Open cursor and connection to secondary_db
-    db = MySQLdb.connect(db_host,db_user,db_passwd,secondary_db,port=database_port)
-    cursor = db.cursor()
+    # If submission_test is not true, query the database
+    if not(options.submission_test):
+      # Open cursor and connection to secondary_db
+      db = MySQLdb.connect(db_host,db_user,db_passwd,secondary_db,port=database_port)
+      cursor = db.cursor()
 
-    # Find the last batch id
-    query = 'select max(id) from cpdn_batch'
-    cursor.execute(query)
-    last_batchid = cursor.fetchone()
+      # Find the last batch id
+      query = 'select max(id) from cpdn_batch'
+      cursor.execute(query)
+      last_batchid = cursor.fetchone()
+    else:
+      last_batchid = 0 
 
     # Catch the case of no batches in the database
     if last_batchid[0] == None:
@@ -411,13 +424,13 @@ if __name__ == "__main__":
             p = subprocess.Popen(args)
             p.wait()
 
-            # GC: Set the memory bound & esimated output instance filesizes
+            # GC: Set the memory bound & estimated output instance filesizes
             # These are taken from measurements by G.Carver and listed at:
             #  https://docs.google.com/document/d/1AxLzZ6-m2owRscf_9SCv2TwRAcMl1pzbxFfbm6qeSL4/edit?usp=sharing
             # Add another 0.5Gb to task mem to allow for wrapper plus bit extra in case of leaks.
             # Ordered by the 'N' number: N80 & up.
             # gribfield_size is approximate as not all GRIB fields are packed to the same precision.
-            # Updated: jan/23, add in size of model restarts which become significant with higher resolution
+            # Updated: Jan/23, add in size of model restarts which become significant with higher resolution
             #   and scale as square of resolution.
 
             fields_per_output = 200       # assume scientist typically has this total no. of fields per output instance
@@ -795,106 +808,151 @@ if __name__ == "__main__":
             query = """insert into cpdn_workunit(wuid,cpdn_batch,umid,name,start_year,run_years,appid) \
                                                  values(%s,%s,'%s','%s',%s,%s,%s)""" \
                                                  %(wuid,batchid,unique_member_id,workunit_name,start_year,run_years,appid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the fullpos_namelist details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('159',fullpos_namelist_file,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the analysis_member_number details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('160',analysis_member_number,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the ensemble_member_number details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('161',ensemble_member_number,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the fclen details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('162',fclen,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the fclen_units details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('163',fclen_units,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the start_day details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('164',str(start_day),'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the start_hour details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('165',str(start_hour),'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the start_month details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('166',str(start_month),'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the start_year details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('167',str(start_year),'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the ic_ancil_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('168',ic_ancil_zip_in,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the GHG_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('169',GHG_zip,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the SO4_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('170',SO4_zip,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the radiation_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('171',radiation_zip,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
             # Enter the climate_data_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('172',climate_data_zip_in,'0',wuid)
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
 
             # If baroclinic wave simulation enter values for parameters into parameter table
@@ -904,50 +962,71 @@ if __name__ == "__main__":
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('180',zn,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
 
                # Enter the zb details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('181',zb,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
 
                # Enter the zt0 details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('182',zt0,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
 
                # Enter the zu0 details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('183',zu0,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
 
                # Enter the zrh0 details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('184',zrh0,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
 
                # Enter the zgamma details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('185',zgamma,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
 
                # Enter the zchar details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('186',zchar,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
 
             # If perturbed surface enter values for parameters into parameter table
             if options.app_name == 'oifs_43r3_ps':
@@ -956,32 +1035,52 @@ if __name__ == "__main__":
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('187',zuncerta,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
+                
                # Enter the zuncertb details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('188',zuncertb,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
+                
                # Enter the zuncertc details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('189',zuncertc,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
+                
                # Enter the zuncertd details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('190',zuncertd,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
+                
                # Enter the zuncerte details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
                                              %('191',zuncerte,'0',wuid)
-               cursor.execute(query)
-               db.commit()
+               if not(options.submission_test):
+                 cursor.execute(query)
+                 db.commit()
+               else:
+                 print query
+
 
             # Remove the contents of the temp_openifs_submission_files directory
             args = ['rm','-rf','temp_openifs_submission_files/*']
@@ -1022,9 +1121,11 @@ if __name__ == "__main__":
                        values(%i,'%s','%s',%i,%i,'%s','%s',%i,'%s','%s','%s',%i,%i,%i,%i,%i);""" \
                        %(batchid,batch_name,batch_desc,first_start_year,appid,server_cgi,batch_owner,number_of_uploads,tech_info,\
                          umid_start,umid_end,projectid,last_start_year,number_of_workunits,max_results_per_workunit,regionid)
-            #print query
-            cursor.execute(query)
-            db.commit()
+            if not(options.submission_test):
+              cursor.execute(query)
+              db.commit()
+            else:
+              print query
 
     # Change back to the project directory
     os.chdir(project_dir)
