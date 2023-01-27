@@ -30,7 +30,7 @@ if __name__ == "__main__":
     fcntl.lockf(f,fcntl.LOCK_EX)
     print "got lock\n"
 
-    project_dir = <PROJECT_DIRECTORY>
+    project_dir = '/storage/www/<PROJECT_NAME>'
     input_directory = project_dir+'oifs_workgen/incoming_xmls'
     oifs_ancil_dir = '/storage/cpdn_ancil_files/oifs_ancil_files/'
 
