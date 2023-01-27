@@ -974,7 +974,9 @@ int main(int argc, char** argv) {
        ifs_word="";
        oifs_parse_ifsstat(ifs_stat_file,ifs_word,3);
        if (ifs_word!="CNT0") {
+         cerr << "CNT0 not found; string returned was: " << ifs_word << '\n';
          // print extra files to help diagnose fail
+         print_last_lines("ifs.stat",8);
          print_last_lines("rcf",11);              // openifs restart control
          print_last_lines("waminfo",17);          // wave model restart control
          print_last_lines(progress_file,8);
