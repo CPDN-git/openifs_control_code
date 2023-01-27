@@ -5,9 +5,9 @@
 #
 #       Glenn 
 
-VERSION = 1.08
-TARGET  = openifs_$(VERSION)_x86_64-pc-linux-gnu
-DEBUG   = openifs_$(VERSION)_x86_64-pc-linux-gnu-debug
+VERSION = 43r3_1.00
+TARGET  = oifs_$(VERSION)_x86_64-pc-linux-gnu
+DEBUG   = oifs_$(VERSION)_x86_64-pc-linux-gnu-debug
 SRC     = openifs.cpp
 
 CC       = g++
