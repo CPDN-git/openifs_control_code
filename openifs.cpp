@@ -708,7 +708,7 @@ int main(int argc, char** argv) {
           iter = last_iter;
           if( file_exists(slot_path + std::string("/ifs.stat")) ) {
 
-             //  To reduce I/O, open file once only and use get_parse_ifsstat() to parse the step count
+             //  To reduce I/O, open file once only and use oifs_parse_ifsstat() to parse the step count
              if( !(ifs_stat_file.is_open()) ) {
                 ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
              } 
