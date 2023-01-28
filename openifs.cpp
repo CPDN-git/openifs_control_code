@@ -1151,31 +1151,16 @@ int main(int argc, char** argv) {
     if (process_status == 1){
       boinc_end_critical_section();
       boinc_finish(0);
-      #ifdef __APPLE_CC__
-         _exit(0);
-      #else
-         exit(0);
-      #endif 
       return 0;
     }
     else if (process_status == 2){
       boinc_end_critical_section();
       boinc_finish(0);
-      #ifdef __APPLE_CC__
-         _exit(0);
-      #else
-         exit(0);
-      #endif 
       return 0;
     }
     else {
       boinc_end_critical_section();
       boinc_finish(1);
-      #ifdef __APPLE_CC__
-         _exit(1);
-      #else
-         exit(1);
-      #endif 
       return 1;
     }	
 }
