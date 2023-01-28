@@ -63,7 +63,8 @@ int main(int argc, char** argv) {
     std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
     std::string ifs_line="", iter="0", ifs_word="", second_part, upload_file_name, last_line="";
     std::string upfile("");
-    int upload_interval, timestep_interval, ICM_file_interval, process_status, retval=0, i, j;
+    int upload_interval, timestep_interval, ICM_file_interval, retval=0, i, j;
+    int process_status=1;
     int restart_interval, current_iter=0, count=0, trickle_upload_count;
     char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
     char *pathvar;
@@ -708,7 +709,7 @@ int main(int argc, char** argv) {
           iter = last_iter;
           if( file_exists(slot_path + std::string("/ifs.stat")) ) {
 
-             //  To reduce I/O, open file once only and use get_parse_ifsstat() to parse the step count
+             //  To reduce I/O, open file once only and use oifs_parse_ifsstat() to parse the step count
              if( !(ifs_stat_file.is_open()) ) {
                 ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
              } 
@@ -974,7 +975,9 @@ int main(int argc, char** argv) {
        ifs_word="";
        oifs_parse_ifsstat(ifs_stat_file,ifs_word,3);
        if (ifs_word!="CNT0") {
+         cerr << "CNT0 not found; string returned was: " << ifs_word << '\n';
          // print extra files to help diagnose fail
+         print_last_lines("ifs.stat",8);
          print_last_lines("rcf",11);              // openifs restart control
          print_last_lines("waminfo",17);          // wave model restart control
          print_last_lines(progress_file,8);
