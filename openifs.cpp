@@ -49,7 +49,8 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
-bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index=4);
+bool oifs_parse_stat(std::string&, std::string&, int);
+bool oifs_get_stat(std::ifstream&, std::string&);
 bool oifs_valid_step(std::string&,int);
 int  print_last_lines(std::string filename, int nlines);
 
@@ -697,6 +698,8 @@ int main(int argc, char** argv) {
 
     // Main loop:	
     // Periodically check the process status and the BOINC client status
+    std::string stat_lastline = "";
+
     while (process_status == 0 && model_completed == 0) {
        sleep_until(system_clock::now() + seconds(1));
 
@@ -719,7 +722,8 @@ int main(int argc, char** argv) {
                 // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
                 // to the output files for that iteration, those files can now be moved and uploaded.
 
-                if ( oifs_parse_ifsstat(ifs_stat_file, iter) ) {          // updates iter, nb. assumes file is never closed!
+                oifs_get_stat(ifs_stat_file,stat_lastline);
+                if ( oifs_parse_stat(stat_lastline, iter, 4) ) {     // iter updates
                    if ( !oifs_valid_step(iter,total_nsteps) ) {
                      iter = last_iter;
                    }
@@ -972,7 +976,8 @@ int main(int argc, char** argv) {
     // This will always be the last line of a successful model forecast.
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
        ifs_word="";
-       oifs_parse_ifsstat(ifs_stat_file,ifs_word,3);
+       oifs_get_stat(ifs_stat_file,last_line);
+       oifs_parse_stat(last_line,ifs_word,3);
        if (ifs_word!="CNT0") {
          // print extra files to help diagnose fail
          print_last_lines("rcf",11);              // openifs restart control
@@ -1552,59 +1557,75 @@ bool check_stoi(std::string& cin) {
     }
 }
 
-bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index) {   // index=4 default
-   // Parse content of ifs.stat and return *valid* step count as string.
-   // ONLY changes step if newlines have been added to ifs.stat since previous call.
+bool oifs_parse_stat(std::string& logline, std::string& stat_column, int index) {
+   //   Parse a line of the OpenIFS ifs.stat log file, previously obtained from oifs_get_statline
+   //      logline  : incoming ifs.stat logfile line to be parsed
+   //      stat_col : returned string given by position 'index'
+   //  Returns false if string is empty.
+
+   istringstream tokens;
+   std::string statstr="";
+
+   //  split input, get token specified by 'column' unless file is corrupted
+   tokens.str(logline);
+   for (int i=0; i<index; ++i)
+      tokens >> statstr;
+
+   if ( statstr.empty() ){
+      return false;
+   } else {
+      stat_column = statstr;
+      //cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
+      return true;
+   }
+}
+
+bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
+   // Parse content of ifs.stat and always return last non-zero line read from log file.
+   //
    // Updates stream offset between calls to prevent completely re-reading the file,
    // to reduce file I/O on the volunteer's machine.
    //
-   // Returns: True if step was changed, 
-   //          False if file not open, line did not parse, or step value did not change.
+   //    ifs_stat : name of logfile (ifs.stat for current generation of OpenIFS models)
+   //    logline  : last line read from ifs.stat. Preserved between calls to this fn.
+   //    NOTE!  The file MUST already be open. This fn does not close it.
    //
-   // TODO: not enough time but ideally this should be part of a small class that
-   // inherits from ifstream to manage & read ifs.stat, because it relies on trust that the
+   // Returns: False if file not open, otherwise true.
+   //
+   // TODO: ideally this should be part of a small class that
+   // inherits from ifstream to manage & read ifs.stat, as it relies on trust the
    // callee has not opened & closed this file inbetween calls.
    //
    //     Glenn
 
-    string      statstr = "";         // default: 4th element of ifs.stat file lines
-    string      logline = "";
+    string             statline = "";         // default: 4th element of ifs.stat file lines
+    static string      current_line = "";
     static streamoff   p = 0;             // stream offset position
-    istringstream tokens;
+    bool               updated=false;
 
     if ( !ifs_stat.is_open() ) {
-        cerr << "oifs_parse_ifsstat: Error. ifs.stat file is not open" << endl;
+        cerr << "oifs_get_stat: Error. ifs.stat file is not open" << endl;
         p = 0;
+        current_line = "";
         return false;
     }
 
     ifs_stat.seekg(p);
-    while ( std::getline(ifs_stat, logline) ) {
-        //cerr << "oifs_parse_ifsstat: " << logline << endl;
+    while ( std::getline(ifs_stat, statline) ) {
+      //cerr << "oifs_get_stat statline = " << statline << endl;
+      current_line = statline;
+      updated = true;
 
-        //  split input, get token specified by 'column' unless file is corrupted
-        tokens.str(logline);
-        for (int i=0; i<index; ++i)
-            tokens >> statstr;
-
-        if ( ifs_stat.tellg() == -1 )     // set p to end of file for next read
-           p = p + logline.size();
-        else
-           p = ifs_stat.tellg();
-
-        // empty stringstream, release memory, and clear any error state
-        // see: https://stackoverflow.com/questions/20731/how-do-you-clear-a-stringstream-variable
-        istringstream().swap(tokens);
+      if ( ifs_stat.tellg() == -1 )     // set p to eof for next call to this fn
+         p = p + statline.size();
+      else
+         p = ifs_stat.tellg();
     }
     ifs_stat.clear();           // must clear stream error before attempting to read again as file remains open
 
-    if ( statstr.empty() ){
-      return false;
-    } else {
-      stat_column = statstr;
-      //cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
-      return true;
-    }
+    logline = current_line;
+    //cerr << "oifs_get_stat: updated? " << updated << " : current_line= " << current_line << '\n';
+    return true;
 }
 
 bool oifs_valid_step(std::string& step, int nsteps) {
