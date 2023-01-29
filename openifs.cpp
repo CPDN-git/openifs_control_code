@@ -67,13 +67,13 @@ int main(int argc, char** argv) {
     int process_status=1;
     int restart_interval, current_iter=0, count=0, trickle_upload_count;
     char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
-    char *pathvar;
+    char *pathvar=NULL;
     long handleProcess;
     double tv_sec, tv_usec, fraction_done, current_cpu_time=0, total_nsteps = 0;
     struct dirent *dir;
     struct rusage usage;
     regex_t regex;
-    DIR *dirp;
+    DIR *dirp=NULL;
     ZipFileList zfl;
     std::ifstream ifs_stat_file;
 	
@@ -1295,7 +1295,7 @@ long launch_process(const char* slot_path,const char* strCmd,const char* exptid,
           break;
        }
        case 0: { //The child process
-          char *pathvar;
+          char *pathvar=NULL;
           // Set the GRIB_SAMPLES_PATH environmental variable
           std::string GRIB_SAMPLES_var = std::string("GRIB_SAMPLES_PATH=") + slot_path + \
                                          std::string("/eccodes/ifs_samples/grib1_mlgrib2");
