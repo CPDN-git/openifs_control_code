@@ -837,7 +837,7 @@ int main(int argc, char** argv) {
 
                       // Create the zipped upload file from the list of files added to zfl
                       memset(upload_file, 0x00, sizeof(upload_file));
-                      std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+                      std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
 
                       fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file);
                       upfile = string(upload_file);
@@ -886,7 +886,7 @@ int main(int argc, char** argv) {
 
                    // Create the zipped upload file from the list of files added to zfl
                    memset(upload_file, 0x00, sizeof(upload_file));
-                   std::sprintf(upload_file,"%s%s",project_path.c_str(),upload_file_name.c_str());
+                   std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
                    if (zfl.size() > 0){
                       upfile = string(upload_file);
                       retval = boinc_zip(ZIP_IT,upfile,&zfl);
@@ -1084,7 +1084,7 @@ int main(int argc, char** argv) {
 
           // Create the zipped upload file from the list of files added to zfl
           memset(upload_file, 0x00, sizeof(upload_file));
-          std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+          std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
 
           fprintf(stderr,"Zipping up the final file: %s\n",upload_file);
           upfile = string(upload_file);
@@ -1128,7 +1128,7 @@ int main(int argc, char** argv) {
 
        // Create the zipped upload file from the list of files added to zfl
        memset(upload_file, 0x00, sizeof(upload_file));
-       std::sprintf(upload_file,"%s%s",project_path.c_str(),upload_file_name.c_str());
+       std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
        if (zfl.size() > 0){
           upfile = string(upload_file);
           retval = boinc_zip(ZIP_IT,upfile,&zfl);
@@ -1365,7 +1365,7 @@ std::string get_tag(const std::string &filename) {
 
 // Produce the trickle and either upload to the project server or as a physical file
 void process_trickle(double current_cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
-    char* trickle = new char[512];
+    char trickle[_MAX_PATH];
 
     //fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
     //fprintf(stderr,"wu_name: %s\n",wu_name);
@@ -1373,7 +1373,7 @@ void process_trickle(double current_cpu_time,const char* wu_name,const char* res
     //fprintf(stderr,"slot_path: %s\n",slot_path);
     //fprintf(stderr,"timestep: %d\n",timestep);
 
-    std::sprintf(trickle, "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
+    std::snprintf(trickle,sizeof(trickle), "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
                            wu_name,result_name, timestep,(long) current_cpu_time);
     //fprintf(stderr,"Contents of trickle: %s\n",trickle);
 
@@ -1386,18 +1386,16 @@ void process_trickle(double current_cpu_time,const char* wu_name,const char* res
 
     // Write out the trickle in standalone mode
     else {
-       char trickle_name[_MAX_PATH];
-       std::sprintf(trickle_name,"%s/trickle_%lu.xml",slot_path,(unsigned long) time(NULL));
+       std::snprintf(trickle,sizeof(trickle),"%s/trickle_%lu.xml",slot_path,(unsigned long) time(NULL));
 
-       fprintf(stderr,"Writing trickle to: %s\n",trickle_name);
+       fprintf(stderr,"Writing trickle to: %s\n",trickle);
 
-       FILE* trickle_file = boinc_fopen(trickle_name,"w");
+       FILE* trickle_file = boinc_fopen(trickle,"w");
        if (trickle_file) {
           fwrite(trickle, 1, strlen(trickle), trickle_file);
           fclose(trickle_file);
        }
     }
-    delete [] trickle;
 }
 
 // Check whether a file exists
