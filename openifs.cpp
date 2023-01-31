@@ -836,8 +836,12 @@ int main(int argc, char** argv) {
                    if (zfl.size() > 0){
 
                       // Create the zipped upload file from the list of files added to zfl
+                      int rsize;
                       memset(upload_file, 0x00, sizeof(upload_file));
-                      std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+                      rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+                      if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {                   // rsize ignores NULL terminating string
+                        cerr << "... Warning. upload_file string overrun prevented. Return value: " << rsize << '\n';
+                      }
 
                       fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file);
                       upfile = string(upload_file);
@@ -885,8 +889,13 @@ int main(int argc, char** argv) {
                    fprintf(stderr,"The current upload_file_name is: %s\n",upload_file_name.c_str());
 
                    // Create the zipped upload file from the list of files added to zfl
+                   int rsize;
                    memset(upload_file, 0x00, sizeof(upload_file));
-                   std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
+                   rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
+                   if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {
+                     cerr << "... Warning. upload_file stdalone string overrun prevented. Return value: " << rsize << '\n';
+                   }
+
                    if (zfl.size() > 0){
                       upfile = string(upload_file);
                       retval = boinc_zip(ZIP_IT,upfile,&zfl);
@@ -1083,8 +1092,12 @@ int main(int argc, char** argv) {
        if (zfl.size() > 0){
 
           // Create the zipped upload file from the list of files added to zfl
+          int rsize;
           memset(upload_file, 0x00, sizeof(upload_file));
-          std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+          rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+          if ( rsize >= (int)sizeof(upload_file) || rsize < 0 ) {
+             cerr << "... Warning. final upload_file string overrun prevented. Return value: " << rsize << '\n';
+          }
 
           fprintf(stderr,"Zipping up the final file: %s\n",upload_file);
           upfile = string(upload_file);
@@ -1127,8 +1140,12 @@ int main(int argc, char** argv) {
        fprintf(stderr,"The final upload_file_name is: %s\n",upload_file_name.c_str());
 
        // Create the zipped upload file from the list of files added to zfl
+       int rsize;
        memset(upload_file, 0x00, sizeof(upload_file));
-       std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
+       rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
+       if ( rsize >= (int)sizeof(upload_file) || rsize < 0 ) {
+          cerr << "... Warning. final upload_file stdalone string overrun prevented. Return value: " << rsize << '\n';
+       }
        if (zfl.size() > 0){
           upfile = string(upload_file);
           retval = boinc_zip(ZIP_IT,upfile,&zfl);
@@ -1366,6 +1383,7 @@ std::string get_tag(const std::string &filename) {
 // Produce the trickle and either upload to the project server or as a physical file
 void process_trickle(double current_cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
     char trickle[_MAX_PATH];
+    int rsize;
 
     //fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
     //fprintf(stderr,"wu_name: %s\n",wu_name);
@@ -1373,8 +1391,11 @@ void process_trickle(double current_cpu_time,const char* wu_name,const char* res
     //fprintf(stderr,"slot_path: %s\n",slot_path);
     //fprintf(stderr,"timestep: %d\n",timestep);
 
-    std::snprintf(trickle,sizeof(trickle), "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
+    rsize = std::snprintf(trickle,sizeof(trickle), "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
                            wu_name,result_name, timestep,(long) current_cpu_time);
+    if ( rsize >= (int)sizeof(trickle) || rsize < 0 ) {
+       cerr << "... Warning. trickle string overrun prevented. Return value: " << rsize << '\n';
+    }
     //fprintf(stderr,"Contents of trickle: %s\n",trickle);
 
     // Upload the trickle if not in standalone mode
