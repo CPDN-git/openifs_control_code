@@ -917,11 +917,11 @@ int main(int argc, char** argv) {
                    last_upload = current_iter;
 		
                    trickle_upload_count++;
-		   if (trickle_upload_count == 10) {
+		             if (trickle_upload_count == 10) {
                       // Produce trickle
                       process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
-		      trickle_upload_count = 0;
-		   }
+		                trickle_upload_count = 0;
+		             }
 
                 }
                 boinc_end_critical_section();
@@ -957,8 +957,8 @@ int main(int argc, char** argv) {
      
 
       if (!boinc_is_standalone()) {
-	 // If the current iteration is at a restart iteration     
-	 if (!(std::stoi(iter)%restart_interval)) restart_cpu_time = current_cpu_time;
+	     // If the current iteration is at a restart iteration     
+	     if (!(std::stoi(iter)%restart_interval)) restart_cpu_time = current_cpu_time;
 	      
          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
          boinc_report_app_status(current_cpu_time,restart_cpu_time,fraction_done);
@@ -969,10 +969,10 @@ int main(int argc, char** argv) {
 	  
          // Check the status of the client if not in standalone mode     
          process_status = check_boinc_status(handleProcess,process_status);
-       }
+      }
 	
-       // Check the status of the child process    
-       process_status = check_child_status(handleProcess,process_status);
+      // Check the status of the child process    
+      process_status = check_child_status(handleProcess,process_status);
     }
 
 
