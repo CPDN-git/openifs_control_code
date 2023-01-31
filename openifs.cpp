@@ -1608,7 +1608,6 @@ bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
     string             statline = "";         // default: 4th element of ifs.stat file lines
     static string      current_line = "";
     static streamoff   p = 0;             // stream offset position
-    bool               updated=false;
 
     if ( !ifs_stat.is_open() ) {
         cerr << "oifs_get_stat: Error. ifs.stat file is not open" << endl;
@@ -1619,9 +1618,7 @@ bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
 
     ifs_stat.seekg(p);
     while ( std::getline(ifs_stat, statline) ) {
-      //cerr << "oifs_get_stat statline = " << statline << endl;
       current_line = statline;
-      updated = true;
 
       if ( ifs_stat.tellg() == -1 )     // set p to eof for next call to this fn
          p = p + statline.size();
@@ -1631,7 +1628,7 @@ bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
     ifs_stat.clear();           // must clear stream error before attempting to read again as file remains open
 
     logline = current_line;
-    //cerr << "oifs_get_stat: updated? " << updated << " : current_line= " << current_line << '\n';
+
     return true;
 }
 
