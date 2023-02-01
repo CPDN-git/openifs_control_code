@@ -49,7 +49,8 @@ double cpu_time(long);
 double model_frac_done(double,double,int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
-bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index=4);
+bool oifs_parse_stat(std::string&, std::string&, int);
+bool oifs_get_stat(std::ifstream&, std::string&);
 bool oifs_valid_step(std::string&,int);
 int  print_last_lines(std::string filename, int nlines);
 
@@ -63,16 +64,17 @@ int main(int argc, char** argv) {
     std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
     std::string ifs_line="", iter="0", ifs_word="", second_part, upload_file_name, last_line="";
     std::string upfile("");
-    int upload_interval, timestep_interval, ICM_file_interval, process_status, retval=0, i, j;
+    int upload_interval, timestep_interval, ICM_file_interval, retval=0, i, j;
+    int process_status=1;
     int restart_interval, current_iter=0, count=0, trickle_upload_count;
     char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
-    char *pathvar;
+    char *pathvar=NULL;
     long handleProcess;
     double tv_sec, tv_usec, fraction_done, current_cpu_time=0, total_nsteps = 0;
     struct dirent *dir;
     struct rusage usage;
     regex_t regex;
-    DIR *dirp;
+    DIR *dirp=NULL;
     ZipFileList zfl;
     std::ifstream ifs_stat_file;
 	
@@ -697,6 +699,8 @@ int main(int argc, char** argv) {
 
     // Main loop:	
     // Periodically check the process status and the BOINC client status
+    std::string stat_lastline = "";
+
     while (process_status == 0 && model_completed == 0) {
        sleep_until(system_clock::now() + seconds(1));
 
@@ -708,7 +712,7 @@ int main(int argc, char** argv) {
           iter = last_iter;
           if( file_exists(slot_path + std::string("/ifs.stat")) ) {
 
-             //  To reduce I/O, open file once only and use get_parse_ifsstat() to parse the step count
+             //  To reduce I/O, open file once only and use oifs_parse_ifsstat() to parse the step count
              if( !(ifs_stat_file.is_open()) ) {
                 ifs_stat_file.open(slot_path + std::string("/ifs.stat"));
              } 
@@ -719,7 +723,8 @@ int main(int argc, char** argv) {
                 // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
                 // to the output files for that iteration, those files can now be moved and uploaded.
 
-                if ( oifs_parse_ifsstat(ifs_stat_file, iter) ) {          // updates iter, nb. assumes file is never closed!
+                oifs_get_stat(ifs_stat_file,stat_lastline);
+                if ( oifs_parse_stat(stat_lastline, iter, 4) ) {     // iter updates
                    if ( !oifs_valid_step(iter,total_nsteps) ) {
                      iter = last_iter;
                    }
@@ -831,8 +836,12 @@ int main(int argc, char** argv) {
                    if (zfl.size() > 0){
 
                       // Create the zipped upload file from the list of files added to zfl
+                      int rsize;
                       memset(upload_file, 0x00, sizeof(upload_file));
-                      std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+                      rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+                      if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {                   // rsize ignores NULL terminating string
+                        cerr << "... Warning. upload_file string overrun prevented. Return value: " << rsize << '\n';
+                      }
 
                       fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file);
                       upfile = string(upload_file);
@@ -862,12 +871,12 @@ int main(int argc, char** argv) {
                          fprintf(stderr,"Finished the upload of the intermediate file: %s\n",upload_file_name.c_str());
                       }
 		      
-		      trickle_upload_count++;
-		      if (trickle_upload_count == 10) {
+                      trickle_upload_count++;
+                      if (trickle_upload_count == 10) {
                         // Produce trickle
                         process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
-		        trickle_upload_count = 0;
-		      }
+                        trickle_upload_count = 0;
+                      }
                    }
                    last_upload = current_iter; 
                 }
@@ -880,8 +889,13 @@ int main(int argc, char** argv) {
                    fprintf(stderr,"The current upload_file_name is: %s\n",upload_file_name.c_str());
 
                    // Create the zipped upload file from the list of files added to zfl
+                   int rsize;
                    memset(upload_file, 0x00, sizeof(upload_file));
-                   std::sprintf(upload_file,"%s%s",project_path.c_str(),upload_file_name.c_str());
+                   rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
+                   if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {
+                     cerr << "... Warning. upload_file stdalone string overrun prevented. Return value: " << rsize << '\n';
+                   }
+
                    if (zfl.size() > 0){
                       upfile = string(upload_file);
                       retval = boinc_zip(ZIP_IT,upfile,&zfl);
@@ -903,11 +917,11 @@ int main(int argc, char** argv) {
                    last_upload = current_iter;
 		
                    trickle_upload_count++;
-		   if (trickle_upload_count == 10) {
+                   if (trickle_upload_count == 10) {
                       // Produce trickle
                       process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
-		      trickle_upload_count = 0;
-		   }
+                      trickle_upload_count = 0;
+                   }
 
                 }
                 boinc_end_critical_section();
@@ -943,8 +957,8 @@ int main(int argc, char** argv) {
      
 
       if (!boinc_is_standalone()) {
-	 // If the current iteration is at a restart iteration     
-	 if (!(std::stoi(iter)%restart_interval)) restart_cpu_time = current_cpu_time;
+	     // If the current iteration is at a restart iteration     
+	     if (!(std::stoi(iter)%restart_interval)) restart_cpu_time = current_cpu_time;
 	      
          // Provide the current cpu_time to the BOINC server (note: this is deprecated in BOINC)
          boinc_report_app_status(current_cpu_time,restart_cpu_time,fraction_done);
@@ -955,10 +969,10 @@ int main(int argc, char** argv) {
 	  
          // Check the status of the client if not in standalone mode     
          process_status = check_boinc_status(handleProcess,process_status);
-       }
+      }
 	
-       // Check the status of the child process    
-       process_status = check_child_status(handleProcess,process_status);
+      // Check the status of the child process    
+      process_status = check_child_status(handleProcess,process_status);
     }
 
 
@@ -972,9 +986,12 @@ int main(int argc, char** argv) {
     // This will always be the last line of a successful model forecast.
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
        ifs_word="";
-       oifs_parse_ifsstat(ifs_stat_file,ifs_word,3);
+       oifs_get_stat(ifs_stat_file,last_line);
+       oifs_parse_stat(last_line,ifs_word,3);
        if (ifs_word!="CNT0") {
+         cerr << "CNT0 not found; string returned was: " << "'" << ifs_word << "'" << '\n';
          // print extra files to help diagnose fail
+         print_last_lines("ifs.stat",8);
          print_last_lines("rcf",11);              // openifs restart control
          print_last_lines("waminfo",17);          // wave model restart control
          print_last_lines(progress_file,8);
@@ -1075,8 +1092,12 @@ int main(int argc, char** argv) {
        if (zfl.size() > 0){
 
           // Create the zipped upload file from the list of files added to zfl
+          int rsize;
           memset(upload_file, 0x00, sizeof(upload_file));
-          std::sprintf(upload_file,"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+          rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+          if ( rsize >= (int)sizeof(upload_file) || rsize < 0 ) {
+             cerr << "... Warning. final upload_file string overrun prevented. Return value: " << rsize << '\n';
+          }
 
           fprintf(stderr,"Zipping up the final file: %s\n",upload_file);
           upfile = string(upload_file);
@@ -1119,8 +1140,12 @@ int main(int argc, char** argv) {
        fprintf(stderr,"The final upload_file_name is: %s\n",upload_file_name.c_str());
 
        // Create the zipped upload file from the list of files added to zfl
+       int rsize;
        memset(upload_file, 0x00, sizeof(upload_file));
-       std::sprintf(upload_file,"%s%s",project_path.c_str(),upload_file_name.c_str());
+       rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
+       if ( rsize >= (int)sizeof(upload_file) || rsize < 0 ) {
+          cerr << "... Warning. final upload_file stdalone string overrun prevented. Return value: " << rsize << '\n';
+       }
        if (zfl.size() > 0){
           upfile = string(upload_file);
           retval = boinc_zip(ZIP_IT,upfile,&zfl);
@@ -1151,31 +1176,16 @@ int main(int argc, char** argv) {
     if (process_status == 1){
       boinc_end_critical_section();
       boinc_finish(0);
-      #ifdef __APPLE_CC__
-         _exit(0);
-      #else
-         exit(0);
-      #endif 
       return 0;
     }
     else if (process_status == 2){
       boinc_end_critical_section();
       boinc_finish(0);
-      #ifdef __APPLE_CC__
-         _exit(0);
-      #else
-         exit(0);
-      #endif 
       return 0;
     }
     else {
       boinc_end_critical_section();
       boinc_finish(1);
-      #ifdef __APPLE_CC__
-         _exit(1);
-      #else
-         exit(1);
-      #endif 
       return 1;
     }	
 }
@@ -1307,7 +1317,7 @@ long launch_process(const char* slot_path,const char* strCmd,const char* exptid,
           break;
        }
        case 0: { //The child process
-          char *pathvar;
+          char *pathvar=NULL;
           // Set the GRIB_SAMPLES_PATH environmental variable
           std::string GRIB_SAMPLES_var = std::string("GRIB_SAMPLES_PATH=") + slot_path + \
                                          std::string("/eccodes/ifs_samples/grib1_mlgrib2");
@@ -1372,7 +1382,8 @@ std::string get_tag(const std::string &filename) {
 
 // Produce the trickle and either upload to the project server or as a physical file
 void process_trickle(double current_cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
-    char* trickle = new char[512];
+    char trickle[_MAX_PATH];
+    int rsize;
 
     //fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
     //fprintf(stderr,"wu_name: %s\n",wu_name);
@@ -1380,8 +1391,11 @@ void process_trickle(double current_cpu_time,const char* wu_name,const char* res
     //fprintf(stderr,"slot_path: %s\n",slot_path);
     //fprintf(stderr,"timestep: %d\n",timestep);
 
-    std::sprintf(trickle, "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
+    rsize = std::snprintf(trickle,sizeof(trickle), "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
                            wu_name,result_name, timestep,(long) current_cpu_time);
+    if ( rsize >= (int)sizeof(trickle) || rsize < 0 ) {
+       cerr << "... Warning. trickle string overrun prevented. Return value: " << rsize << '\n';
+    }
     //fprintf(stderr,"Contents of trickle: %s\n",trickle);
 
     // Upload the trickle if not in standalone mode
@@ -1393,18 +1407,16 @@ void process_trickle(double current_cpu_time,const char* wu_name,const char* res
 
     // Write out the trickle in standalone mode
     else {
-       char trickle_name[_MAX_PATH];
-       std::sprintf(trickle_name,"%s/trickle_%lu.xml",slot_path,(unsigned long) time(NULL));
+       std::snprintf(trickle,sizeof(trickle),"%s/trickle_%lu.xml",slot_path,(unsigned long) time(NULL));
 
-       fprintf(stderr,"Writing trickle to: %s\n",trickle_name);
+       fprintf(stderr,"Writing trickle to: %s\n",trickle);
 
-       FILE* trickle_file = boinc_fopen(trickle_name,"w");
+       FILE* trickle_file = boinc_fopen(trickle,"w");
        if (trickle_file) {
           fwrite(trickle, 1, strlen(trickle), trickle_file);
           fclose(trickle_file);
        }
     }
-    delete [] trickle;
 }
 
 // Check whether a file exists
@@ -1552,59 +1564,72 @@ bool check_stoi(std::string& cin) {
     }
 }
 
-bool oifs_parse_ifsstat(std::ifstream& ifs_stat, std::string& stat_column, int index) {   // index=4 default
-   // Parse content of ifs.stat and return *valid* step count as string.
-   // ONLY changes step if newlines have been added to ifs.stat since previous call.
+bool oifs_parse_stat(std::string& logline, std::string& stat_column, int index) {
+   //   Parse a line of the OpenIFS ifs.stat log file, previously obtained from oifs_get_statline
+   //      logline  : incoming ifs.stat logfile line to be parsed
+   //      stat_col : returned string given by position 'index'
+   //  Returns false if string is empty.
+
+   istringstream tokens;
+   std::string statstr="";
+
+   //  split input, get token specified by 'column' unless file is corrupted
+   tokens.str(logline);
+   for (int i=0; i<index; ++i)
+      tokens >> statstr;
+
+   if ( statstr.empty() ){
+      return false;
+   } else {
+      stat_column = statstr;
+      //cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
+      return true;
+   }
+}
+
+bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
+   // Parse content of ifs.stat and always return last non-zero line read from log file.
+   //
    // Updates stream offset between calls to prevent completely re-reading the file,
    // to reduce file I/O on the volunteer's machine.
    //
-   // Returns: True if step was changed, 
-   //          False if file not open, line did not parse, or step value did not change.
+   //    ifs_stat : name of logfile (ifs.stat for current generation of OpenIFS models)
+   //    logline  : last line read from ifs.stat. Preserved between calls to this fn.
+   //    NOTE!  The file MUST already be open. This fn does not close it.
    //
-   // TODO: not enough time but ideally this should be part of a small class that
-   // inherits from ifstream to manage & read ifs.stat, because it relies on trust that the
+   // Returns: False if file not open, otherwise true.
+   //
+   // TODO: ideally this should be part of a small class that
+   // inherits from ifstream to manage & read ifs.stat, as it relies on trust the
    // callee has not opened & closed this file inbetween calls.
    //
    //     Glenn
 
-    string      statstr = "";         // default: 4th element of ifs.stat file lines
-    string      logline = "";
+    string             statline = "";         // default: 4th element of ifs.stat file lines
+    static string      current_line = "";
     static streamoff   p = 0;             // stream offset position
-    istringstream tokens;
 
     if ( !ifs_stat.is_open() ) {
-        cerr << "oifs_parse_ifsstat: Error. ifs.stat file is not open" << endl;
+        cerr << "oifs_get_stat: Error. ifs.stat file is not open" << endl;
         p = 0;
+        current_line = "";
         return false;
     }
 
     ifs_stat.seekg(p);
-    while ( std::getline(ifs_stat, logline) ) {
-        //cerr << "oifs_parse_ifsstat: " << logline << endl;
+    while ( std::getline(ifs_stat, statline) ) {
+      current_line = statline;
 
-        //  split input, get token specified by 'column' unless file is corrupted
-        tokens.str(logline);
-        for (int i=0; i<index; ++i)
-            tokens >> statstr;
-
-        if ( ifs_stat.tellg() == -1 )     // set p to end of file for next read
-           p = p + logline.size();
-        else
-           p = ifs_stat.tellg();
-
-        // empty stringstream, release memory, and clear any error state
-        // see: https://stackoverflow.com/questions/20731/how-do-you-clear-a-stringstream-variable
-        istringstream().swap(tokens);
+      if ( ifs_stat.tellg() == -1 )     // set p to eof for next call to this fn
+         p = p + statline.size();
+      else
+         p = ifs_stat.tellg();
     }
     ifs_stat.clear();           // must clear stream error before attempting to read again as file remains open
 
-    if ( statstr.empty() ){
-      return false;
-    } else {
-      stat_column = statstr;
-      //cerr << "oifs_parse_ifsstat: parsed string  = " << stat_column << " index " << index << '\n';
-      return true;
-    }
+    logline = current_line;
+
+    return true;
 }
 
 bool oifs_valid_step(std::string& step, int nsteps) {
