@@ -1383,7 +1383,7 @@ std::string get_tag(const std::string &filename) {
 // Produce the trickle and either upload to the project server or as a physical file
 void process_trickle(double current_cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
     char trickle[_MAX_PATH];
-    char trickle_name[_MAX_PATH];
+    char trickle_location[_MAX_PATH];
     int rsize;
 
     //fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
