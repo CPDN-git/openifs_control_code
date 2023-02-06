@@ -1210,24 +1210,24 @@ int check_child_status(long handleProcess, int process_status) {
        // Child exited normally but model might still have failed
        if (WIFEXITED(stat)) {
           process_status = 1;
-          cerr << "..The child process terminated with status: " << WEXITSTATUS(stat) << endl;
+          cerr << "..The child process terminated with status: " << WEXITSTATUS(stat) << '\n';
        }
        // Child process has exited due to signal that was not caught
        // n.b. OpenIFS has its own signal handler.
        else if (WIFSIGNALED(stat)) {
           process_status = 3;
-          cerr << "..The child process has been killed with signal: " << WTERMSIG(stat) << endl;
+          cerr << "..The child process has been killed with signal: " << WTERMSIG(stat) << '\n';
        }
        // Child is stopped
        else if (WIFSTOPPED(stat)) {
           process_status = 4;
-          cerr << "..The child process has stopped with signal: " << WSTOPSIG(stat) << endl;
+          cerr << "..The child process has stopped with signal: " << WSTOPSIG(stat) << '\n';
        }
     }
     else if ( pid == -1) {
       // should not get here, it means the child could not be found
       process_status = 5;
-      cerr << "Unable to retrieve status of child process " << endl;
+      cerr << "Unable to retrieve status of child process " << '\n';
       perror("waitpid() error");
     }
     return process_status;
@@ -1241,21 +1241,18 @@ int check_boinc_status(long handleProcess, int process_status) {
     // If a quit, abort or no heartbeat has been received from the BOINC client, end child process
     if (status.quit_request) {
        fprintf(stderr,"Quit request received from BOINC client, ending the child process\n");
-       fflush(stderr);
        kill(handleProcess,SIGKILL);
        process_status = 2;
        return process_status;
     }
     else if (status.abort_request) {
        fprintf(stderr,"Abort request received from BOINC client, ending the child process\n");
-       fflush(stderr);
        kill(handleProcess,SIGKILL);
        process_status = 1;
        return process_status;
     }
     else if (status.no_heartbeat) {
        fprintf(stderr,"No heartbeat received from BOINC client, ending the child process\n");
-       fflush(stderr);
        kill(handleProcess,SIGKILL);
        process_status = 1;
        return process_status;
@@ -1264,28 +1261,24 @@ int check_boinc_status(long handleProcess, int process_status) {
     else {
        if (status.suspended) {
           fprintf(stderr,"Suspend request received from the BOINC client, suspending the child process\n");
-          fflush(stderr);
           kill(handleProcess,SIGSTOP);
 
           while (status.suspended) {
              boinc_get_status(&status);
              if (status.quit_request) {
                 fprintf(stderr,"Quit request received from the BOINC client, ending the child process\n");
-                fflush(stderr);
                 kill(handleProcess,SIGKILL);
                 process_status = 2;
                 return process_status;
              }
              else if (status.abort_request) {
                 fprintf(stderr,"Abort request received from the BOINC client, ending the child process\n");
-                fflush(stderr);
                 kill(handleProcess,SIGKILL);
                 process_status = 1;
                 return process_status;
              }
              else if (status.no_heartbeat) {
                 fprintf(stderr,"No heartbeat received from the BOINC client, ending the child process\n");
-                fflush(stderr);
                 kill(handleProcess,SIGKILL);
                 process_status = 1;
                 return process_status;
@@ -1294,7 +1287,6 @@ int check_boinc_status(long handleProcess, int process_status) {
           }
           // Resume child process
           fprintf(stderr,"Resuming the child process\n");
-          fflush(stderr);
           kill(handleProcess,SIGCONT);
           process_status = 0;
        }
