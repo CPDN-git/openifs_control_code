@@ -576,7 +576,7 @@ int main(int argc, char** argv) {
        std::ifstream progress_file_in(progress_file);
        std::stringstream progress_file_buffer;
        xml_document<> doc;
-       
+
        // If present parse file and extract values
        progress_file_in.open(progress_file);
        cerr << "Opened progress file ok : " << progress_file << "\n";
@@ -584,7 +584,11 @@ int main(int argc, char** argv) {
        progress_file_in.close();
 	    
        // Parse XML progress file
-       doc.parse<0>(&progress_file_buffer.str()[0]);
+       // RapidXML needs careful memory management. Use string to preserve memory for later xml_node calls.
+       // Passing &progress_file_buffer.str()[0] caused new str on heap & memory error.
+       std::string prog_contents = progress_file_buffer.str();       // could use vector<char> here
+
+       doc.parse<0>(&prog_contents[0]);
        xml_node<> *root_node = doc.first_node("running_values");
        xml_node<> *last_cpu_time_node = root_node->first_node("last_cpu_time");
        xml_node<> *upload_file_number_node = root_node->first_node("upload_file_number");
