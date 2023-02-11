@@ -36,6 +36,9 @@
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
 #endif
+#ifndef _MAX_FNAME
+   #define _MAX_FNAME 64
+#endif
 
 const char* strip_path(const char* path);
 int check_child_status(long,int);
@@ -67,7 +70,7 @@ int main(int argc, char** argv) {
     int upload_interval, timestep_interval, ICM_file_interval, retval=0, i, j;
     int process_status=1;
     int restart_interval, current_iter=0, count=0, trickle_upload_count;
-    char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
+    char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[_MAX_FNAME];
     char *pathvar=NULL;
     long handleProcess;
     double tv_sec, tv_usec, fraction_done, current_cpu_time=0, total_nsteps = 0;
@@ -636,7 +639,7 @@ int main(int argc, char** argv) {
 
 
     fraction_done = 0;
-    memset(result_base_name, 0x00, sizeof(char) * 64);
+    memset(result_base_name, 0x00, sizeof(char) * _MAX_FNAME);
     trickle_upload_count = 0;
 
     // seconds between upload files: upload_interval
