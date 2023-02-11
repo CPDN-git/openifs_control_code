@@ -567,15 +567,16 @@ int main(int argc, char** argv) {
 
     // Define the name and location of the progress file
     std::string progress_file = slot_path+std::string("/progress_file_")+wuid+std::string(".xml");
-    std::ifstream progress_file_in(progress_file);
-    std::stringstream progress_file_buffer;
-    xml_document<> doc;
 	
     // Model progress is held in the progress file
     // First check if a file is not already present from an unscheduled shutdown
     cerr << "Checking for progress XML file: " << progress_file << "\n";
 
     if ( file_exists(progress_file) && !file_is_empty(progress_file) ) {
+       std::ifstream progress_file_in(progress_file);
+       std::stringstream progress_file_buffer;
+       xml_document<> doc;
+       
        // If present parse file and extract values
        progress_file_in.open(progress_file);
        cerr << "Opened progress file ok : " << progress_file << "\n";
