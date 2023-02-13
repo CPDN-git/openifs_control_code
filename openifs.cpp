@@ -1184,16 +1184,19 @@ int main(int argc, char** argv) {
     if (process_status == 1){
       boinc_end_critical_section();
       boinc_finish(0);
+      cerr << "... Task finished." << endl;
       return 0;
     }
     else if (process_status == 2){
       boinc_end_critical_section();
       boinc_finish(0);
+      cerr << "... Task finished." << endl;
       return 0;
     }
     else {
       boinc_end_critical_section();
       boinc_finish(1);
+      cerr << "... Task finished." << endl;
       return 1;
     }	
 }
