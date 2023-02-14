@@ -36,6 +36,9 @@
 #ifndef _MAX_PATH
    #define _MAX_PATH 512
 #endif
+#ifndef _MAX_FNAME
+   #define _MAX_FNAME 64
+#endif
 
 const char* strip_path(const char* path);
 int check_child_status(long,int);
@@ -67,7 +70,7 @@ int main(int argc, char** argv) {
     int upload_interval, timestep_interval, ICM_file_interval, retval=0, i, j;
     int process_status=1;
     int restart_interval, current_iter=0, count=0, trickle_upload_count;
-    char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[64];
+    char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[_MAX_FNAME];
     char *pathvar=NULL;
     long handleProcess;
     double tv_sec, tv_usec, fraction_done, current_cpu_time=0, total_nsteps = 0;
@@ -564,15 +567,16 @@ int main(int argc, char** argv) {
 
     // Define the name and location of the progress file
     std::string progress_file = slot_path+std::string("/progress_file_")+wuid+std::string(".xml");
-    std::ifstream progress_file_in(progress_file);
-    std::stringstream progress_file_buffer;
-    xml_document<> doc;
 	
     // Model progress is held in the progress file
     // First check if a file is not already present from an unscheduled shutdown
     cerr << "Checking for progress XML file: " << progress_file << "\n";
 
     if ( file_exists(progress_file) && !file_is_empty(progress_file) ) {
+       std::ifstream progress_file_in(progress_file);
+       std::stringstream progress_file_buffer;
+       xml_document<> doc;
+
        // If present parse file and extract values
        progress_file_in.open(progress_file);
        cerr << "Opened progress file ok : " << progress_file << "\n";
@@ -580,7 +584,11 @@ int main(int argc, char** argv) {
        progress_file_in.close();
 	    
        // Parse XML progress file
-       doc.parse<0>(&progress_file_buffer.str()[0]);
+       // RapidXML needs careful memory management. Use string to preserve memory for later xml_node calls.
+       // Passing &progress_file_buffer.str()[0] caused new str on heap & memory error.
+       std::string prog_contents = progress_file_buffer.str();       // could use vector<char> here
+
+       doc.parse<0>(&prog_contents[0]);
        xml_node<> *root_node = doc.first_node("running_values");
        xml_node<> *last_cpu_time_node = root_node->first_node("last_cpu_time");
        xml_node<> *upload_file_number_node = root_node->first_node("upload_file_number");
@@ -618,13 +626,13 @@ int main(int argc, char** argv) {
     fprintf(stderr, "Creating progress file: %s\n",progress_file.c_str());
 
     progress_file_out.open(progress_file);
-    progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
-    progress_file_out <<"<running_values>"<< std::endl;
-    progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< std::endl;
-    progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
-    progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
-    progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
-    progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
+    progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< '\n';
+    progress_file_out <<"<running_values>"<< '\n';
+    progress_file_out <<"  <last_cpu_time>"<<std::to_string(last_cpu_time)<<"</last_cpu_time>"<< '\n';
+    progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< '\n';
+    progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< '\n';
+    progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< '\n';
+    progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< '\n';
     progress_file_out <<"</running_values>"<< std::endl;
     progress_file_out.close();
 
@@ -636,7 +644,7 @@ int main(int argc, char** argv) {
 
 
     fraction_done = 0;
-    memset(result_base_name, 0x00, sizeof(char) * 64);
+    memset(result_base_name, 0x00, sizeof(char) * _MAX_FNAME);
     trickle_upload_count = 0;
 
     // seconds between upload files: upload_interval
@@ -933,13 +941,13 @@ int main(int argc, char** argv) {
 	       
           // Update the progress file	
           progress_file_out.open(progress_file);
-          progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< std::endl;
-          progress_file_out <<"<running_values>"<< std::endl;
-          progress_file_out <<"  <last_cpu_time>"<<std::to_string(current_cpu_time)<<"</last_cpu_time>"<< std::endl;
-          progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< std::endl;
-          progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< std::endl;
-          progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< std::endl;
-          progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< std::endl;
+          progress_file_out <<"<?xml version=\"1.0\" encoding=\"utf-8\"?>"<< '\n';
+          progress_file_out <<"<running_values>"<< '\n';
+          progress_file_out <<"  <last_cpu_time>"<<std::to_string(current_cpu_time)<<"</last_cpu_time>"<< '\n';
+          progress_file_out <<"  <upload_file_number>"<<std::to_string(upload_file_number)<<"</upload_file_number>"<< '\n';
+          progress_file_out <<"  <last_iter>"<<last_iter<<"</last_iter>"<< '\n';
+          progress_file_out <<"  <last_upload>"<<std::to_string(last_upload)<<"</last_upload>"<< '\n';
+          progress_file_out <<"  <model_completed>"<<std::to_string(model_completed)<<"</model_completed>"<< '\n';
           progress_file_out <<"</running_values>"<< std::endl;
           progress_file_out.close();
        }
@@ -1176,16 +1184,19 @@ int main(int argc, char** argv) {
     if (process_status == 1){
       boinc_end_critical_section();
       boinc_finish(0);
+      cerr << "... Task finished." << endl;
       return 0;
     }
     else if (process_status == 2){
       boinc_end_critical_section();
       boinc_finish(0);
+      cerr << "... Task finished." << endl;
       return 0;
     }
     else {
       boinc_end_critical_section();
       boinc_finish(1);
+      cerr << "... Task finished." << endl;
       return 1;
     }	
 }
@@ -1394,9 +1405,11 @@ void process_trickle(double current_cpu_time,const char* wu_name,const char* res
 
     // Upload the trickle if not in standalone mode
     if (!boinc_is_standalone()) {
+       std::string variety("orig");
+
        fprintf(stderr,"Uploading trickle at timestep: %d\n",timestep);
 
-       boinc_send_trickle_up((char*) "orig",(char*) trickle);
+       boinc_send_trickle_up(variety.data(), trickle);
     }
 
     // Write out the trickle in standalone mode
