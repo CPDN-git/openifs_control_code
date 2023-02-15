@@ -14,18 +14,18 @@ CC       = g++
 CFLAGS   = -g -static -pthread -std=c++17 -Wall
 # Address Sanitizer (ASan) can't use -static
 CDEBUG   = -fsanitize=address -ggdb3 -pthread -std=c++17 -Wall
-INCLUDES    = -I../boinc-install/include
-LIBDIR    = -L../boinc-install/lib
+INCLUDES  = -I../boinc-install/include
+LIBDIR    = ../boinc-install/lib
 LIBS      = -lboinc_api -lboinc_zip -lboinc
 
 
 all: $(TARGET) $(DEBUG)
 
 $(TARGET): $(SRC)
-	$(CC) $(SRC) $(CFLAGS) $(INCLUDES) $(LIBDIR) $(LIBS) -o $(TARGET)
+	$(CC) $(SRC) $(CFLAGS) $(INCLUDES) -L$(LIBDIR) $(LIBS) -o $(TARGET)
 
 $(DEBUG): $(SRC)
-	$(CC) $(SRC) $(CDEBUG) $(INCLUDES) $(LIBDIR) $(LIBS) -o $(DEBUG)
+	$(CC) $(SRC) $(CDEBUG) $(INCLUDES) $(LIBDIR)/libboinc_api.a $(LIBDIR)/libboinc_zip.a $(LIBDIR)/libboinc.a  -o $(DEBUG)
 
 clean:
 	$(RM) *.o $(TARGET) $(DEBUG)
