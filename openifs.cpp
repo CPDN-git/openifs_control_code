@@ -846,14 +846,6 @@ int main(int argc, char** argv) {
                    if (zfl.size() > 0){
 
                       // Create the zipped upload file from the list of files added to zfl
-
-                      //int rsize;
-                      //memset(upload_file, 0x00, sizeof(upload_file));
-                      //rsize = std::snprintf(upload_file.c_str(),sizeof(upload_file.c_str()),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
-                      //if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {                   // rsize ignores NULL terminating string
-                      //  cerr << "... Warning. upload_file string overrun prevented. Return value: " << rsize << '\n';
-                      //}
-
                       upload_file = project_path + result_base_name + "_" + std::to_string(upload_file_number) + ".zip";
 
                       fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file.c_str());
