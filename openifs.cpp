@@ -41,15 +41,15 @@
 #endif
 
 const char* strip_path(const char* path);
-int check_child_status(long,int);
-int check_boinc_status(long,int);
-long launch_process(const char*,const char*,const char*,const std::string);
+int check_child_status(long, int);
+int check_boinc_status(long, int);
+long launch_process(const std::string, const char*, const char*, const std::string);
 std::string get_tag(const std::string &str);
-void process_trickle(double,const char*,const char*,const char*,int);
+void process_trickle(double, const char*, const char*, const char*, int);
 bool file_exists(const std::string &str);
 bool file_is_empty(std::string &str);
 double cpu_time(long);
-double model_frac_done(double,double,int);
+double model_frac_done(double, double, int);
 std::string get_second_part(const std::string, const std::string);
 bool check_stoi(std::string& cin);
 bool oifs_parse_stat(std::string&, std::string&, int);
@@ -64,13 +64,13 @@ using namespace rapidxml;
 
 int main(int argc, char** argv) {
     std::string ifsdata_file, ic_ancil_file, climate_data_file, horiz_resolution, vert_resolution, grid_type;
-    std::string project_path, result_name, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
+    std::string project_path, wu_name, version, tmpstr1, tmpstr2, tmpstr3;
     std::string ifs_line="", iter="0", ifs_word="", second_part, upload_file_name, last_line="";
-    std::string upfile("");
+    std::string upfile(""), resolved_name, upload_file;
     int upload_interval, timestep_interval, ICM_file_interval, retval=0, i, j;
     int process_status=1;
     int restart_interval, current_iter=0, count=0, trickle_upload_count;
-    char strTmp[_MAX_PATH], upload_file[_MAX_PATH], result_base_name[_MAX_FNAME];
+    std::string result_base_name;
     char *pathvar=NULL;
     long handleProcess;
     double tv_sec, tv_usec, fraction_done, current_cpu_time=0, total_nsteps = 0;
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
     // Get the slots path (the current working path)
     char slot_path[_MAX_PATH];
     if (getcwd(slot_path, sizeof(slot_path)) == NULL)
-      fprintf(stderr,"..getcwd returned an error\n");
+      cerr << "..getcwd returned an error" << "\n";
     else
       fprintf(stderr,"Working directory is: %s\n",slot_path);
 
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
          //fprintf(stderr,"version: %s\n",version.c_str());
       }
       else {
-         fprintf(stderr,"..Error with the length of app_version, length is: %lu\n",version.length());
+         cerr << "..Error with the length of app_version, length is: " << version.length() << "\n";
          return 1;
       }
 	    
@@ -206,10 +206,10 @@ int main(int argc, char** argv) {
     // Copy the app file to the working directory
     std::string app_source = project_path + app_file;
     std::string app_destination = slot_path + std::string("/") + app_file;
-    fprintf(stderr,"Copying: %s to: %s\n",app_source.c_str(),app_destination.c_str());
-    retval = boinc_copy(app_source.c_str(),app_destination.c_str());
+    fprintf(stderr,"Copying: %s to: %s\n", app_source.c_str(), app_destination.c_str());
+    retval = boinc_copy(app_source.c_str(), app_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the app file to the working directory failed: error %i\n",retval);
+       cerr << "..Copying the app file to the working directory failed: error " << retval << "\n";
        return retval;
     }
 
@@ -217,10 +217,10 @@ int main(int argc, char** argv) {
     std::string app_zip = slot_path + std::string("/") + app_file;
     fprintf(stderr,"Unzipping the app zip file: %s\n",app_zip.c_str());
 
-    retval = boinc_zip(UNZIP_IT,app_zip.c_str(),slot_path);
+    retval = boinc_zip(UNZIP_IT, app_zip.c_str(), slot_path);
 
     if (retval) {
-       fprintf(stderr,"..Unzipping the app file failed\n");
+       cerr << "..Unzipping the app file failed" << "\n";
        return retval;
     }
     // Remove the zip file
@@ -238,18 +238,18 @@ int main(int argc, char** argv) {
 
     // Copy the namelist files to the working directory
     std::string wu_destination = namelist_zip;
-    fprintf(stderr,"Copying the namelist files from: %s to: %s\n",wu_source.c_str(),wu_destination.c_str());
-    retval = boinc_copy(wu_source.c_str(),wu_destination.c_str());
+    fprintf(stderr,"Copying the namelist files from: %s to: %s\n", wu_source.c_str(), wu_destination.c_str());
+    retval = boinc_copy(wu_source.c_str(), wu_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the namelist files to the working directory failed\n");
+       cerr << "..Copying the namelist files to the working directory failed" << "\n";
        return retval;
     }
 
     // Unzip the namelist zip file
-    fprintf(stderr,"Unzipping the namelist zip file: %s\n",namelist_zip.c_str());
-    retval = boinc_zip(UNZIP_IT,namelist_zip.c_str(),slot_path);
+    fprintf(stderr,"Unzipping the namelist zip file: %s\n", namelist_zip.c_str());
+    retval = boinc_zip(UNZIP_IT, namelist_zip.c_str(), slot_path);
     if (retval) {
-       fprintf(stderr,"..Unzipping the namelist file failed\n");
+       cerr << "..Unzipping the namelist file failed" << "\n";
        return retval;
     }
     // Remove the zip file
@@ -260,12 +260,12 @@ int main(int argc, char** argv) {
 	
     // Parse the fort.4 namelist for the filenames and variables
     std::string namelist_file = slot_path + std::string("/") + namelist;
-    std::string namelist_line="",nss="",delimiter="=";
+    std::string namelist_line="", nss="", delimiter="=";
     std::ifstream namelist_filestream;
 
    // Check for the existence of the namelist
    if( !file_exists(namelist_file) ) {
-      fprintf(stderr,"..The namelist file %s does not exist\n",namelist.c_str());
+      cerr << "..The namelist file does not exist: " << namelist_file << "\n";
       return 1;        // should terminate, the model won't run.
     }
 
@@ -281,71 +281,71 @@ int main(int argc, char** argv) {
        if (nss.str().find("IFSDATA_FILE") != std::string::npos) {
           ifsdata_file = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          ifsdata_file.erase(std::remove(ifsdata_file.begin(),ifsdata_file.end(),' '),ifsdata_file.end());
-          fprintf(stderr,"ifsdata_file: %s\n",ifsdata_file.c_str());
+          ifsdata_file.erase(std::remove(ifsdata_file.begin(), ifsdata_file.end(), ' '), ifsdata_file.end());
+          fprintf(stderr,"ifsdata_file: %s\n", ifsdata_file.c_str());
        }
        else if (nss.str().find("IC_ANCIL_FILE") != std::string::npos) {
           ic_ancil_file = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          ic_ancil_file.erase(std::remove(ic_ancil_file.begin(),ic_ancil_file.end(),' '),ic_ancil_file.end());
-          fprintf(stderr,"ic_ancil_file: %s\n",ic_ancil_file.c_str());
+          ic_ancil_file.erase(std::remove(ic_ancil_file.begin(), ic_ancil_file.end(), ' '), ic_ancil_file.end());
+          fprintf(stderr,"ic_ancil_file: %s\n", ic_ancil_file.c_str());
        }
        else if (nss.str().find("CLIMATE_DATA_FILE") != std::string::npos) {
           climate_data_file = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          climate_data_file.erase(std::remove(climate_data_file.begin(),climate_data_file.end(),' '),climate_data_file.end());
-          fprintf(stderr,"climate_data_file: %s\n",climate_data_file.c_str());
+          climate_data_file.erase(std::remove(climate_data_file.begin(),climate_data_file.end(),' '), climate_data_file.end());
+          fprintf(stderr,"climate_data_file: %s\n", climate_data_file.c_str());
        }
        else if (nss.str().find("HORIZ_RESOLUTION") != std::string::npos) {
           horiz_resolution = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          horiz_resolution.erase(std::remove(horiz_resolution.begin(),horiz_resolution.end(),' '),horiz_resolution.end());
-          fprintf(stderr,"horiz_resolution: %s\n",horiz_resolution.c_str());
+          horiz_resolution.erase(std::remove(horiz_resolution.begin(),horiz_resolution.end(),' '), horiz_resolution.end());
+          fprintf(stderr,"horiz_resolution: %s\n", horiz_resolution.c_str());
        }
        else if (nss.str().find("VERT_RESOLUTION") != std::string::npos) {
           vert_resolution = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          vert_resolution.erase(std::remove(vert_resolution.begin(),vert_resolution.end(),' '),vert_resolution.end());
-          fprintf(stderr,"vert_resolution: %s\n",vert_resolution.c_str());
+          vert_resolution.erase(std::remove(vert_resolution.begin(), vert_resolution.end(), ' '), vert_resolution.end());
+          fprintf(stderr,"vert_resolution: %s\n", vert_resolution.c_str());
        }
        else if (nss.str().find("GRID_TYPE") != std::string::npos) {
           grid_type = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          grid_type.erase(std::remove(grid_type.begin(),grid_type.end(),' '),grid_type.end());
-          fprintf(stderr,"grid_type: %s\n",grid_type.c_str());
+          grid_type.erase(std::remove(grid_type.begin(), grid_type.end(),' '), grid_type.end());
+          fprintf(stderr,"grid_type: %s\n", grid_type.c_str());
        }
        else if (nss.str().find("UPLOAD_INTERVAL") != std::string::npos) {
           tmpstr1 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-          tmpstr1.erase(std::remove(tmpstr1.begin(),tmpstr1.end(),' '),tmpstr1.end());
+          tmpstr1.erase(std::remove(tmpstr1.begin(), tmpstr1.end(),' '), tmpstr1.end());
           upload_interval=std::stoi(tmpstr1);
-          fprintf(stderr,"upload_interval: %i\n",upload_interval);
+          fprintf(stderr,"upload_interval: %i\n", upload_interval);
        }
        else if (nss.str().find("UTSTEP") != std::string::npos) {
           tmpstr2 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace
-	  tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),','),tmpstr2.end());
-          tmpstr2.erase(std::remove(tmpstr2.begin(),tmpstr2.end(),' '),tmpstr2.end());
+	  tmpstr2.erase(std::remove(tmpstr2.begin(), tmpstr2.end(),','), tmpstr2.end());
+          tmpstr2.erase(std::remove(tmpstr2.begin(), tmpstr2.end(),' '), tmpstr2.end());
           timestep_interval = std::stoi(tmpstr2);
-          fprintf(stderr,"utstep: %i\n",timestep_interval);
+          fprintf(stderr,"utstep: %i\n", timestep_interval);
        }
        else if (nss.str().find("!NFRPOS") != std::string::npos) {
           tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace and commas
-          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),','),tmpstr3.end());
-          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),' '),tmpstr3.end());
+          tmpstr3.erase(std::remove(tmpstr3.begin(), tmpstr3.end(),','), tmpstr3.end());
+          tmpstr3.erase(std::remove(tmpstr3.begin(), tmpstr3.end(),' '), tmpstr3.end());
           ICM_file_interval = std::stoi(tmpstr3);
-          fprintf(stderr,"nfrpos: %i\n",ICM_file_interval);
+          fprintf(stderr,"nfrpos: %i\n", ICM_file_interval);
        }
        else if (nss.str().find("NFRRES") != std::string::npos) {     // frequency of model output: +ve steps, -ve in hours.
           tmpstr3 = nss.str().substr(nss.str().find(delimiter)+1, nss.str().length()-1);
           // Remove any whitespace and commas
-          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),','),tmpstr3.end());
-          tmpstr3.erase(std::remove(tmpstr3.begin(),tmpstr3.end(),' '),tmpstr3.end());
+          tmpstr3.erase(std::remove(tmpstr3.begin(), tmpstr3.end(),','), tmpstr3.end());
+          tmpstr3.erase(std::remove(tmpstr3.begin(), tmpstr3.end(),' '), tmpstr3.end());
           if ( check_stoi(tmpstr3) ) {
             restart_interval = stoi(tmpstr3);
           } else {
-            fprintf(stderr,"Warning. Unable to read restart interval. Setting to zero. Got string: %s\n",tmpstr3.c_str());
+            cerr << "..Warning, unable to read restart interval, setting to zero, got string: " << tmpstr3 << "\n";
             restart_interval = 0;
           }
        }
@@ -370,18 +370,18 @@ int main(int argc, char** argv) {
 
     // Copy the IC ancils to working directory
     std::string ic_ancil_destination = ic_ancil_zip;
-    fprintf(stderr,"Copying IC ancils from: %s to: %s\n",ic_ancil_source.c_str(),ic_ancil_destination.c_str());
-    retval = boinc_copy(ic_ancil_source.c_str(),ic_ancil_destination.c_str());
+    fprintf(stderr,"Copying IC ancils from: %s to: %s\n", ic_ancil_source.c_str(), ic_ancil_destination.c_str());
+    retval = boinc_copy(ic_ancil_source.c_str(), ic_ancil_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the IC ancils to the working directory failed\n");
+       cerr << "..Copying the IC ancils to the working directory failed" << "\n";
        return retval;
     }
 
     // Unzip the IC ancils zip file
-    fprintf(stderr,"Unzipping the IC ancils zip file: %s\n",ic_ancil_zip.c_str());
-    retval = boinc_zip(UNZIP_IT,ic_ancil_zip.c_str(),slot_path);
+    fprintf(stderr,"Unzipping the IC ancils zip file: %s\n", ic_ancil_zip.c_str());
+    retval = boinc_zip(UNZIP_IT, ic_ancil_zip.c_str(), slot_path);
     if (retval) {
-       fprintf(stderr,"..Unzipping the IC ancils file failed\n");
+       cerr << "..Unzipping the IC ancils file failed" << "\n";
        return retval;
     }
     // Remove the zip file
@@ -400,19 +400,19 @@ int main(int argc, char** argv) {
 
     // Copy the ifsdata_file to the working directory
     std::string ifsdata_destination = ifsdata_folder + std::string("/") + ifsdata_file + std::string(".zip");
-    fprintf(stderr,"Copying the ifsdata_file from: %s to: %s\n",ifsdata_source.c_str(),ifsdata_destination.c_str());
-    retval = boinc_copy(ifsdata_source.c_str(),ifsdata_destination.c_str());
+    fprintf(stderr,"Copying the ifsdata_file from: %s to: %s\n", ifsdata_source.c_str(), ifsdata_destination.c_str());
+    retval = boinc_copy(ifsdata_source.c_str(), ifsdata_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the ifsdata file to the working directory failed\n");
+       cerr << "..Copying the ifsdata file to the working directory failed" << "\n";
        return retval;
     }
 
     // Unzip the ifsdata_file zip file
     std::string ifsdata_zip = ifsdata_folder + std::string("/") + ifsdata_file + std::string(".zip");
     fprintf(stderr,"Unzipping the ifsdata_zip file: %s\n", ifsdata_zip.c_str());
-    retval = boinc_zip(UNZIP_IT,ifsdata_zip.c_str(),ifsdata_folder + std::string("/"));
+    retval = boinc_zip(UNZIP_IT, ifsdata_zip.c_str(), ifsdata_folder + std::string("/"));
     if (retval) {
-       fprintf(stderr,"..Unzipping the ifsdata_zip file failed\n");
+       cerr << "..Unzipping the ifsdata_zip file failed" << "\n";
        return retval;
     }
     // Remove the zip file
@@ -432,19 +432,19 @@ int main(int argc, char** argv) {
 
     // Copy the climate data file to working directory
     std::string climate_data_destination = climate_data_path + std::string("/") + climate_data_file + std::string(".zip");
-    fprintf(stderr,"Copying the climate data file from: %s to: %s\n",climate_data_source.c_str(),climate_data_destination.c_str());
-    retval = boinc_copy(climate_data_source.c_str(),climate_data_destination.c_str());
+    fprintf(stderr,"Copying the climate data file from: %s to: %s\n", climate_data_source.c_str(), climate_data_destination.c_str());
+    retval = boinc_copy(climate_data_source.c_str(), climate_data_destination.c_str());
     if (retval) {
-       fprintf(stderr,"..Copying the climate data file to the working directory failed\n");
+       cerr << "..Copying the climate data file to the working directory failed" << "\n";
        return retval;
     }	
 
     // Unzip the climate data zip file
     std::string climate_zip = climate_data_destination;
-    fprintf(stderr,"Unzipping the climate data zip file: %s\n",climate_zip.c_str());
-    retval = boinc_zip(UNZIP_IT,climate_zip.c_str(),climate_data_path);
+    fprintf(stderr,"Unzipping the climate data zip file: %s\n", climate_zip.c_str());
+    retval = boinc_zip(UNZIP_IT, climate_zip.c_str(), climate_data_path);
     if (retval) {
-       fprintf(stderr,"..Unzipping the climate data file failed\n");
+       cerr << "..Unzipping the climate data file failed" << "\n";
        return retval;
     }
     // Remove the zip file
@@ -458,7 +458,7 @@ int main(int argc, char** argv) {
     // Possible values are: 'quiet', 'verbose' or 'abort'
     std::string OIFS_var("OIFS_DUMMY_ACTION=abort");
     if (putenv((char *)OIFS_var.c_str())) {
-      fprintf(stderr,"..Setting the OIFS_DUMMY_ACTION environmental variable failed\n");
+      cerr << "..Setting the OIFS_DUMMY_ACTION environmental variable failed" << "\n";
       return 1;
     }
     pathvar = getenv("OIFS_DUMMY_ACTION");
@@ -467,7 +467,7 @@ int main(int argc, char** argv) {
     // Set the OMP_NUM_THREADS environmental variable, the number of threads
     std::string OMP_NUM_var = std::string("OMP_NUM_THREADS=") + nthreads;
     if (putenv((char *)OMP_NUM_var.c_str())) {
-      fprintf(stderr,"..Setting the OMP_NUM_THREADS environmental variable failed\n");
+      cerr << "..Setting the OMP_NUM_THREADS environmental variable failed" << "\n";
       return 1;
     }
     pathvar = getenv("OMP_NUM_THREADS");
@@ -476,7 +476,7 @@ int main(int argc, char** argv) {
     // Set the OMP_SCHEDULE environmental variable, this enforces static thread scheduling
     std::string OMP_SCHED_var("OMP_SCHEDULE=STATIC");
     if (putenv((char *)OMP_SCHED_var.c_str())) {
-      fprintf(stderr,"..Setting the OMP_SCHEDULE environmental variable failed\n");
+      cerr << "..Setting the OMP_SCHEDULE environmental variable failed" << "\n";
       return 1;
     }
     pathvar = getenv("OMP_SCHEDULE");
@@ -485,7 +485,7 @@ int main(int argc, char** argv) {
     // Set the DR_HOOK environmental variable, this controls the tracing facility in OpenIFS, off=0 and on=1
     std::string DR_HOOK_var("DR_HOOK=1");
     if (putenv((char *)DR_HOOK_var.c_str())) {
-      fprintf(stderr,"..Setting the DR_HOOK environmental variable failed\n");
+      cerr << "..Setting the DR_HOOK environmental variable failed" << "\n";
       return 1;
     }
     pathvar = getenv("DR_HOOK");
@@ -494,7 +494,7 @@ int main(int argc, char** argv) {
     // Set the DR_HOOK_HEAPCHECK environmental variable, this ensures the heap size statistics are reported
     std::string DR_HOOK_HEAP_var("DR_HOOK_HEAPCHECK=no");
     if (putenv((char *)DR_HOOK_HEAP_var.c_str())) {
-      fprintf(stderr,"..Setting the DR_HOOK_HEAPCHECK environmental variable failed\n");
+      cerr << "..Setting the DR_HOOK_HEAPCHECK environmental variable failed" << "\n";
       return 1;
     }
     pathvar = getenv("DR_HOOK_HEAPCHECK");
@@ -503,7 +503,7 @@ int main(int argc, char** argv) {
     // Set the DR_HOOK_STACKCHECK environmental variable, this ensures the stack size statistics are reported
     std::string DR_HOOK_STACK_var("DR_HOOK_STACKCHECK=no");
     if (putenv((char *)DR_HOOK_STACK_var.c_str())) {
-      fprintf(stderr,"..Setting the DR_HOOK_STACKCHECK environmental variable failed\n");
+      cerr << "..Setting the DR_HOOK_STACKCHECK environmental variable failed" << "\n";
       return 1;
     }
     pathvar = getenv("DR_HOOK_STACKCHECK");
@@ -513,7 +513,7 @@ int main(int argc, char** argv) {
     // Disable EC_MEMINFO to remove the useless EC_MEMINFO messages to the stdout file to reduce filesize.
     std::string EC_MEMINFO("EC_MEMINFO=0");
     if (putenv((char *)EC_MEMINFO.c_str())) {
-       fprintf(stderr,"..Setting the EC_MEMINFO environment variable failed\n");
+       cerr << "..Setting the EC_MEMINFO environment variable failed" << "\n";
        return 1;
     }
     pathvar = getenv("EC_MEMINFO");
@@ -522,7 +522,7 @@ int main(int argc, char** argv) {
     // Disable Heap memory stats at end of run; does not work for CPDN version of OpenIFS
     std::string EC_PROFILE_HEAP("EC_PROFILE_HEAP=0");
     if (putenv((char *)EC_PROFILE_HEAP.c_str())) {
-       fprintf(stderr,"..Setting the EC_PROFILE_HEAP environment variable failed\n");
+       cerr << "..Setting the EC_PROFILE_HEAP environment variable failed" << "\n";
        return 1;
     }
     pathvar = getenv("EC_PROFILE_HEAP");
@@ -531,7 +531,7 @@ int main(int argc, char** argv) {
     // Disable all memory stats at end of run; does not work for CPDN version of OpenIFS
     std::string EC_PROFILE_MEM("EC_PROFILE_MEM=0");
     if (putenv((char *)EC_PROFILE_MEM.c_str())) {
-       fprintf(stderr,"..Setting the EC_PROFILE_MEM environment variable failed\n");
+       cerr << "..Setting the EC_PROFILE_MEM environment variable failed" << "\n";
        return 1;
     }
     pathvar = getenv("EC_PROFILE_MEM");
@@ -540,7 +540,7 @@ int main(int argc, char** argv) {
     // Set the OMP_STACKSIZE environmental variable, OpenIFS needs more stack memory per process
     std::string OMP_STACK_var("OMP_STACKSIZE=128M");
     if (putenv((char *)OMP_STACK_var.c_str())) {
-      fprintf(stderr,"..Setting the OMP_STACKSIZE environmental variable failed\n");
+      cerr << "..Setting the OMP_STACKSIZE environmental variable failed" << "\n";
       return 1;
     }
     pathvar = getenv("OMP_STACKSIZE");
@@ -579,7 +579,7 @@ int main(int argc, char** argv) {
 
        // If present parse file and extract values
        progress_file_in.open(progress_file);
-       cerr << "Opened progress file ok : " << progress_file << "\n";
+       cout << "Opened progress file ok : " << progress_file << "\n";
        progress_file_buffer << progress_file_in.rdbuf();
        progress_file_in.close();
 	    
@@ -606,8 +606,8 @@ int main(int argc, char** argv) {
        // Adjust last_iter to the step of the previous model restart dump step.
        // This is always a multiple of the restart frequency
 
-       cerr << "-- Model is restarting --\n";
-       cerr << "Adjusting last_iter, " << last_iter << ", to previous model restart step.\n";
+       cout << "-- Model is restarting --\n";
+       cout << "Adjusting last_iter, " << last_iter << ", to previous model restart step.\n";
        restart_iter = stoi(last_iter);
        restart_iter = restart_iter - ((restart_iter % restart_interval) - 1);   // -1 because the model will continue from restart_iter.
        last_iter = to_string(restart_iter); 
@@ -644,7 +644,6 @@ int main(int argc, char** argv) {
 
 
     fraction_done = 0;
-    memset(result_base_name, 0x00, sizeof(char) * _MAX_FNAME);
     trickle_upload_count = 0;
 
     // seconds between upload files: upload_interval
@@ -654,7 +653,7 @@ int main(int argc, char** argv) {
 
     // Check if upload_interval x timestep_interval equal to zero
     if (upload_interval * timestep_interval == 0) {
-       fprintf(stderr,"..upload_interval x timestep_interval equals zero\n");
+       cerr << "..upload_interval x timestep_interval equals zero" << "\n";
        return 1;
     }
 
@@ -664,13 +663,16 @@ int main(int argc, char** argv) {
     // Get result_base_name to construct upload file names using 
     // the first upload as an example and then stripping off '_0.zip'
     if (!boinc_is_standalone()) {
-       memset(strTmp,0x00,_MAX_PATH);
-       retval = boinc_resolve_filename("upload_file_0.zip",strTmp,_MAX_PATH);
-       //fprintf(stderr,"strTmp: %s\n",strTmp);
-       strncpy(result_base_name, strip_path(strTmp), strlen(strip_path(strTmp))-6);
-       fprintf(stderr,"result_base_name: %s\n",result_base_name);
-       if (strcmp(result_base_name,"upload_file")==0) {
-          fprintf(stderr,"..Failed to get result name\n");
+       retval = boinc_resolve_filename_s("upload_file_0.zip", resolved_name);
+       if (retval) {
+          cerr << "..boinc_resolve_filename failed" << "\n";
+       }
+
+       fprintf(stderr,"resolved_name: %s\n",resolved_name.c_str());
+       strncpy(const_cast<char*> (result_base_name.c_str()), strip_path(resolved_name.c_str()), strlen(strip_path(resolved_name.c_str()))-6);
+       cout << "result_base_name: " << result_base_name << "\n";
+       if (strcmp(result_base_name.c_str(), "upload_file")==0) {
+          cerr << "..Failed to get result name" << "\n";
           return 1;
        }
     }
@@ -682,7 +684,7 @@ int main(int argc, char** argv) {
        // If exists then run file
        FILE* pipe = popen(override_env_vars.c_str(), "r");
        if (!pipe) {
-          fprintf(stderr,"..Failed to open environment variables override file\n");
+          cerr << "..Failed to open environment variables override file" << "\n";
           return 1;
        }
        pclose(pipe);
@@ -691,7 +693,7 @@ int main(int argc, char** argv) {
 
     // Start the OpenIFS job
     std::string strCmd = slot_path + std::string("/oifs_43r3_model.exe");
-    handleProcess = launch_process(slot_path,strCmd.c_str(),exptid.c_str(),app_name);
+    handleProcess = launch_process(slot_path, strCmd.c_str(), exptid.c_str(), app_name);
     if (handleProcess > 0) process_status = 0;
 
     boinc_end_critical_section();
@@ -731,7 +733,7 @@ int main(int argc, char** argv) {
                 // When the iteration number changes in the ifs.stat file, OpenIFS has completed writing
                 // to the output files for that iteration, those files can now be moved and uploaded.
 
-                oifs_get_stat(ifs_stat_file,stat_lastline);
+                oifs_get_stat(ifs_stat_file, stat_lastline);
                 if ( oifs_parse_stat(stat_lastline, iter, 4) ) {     // iter updates
                    if ( !oifs_valid_step(iter,total_nsteps) ) {
                      iter = last_iter;
@@ -745,47 +747,47 @@ int main(int argc, char** argv) {
              second_part = get_second_part(last_iter, exptid);
 
              // Move the ICMGG result file to the temporary folder in the project directory
-             if(file_exists(slot_path+std::string("/ICMGG")+second_part)) {
-                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG")+second_part).c_str());
-                retval = boinc_copy((slot_path+std::string("/ICMGG")+second_part).c_str() , \
-                                    (temp_path+std::string("/ICMGG")+second_part).c_str());
+             if(file_exists(slot_path + std::string("/ICMGG") + second_part)) {
+                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path + std::string("/ICMGG") + second_part).c_str());
+                retval = boinc_copy((slot_path + std::string("/ICMGG") + second_part).c_str() , \
+                                    (temp_path + std::string("/ICMGG") + second_part).c_str());
                 if (retval) {
-                   fprintf(stderr,"..Copying ICMGG result file to the temp folder in the projects directory failed\n");
+                   cerr << "..Copying ICMGG result file to the temp folder in the projects directory failed" << "\n";
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
                 else {
-                   std::remove((slot_path+std::string("/ICMGG")+second_part).c_str());
+                   std::remove((slot_path + std::string("/ICMGG") + second_part).c_str());
                 }
              }
 
              // Move the ICMSH result file to the temporary folder in the project directory
-             if(file_exists(slot_path+std::string("/ICMSH")+second_part)) {
-                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH")+second_part).c_str());
-                retval = boinc_copy((slot_path+std::string("/ICMSH")+second_part).c_str() , \
-                                    (temp_path+std::string("/ICMSH")+second_part).c_str());
+             if(file_exists(slot_path+std::string("/ICMSH") + second_part)) {
+                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path + std::string("/ICMSH")+second_part).c_str());
+                retval = boinc_copy((slot_path + std::string("/ICMSH") + second_part).c_str() , \
+                                    (temp_path + std::string("/ICMSH") + second_part).c_str());
                 if (retval) {
-                   fprintf(stderr,"..Copying ICMSH result file to the temp folder in the projects directory failed\n");
+                   cerr << "..Copying ICMSH result file to the temp folder in the projects directory failed" << "\n";
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
                 else {
-                   std::remove((slot_path+std::string("/ICMSH")+second_part).c_str());
+                   std::remove((slot_path + std::string("/ICMSH") + second_part).c_str());
                 }
              }
 
              // Move the ICMUA result file to the temporary folder in the project directory (this is for 43r3 and above only)
-             if(file_exists(slot_path+std::string("/ICMUA")+second_part)) {
-                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA")+second_part).c_str());
-                retval = boinc_copy((slot_path+std::string("/ICMUA")+second_part).c_str() , \
-                                    (temp_path+std::string("/ICMUA")+second_part).c_str());
+             if(file_exists(slot_path+std::string("/ICMUA") + second_part)) {
+                fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA") + second_part).c_str());
+                retval = boinc_copy((slot_path+std::string("/ICMUA") + second_part).c_str() , \
+                                    (temp_path+std::string("/ICMUA") + second_part).c_str());
                 if (retval) {
-                   fprintf(stderr,"..Copying ICMUA result file to the temp folder in the projects directory failed\n");
+                   cerr << "..Copying ICMUA result file to the temp folder in the projects directory failed" << "\n";
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
                 else {
-                   std::remove((slot_path+std::string("/ICMUA")+second_part).c_str());
+                   std::remove((slot_path+std::string("/ICMUA") + second_part).c_str());
                 }
              }
 		  
@@ -814,25 +816,25 @@ int main(int argc, char** argv) {
                    second_part = get_second_part(std::to_string(i), exptid);
 
                    // Add ICMGG result files to zip to be uploaded
-                   if(file_exists(temp_path+std::string("/ICMGG")+second_part)) {
-                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMGG")+second_part).c_str());
-                      zfl.push_back(temp_path+std::string("/ICMGG")+second_part);
+                   if(file_exists(temp_path + std::string("/ICMGG") + second_part)) {
+                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path + std::string("/ICMGG")+second_part).c_str());
+                      zfl.push_back(temp_path + std::string("/ICMGG") + second_part);
                       // Delete the file that has been added to the zip
                       // std::remove((temp_path+std::string("/ICMGG")+second_part).c_str());
                    }
 
                    // Add ICMSH result files to zip to be uploaded
-                   if(file_exists(temp_path+std::string("/ICMSH")+second_part)) {
-                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMSH")+second_part).c_str());
-                      zfl.push_back(temp_path+std::string("/ICMSH")+second_part);
+                   if(file_exists(temp_path + std::string("/ICMSH") + second_part)) {
+                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path + std::string("/ICMSH")+second_part).c_str());
+                      zfl.push_back(temp_path + std::string("/ICMSH") + second_part);
                       // Delete the file that has been added to the zip
                       // std::remove((temp_path+std::string("/ICMSH")+second_part).c_str());
                    }
 		
                    // Add ICMUA result files to zip to be uploaded
-                   if(file_exists(temp_path+std::string("/ICMUA")+second_part)) {
-                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/ICMUA")+second_part).c_str());
-                      zfl.push_back(temp_path+std::string("/ICMUA")+second_part);
+                   if(file_exists(temp_path + std::string("/ICMUA") + second_part)) {
+                      fprintf(stderr,"Adding to the zip: %s\n",(temp_path + std::string("/ICMUA")+second_part).c_str());
+                      zfl.push_back(temp_path + std::string("/ICMUA") + second_part);
                       // Delete the file that has been added to the zip
                       // std::remove((temp_path+std::string("/ICMUA")+second_part).c_str());
                    }
@@ -844,20 +846,24 @@ int main(int argc, char** argv) {
                    if (zfl.size() > 0){
 
                       // Create the zipped upload file from the list of files added to zfl
-                      int rsize;
-                      memset(upload_file, 0x00, sizeof(upload_file));
-                      rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
-                      if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {                   // rsize ignores NULL terminating string
-                        cerr << "... Warning. upload_file string overrun prevented. Return value: " << rsize << '\n';
-                      }
 
-                      fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file);
-                      upfile = string(upload_file);
-                      retval = boinc_zip(ZIP_IT,upfile,&zfl);  // n.b. pass std::string to avoid copy-on-call
+                      //int rsize;
+                      //memset(upload_file, 0x00, sizeof(upload_file));
+                      //rsize = std::snprintf(upload_file.c_str(),sizeof(upload_file.c_str()),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
+                      //if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {                   // rsize ignores NULL terminating string
+                      //  cerr << "... Warning. upload_file string overrun prevented. Return value: " << rsize << '\n';
+                      //}
+
+                      upload_file = project_path + result_base_name + "_" + std::to_string(upload_file_number) + ".zip";
+
+                      fprintf(stderr,"Zipping up the intermediate file: %s\n",upload_file.c_str());
+                      //upfile = string(upload_file);
+                      upfile = upload_file;
+                      retval = boinc_zip(ZIP_IT, upfile, &zfl);  // n.b. pass std::string to avoid copy-on-call
                       upfile.clear();
 
                       if (retval) {
-                         fprintf(stderr,"..Zipping up the intermediate file failed\n");
+                         cerr << "..Zipping up the intermediate file failed" << "\n";
                          boinc_end_critical_section();
                          return retval;
                       }
@@ -871,18 +877,18 @@ int main(int argc, char** argv) {
                    
                       // Upload the file. In BOINC the upload file is the logical name, not the physical name
                       upload_file_name = std::string("upload_file_") + std::to_string(upload_file_number) + std::string(".zip");
-                      fprintf(stderr,"Uploading the intermediate file: %s\n",upload_file_name.c_str());
+                      fprintf(stderr,"Uploading the intermediate file: %s\n", upload_file_name.c_str());
                       sleep_until(system_clock::now() + seconds(20));
                       boinc_upload_file(upload_file_name);
                       retval = boinc_upload_status(upload_file_name);
                       if (!retval) {
-                         fprintf(stderr,"Finished the upload of the intermediate file: %s\n",upload_file_name.c_str());
+                         fprintf(stderr,"Finished the upload of the intermediate file: %s\n", upload_file_name.c_str());
                       }
 		      
                       trickle_upload_count++;
                       if (trickle_upload_count == 10) {
                         // Produce trickle
-                        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+                        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);
                         trickle_upload_count = 0;
                       }
                    }
@@ -892,25 +898,21 @@ int main(int argc, char** argv) {
                 // Else running in standalone
                 else {
                    upload_file_name = app_name + std::string("_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
-                              std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
-                              std::to_string(upload_file_number) + std::string(".zip");
+                               std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
+                               std::to_string(upload_file_number) + std::string(".zip");
                    fprintf(stderr,"The current upload_file_name is: %s\n",upload_file_name.c_str());
 
                    // Create the zipped upload file from the list of files added to zfl
-                   int rsize;
-                   memset(upload_file, 0x00, sizeof(upload_file));
-                   rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
-                   if ( rsize >= (int)sizeof(upload_file) || rsize < 0) {
-                     cerr << "... Warning. upload_file stdalone string overrun prevented. Return value: " << rsize << '\n';
-                   }
+                   upload_file = project_path + upload_file_name;
 
                    if (zfl.size() > 0){
-                      upfile = string(upload_file);
+                      //upfile = string(upload_file);
+                      upfile = upload_file;
                       retval = boinc_zip(ZIP_IT,upfile,&zfl);
                       upfile.clear();
 
                       if (retval) {
-                         fprintf(stderr,"..Creating the zipped upload file failed\n");
+                         cerr << "..Creating the zipped upload file failed" << "\n";
                          boinc_end_critical_section();
                          return retval;
                       }
@@ -927,7 +929,7 @@ int main(int argc, char** argv) {
                    trickle_upload_count++;
                    if (trickle_upload_count == 10) {
                       // Produce trickle
-                      process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+                      process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);
                       trickle_upload_count = 0;
                    }
 
@@ -994,10 +996,10 @@ int main(int argc, char** argv) {
     // This will always be the last line of a successful model forecast.
     if(file_exists(slot_path + std::string("/ifs.stat"))) {
        ifs_word="";
-       oifs_get_stat(ifs_stat_file,last_line);
-       oifs_parse_stat(last_line,ifs_word,3);
+       oifs_get_stat(ifs_stat_file, last_line);
+       oifs_parse_stat(last_line, ifs_word, 3);
        if (ifs_word!="CNT0") {
-         cerr << "CNT0 not found; string returned was: " << "'" << ifs_word << "'" << '\n';
+         cout << "CNT0 not found; string returned was: " << "'" << ifs_word << "'" << '\n';
          // print extra files to help diagnose fail
          print_last_lines("ifs.stat",8);
          print_last_lines("rcf",11);              // openifs restart control
@@ -1009,7 +1011,7 @@ int main(int argc, char** argv) {
     }
     // ifs.stat has not been produced, then model did not start
     else {
-       fprintf(stderr,"..Failed, model did not start\n");
+       cerr << "..Failed, model did not start" << endl;
        return 1;	    
     }
 	
@@ -1022,27 +1024,27 @@ int main(int argc, char** argv) {
     second_part = get_second_part(last_iter, exptid);
 
     // Move the ICMGG result file to the temporary folder in the project directory
-    if(file_exists(slot_path+std::string("/ICMGG")+second_part)) {
-       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG")+second_part).c_str());
-       retval = boinc_copy((slot_path+std::string("/ICMGG")+second_part).c_str() , \
-                           (temp_path+std::string("/ICMGG")+second_part).c_str());
+    if(file_exists(slot_path+std::string("/ICMGG") + second_part)) {
+       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMGG") + second_part).c_str());
+       retval = boinc_copy((slot_path + std::string("/ICMGG") + second_part).c_str() , \
+                           (temp_path + std::string("/ICMGG") + second_part).c_str());
        if (retval) {
-          fprintf(stderr,"..Copying ICMGG result file to the temp folder in the projects directory failed\n");
+          cerr << "..Copying ICMGG result file to the temp folder in the projects directory failed" << "\n";
           return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
        else {
-          std::remove((slot_path+std::string("/ICMGG")+second_part).c_str());
+          std::remove((slot_path + std::string("/ICMGG") + second_part).c_str());
        }
     }
 
     // Move the ICMSH result file to the temporary folder in the project directory
-    if(file_exists(slot_path+std::string("/ICMSH")+second_part)) {
-       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH")+second_part).c_str());
-       retval = boinc_copy((slot_path+std::string("/ICMSH")+second_part).c_str() , \
-                           (temp_path+std::string("/ICMSH")+second_part).c_str());
+    if(file_exists(slot_path+std::string("/ICMSH") + second_part)) {
+       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMSH") + second_part).c_str());
+       retval = boinc_copy((slot_path + std::string("/ICMSH") + second_part).c_str() , \
+                           (temp_path + std::string("/ICMSH") + second_part).c_str());
        if (retval) {
-          fprintf(stderr,"..Copying ICMSH result file to the temp folder in the projects directory failed\n");
+          cerr << "..Copying ICMSH result file to the temp folder in the projects directory failed" << "\n";
           return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
@@ -1052,17 +1054,17 @@ int main(int argc, char** argv) {
     }
 
     // Move the ICMUA result file to the temporary folder in the project directory (this is for 43r3 and above only)
-    if(file_exists(slot_path+std::string("/ICMUA")+second_part)) {
-       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA")+second_part).c_str());
-       retval = boinc_copy((slot_path+std::string("/ICMUA")+second_part).c_str() , \
-                           (temp_path+std::string("/ICMUA")+second_part).c_str());
+    if(file_exists(slot_path + std::string("/ICMUA") + second_part)) {
+       fprintf(stderr,"Moving to projects directory: %s\n",(slot_path+std::string("/ICMUA") + second_part).c_str());
+       retval = boinc_copy((slot_path + std::string("/ICMUA") + second_part).c_str() , \
+                           (temp_path + std::string("/ICMUA") + second_part).c_str());
        if (retval) {
-          fprintf(stderr,"..Copying ICMUA result file to the temp folder in the projects directory failed\n");
+          cerr << "..Copying ICMUA result file to the temp folder in the projects directory failed" << "\n";
 	  return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
        else {
-          std::remove((slot_path+std::string("/ICMUA")+second_part).c_str());
+          std::remove((slot_path + std::string("/ICMUA") + second_part).c_str());
        }
     }
     
@@ -1076,8 +1078,8 @@ int main(int argc, char** argv) {
     zfl.push_back(node_file);
     std::string ifsstat_file = slot_path + std::string("/ifs.stat");
     zfl.push_back(ifsstat_file);
-    cerr << "Adding to the zip: " << node_file << '\n';
-    cerr << "Adding to the zip: " << ifsstat_file << '\n';
+    cout << "Adding to the zip: " << node_file << '\n';
+    cout << "Adding to the zip: " << ifsstat_file << '\n';
 
     // Read the remaining list of files from the slots directory and add the matching files to the list of files for the zip
     dirp = opendir(temp_path.c_str());
@@ -1087,8 +1089,8 @@ int main(int argc, char** argv) {
           //fprintf(stderr,"In temp folder: %s\n",dir->d_name);
 
           if (!regexec(&regex,dir->d_name,(size_t) 0,NULL,0)) {
-            zfl.push_back(temp_path+std::string("/")+dir->d_name);
-            fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/")+dir->d_name).c_str());
+            zfl.push_back(temp_path + std::string("/") + dir->d_name);
+            fprintf(stderr,"Adding to the zip: %s\n",(temp_path+std::string("/") + dir->d_name).c_str());
           }
         }
         regfree(&regex);
@@ -1100,20 +1102,15 @@ int main(int argc, char** argv) {
        if (zfl.size() > 0){
 
           // Create the zipped upload file from the list of files added to zfl
-          int rsize;
-          memset(upload_file, 0x00, sizeof(upload_file));
-          rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s_%d.zip",project_path.c_str(),result_base_name,upload_file_number);
-          if ( rsize >= (int)sizeof(upload_file) || rsize < 0 ) {
-             cerr << "... Warning. final upload_file string overrun prevented. Return value: " << rsize << '\n';
-          }
+          upload_file = project_path + result_base_name + "_" + std::to_string(upload_file_number) + ".zip";
 
-          fprintf(stderr,"Zipping up the final file: %s\n",upload_file);
-          upfile = string(upload_file);
-          retval = boinc_zip(ZIP_IT,upfile,&zfl);
+          fprintf(stderr,"Zipping up the final file: %s\n", upload_file.c_str());
+          upfile = upload_file;
+          retval = boinc_zip(ZIP_IT, upfile, &zfl);
           upfile.clear();
 
           if (retval) {
-             fprintf(stderr,"..Zipping up the final file failed\n");
+             cerr << "..Zipping up the final file failed" << "\n";
              boinc_end_critical_section();
              return retval;
           }
@@ -1127,7 +1124,7 @@ int main(int argc, char** argv) {
 
           // Upload the file. In BOINC the upload file is the logical name, not the physical name
           upload_file_name = std::string("upload_file_") + std::to_string(upload_file_number) + std::string(".zip");
-          fprintf(stderr,"Uploading the final file: %s\n",upload_file_name.c_str());
+          fprintf(stderr,"Uploading the final file: %s\n", upload_file_name.c_str());
           sleep_until(system_clock::now() + seconds(20));
           boinc_upload_file(upload_file_name);
           retval = boinc_upload_status(upload_file_name);
@@ -1136,30 +1133,26 @@ int main(int argc, char** argv) {
           }
 	       
 	  // Produce trickle
-          process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);
+          process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);
        }
        boinc_end_critical_section();
     }
     // Else running in standalone
     else {
        upload_file_name = app_name + std::string("_") + unique_member_id + std::string("_") + start_date + std::string("_") + \
-                          std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
-                          std::to_string(upload_file_number) + std::string(".zip");
-       fprintf(stderr,"The final upload_file_name is: %s\n",upload_file_name.c_str());
+                   std::to_string(num_days_trunc) + std::string("_") + batchid + std::string("_") + wuid + std::string("_") + \
+                   std::to_string(upload_file_number) + std::string(".zip");
+       fprintf(stderr,"The final upload_file_name is: %s\n", upload_file_name.c_str());
 
        // Create the zipped upload file from the list of files added to zfl
-       int rsize;
-       memset(upload_file, 0x00, sizeof(upload_file));
-       rsize = std::snprintf(upload_file,sizeof(upload_file),"%s%s",project_path.c_str(),upload_file_name.c_str());
-       if ( rsize >= (int)sizeof(upload_file) || rsize < 0 ) {
-          cerr << "... Warning. final upload_file stdalone string overrun prevented. Return value: " << rsize << '\n';
-       }
+       upload_file = project_path + upload_file_name;
+
        if (zfl.size() > 0){
-          upfile = string(upload_file);
+          upfile = upload_file;
           retval = boinc_zip(ZIP_IT,upfile,&zfl);
           upfile.clear();
           if (retval) {
-             fprintf(stderr,"..Creating the zipped upload file failed\n");
+             cerr << "..Creating the zipped upload file failed" << "\n";
              boinc_end_critical_section();
              return retval;
           }
@@ -1172,7 +1165,7 @@ int main(int argc, char** argv) {
           }
         }
 	// Produce trickle
-        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name,slot_path,current_iter);     
+        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);     
     }
 
     // Now task has finished, remove the temp folder
@@ -1184,19 +1177,19 @@ int main(int argc, char** argv) {
     if (process_status == 1){
       boinc_end_critical_section();
       boinc_finish(0);
-      cerr << "... Task finished." << endl;
+      cout << "Task finished" << endl;
       return 0;
     }
     else if (process_status == 2){
       boinc_end_critical_section();
       boinc_finish(0);
-      cerr << "... Task finished." << endl;
+      cout << "Task finished" << endl;
       return 0;
     }
     else {
       boinc_end_critical_section();
       boinc_finish(1);
-      cerr << "... Task finished." << endl;
+      cout << "Task finished" << endl;
       return 1;
     }	
 }
@@ -1238,7 +1231,7 @@ int check_child_status(long handleProcess, int process_status) {
     else if ( pid == -1) {
       // should not get here, it means the child could not be found
       process_status = 5;
-      cerr << "Unable to retrieve status of child process " << '\n';
+      cerr << "..Unable to retrieve status of child process " << '\n';
       perror("waitpid() error");
     }
     return process_status;
@@ -1252,19 +1245,19 @@ int check_boinc_status(long handleProcess, int process_status) {
     // If a quit, abort or no heartbeat has been received from the BOINC client, end child process
     if (status.quit_request) {
        fprintf(stderr,"Quit request received from BOINC client, ending the child process\n");
-       kill(handleProcess,SIGKILL);
+       kill(handleProcess, SIGKILL);
        process_status = 2;
        return process_status;
     }
     else if (status.abort_request) {
        fprintf(stderr,"Abort request received from BOINC client, ending the child process\n");
-       kill(handleProcess,SIGKILL);
+       kill(handleProcess, SIGKILL);
        process_status = 1;
        return process_status;
     }
     else if (status.no_heartbeat) {
        fprintf(stderr,"No heartbeat received from BOINC client, ending the child process\n");
-       kill(handleProcess,SIGKILL);
+       kill(handleProcess, SIGKILL);
        process_status = 1;
        return process_status;
     }
@@ -1272,25 +1265,25 @@ int check_boinc_status(long handleProcess, int process_status) {
     else {
        if (status.suspended) {
           fprintf(stderr,"Suspend request received from the BOINC client, suspending the child process\n");
-          kill(handleProcess,SIGSTOP);
+          kill(handleProcess, SIGSTOP);
 
           while (status.suspended) {
              boinc_get_status(&status);
              if (status.quit_request) {
                 fprintf(stderr,"Quit request received from the BOINC client, ending the child process\n");
-                kill(handleProcess,SIGKILL);
+                kill(handleProcess, SIGKILL);
                 process_status = 2;
                 return process_status;
              }
              else if (status.abort_request) {
                 fprintf(stderr,"Abort request received from the BOINC client, ending the child process\n");
-                kill(handleProcess,SIGKILL);
+                kill(handleProcess, SIGKILL);
                 process_status = 1;
                 return process_status;
              }
              else if (status.no_heartbeat) {
                 fprintf(stderr,"No heartbeat received from the BOINC client, ending the child process\n");
-                kill(handleProcess,SIGKILL);
+                kill(handleProcess, SIGKILL);
                 process_status = 1;
                 return process_status;
              }
@@ -1298,14 +1291,14 @@ int check_boinc_status(long handleProcess, int process_status) {
           }
           // Resume child process
           fprintf(stderr,"Resuming the child process\n");
-          kill(handleProcess,SIGCONT);
+          kill(handleProcess, SIGCONT);
           process_status = 0;
        }
        return process_status;
     }
 }
 
-long launch_process(const char* slot_path,const char* strCmd,const char* exptid, const std::string app_name) {
+long launch_process(const std::string slot_path,const char* strCmd,const char* exptid, const std::string app_name) {
     int retval = 0;
     long handleProcess;
 
@@ -1315,7 +1308,7 @@ long launch_process(const char* slot_path,const char* strCmd,const char* exptid,
 
     switch((handleProcess=fork())) {
        case -1: {
-          fprintf(stderr,"..Unable to start a new child process\n");
+          cerr << "..Unable to start a new child process" << "\n";
           exit(0);
           break;
        }
@@ -1325,7 +1318,7 @@ long launch_process(const char* slot_path,const char* strCmd,const char* exptid,
           std::string GRIB_SAMPLES_var = std::string("GRIB_SAMPLES_PATH=") + slot_path + \
                                          std::string("/eccodes/ifs_samples/grib1_mlgrib2");
           if (putenv((char *)GRIB_SAMPLES_var.c_str())) {
-            fprintf(stderr,"..Setting the GRIB_SAMPLES_PATH failed\n");
+            cerr << "..Setting the GRIB_SAMPLES_PATH failed" << "\n";
           }
           pathvar = getenv("GRIB_SAMPLES_PATH");
           //fprintf(stderr,"The GRIB_SAMPLES_PATH environmental variable is: %s\n",pathvar);
@@ -1334,7 +1327,7 @@ long launch_process(const char* slot_path,const char* strCmd,const char* exptid,
           std::string GRIB_DEF_var = std::string("GRIB_DEFINITION_PATH=") + slot_path + \
                                      std::string("/eccodes/definitions");
           if (putenv((char *)GRIB_DEF_var.c_str())) {
-            fprintf(stderr,"..Setting the GRIB_DEFINITION_PATH failed\n");
+            cerr << "..Setting the GRIB_DEFINITION_PATH failed" << "\n";
           }
           pathvar = getenv("GRIB_DEFINITION_PATH");
           //fprintf(stderr,"The GRIB_DEFINITION_PATH environmental variable is: %s\n",pathvar);
@@ -1344,18 +1337,18 @@ long launch_process(const char* slot_path,const char* strCmd,const char* exptid,
             retval = execl(strCmd,strCmd,"-e",exptid,NULL);
           }
           else {  // OpenIFS 43r3 and above
-            fprintf(stderr,"Executing the command: %s\n",strCmd);
+            fprintf(stderr,"Executing the command: %s\n", strCmd);
             retval = execl(strCmd,strCmd,NULL,NULL,NULL);
           }
 
           // If execl returns then there was an error
-          fprintf(stderr,"..The execl() command failed slot_path=%s,strCmd=%s,exptid=%s\n",slot_path,strCmd,exptid);
+          fprintf(stderr,"..The execl() command failed slot_path=%s,strCmd=%s,exptid=%s\n",slot_path.c_str(),strCmd,exptid);
           fflush(stderr);
           exit(retval);
           break;
        }
        default: 
-          fprintf(stderr,"The child process has been launched with process id: %ld\n",handleProcess);
+          fprintf(stderr,"The child process has been launched with process id: %ld\n", handleProcess);
           fflush(stderr);
     }
     return handleProcess;
@@ -1384,43 +1377,42 @@ std::string get_tag(const std::string &filename) {
 }
 
 // Produce the trickle and either upload to the project server or as a physical file
-void process_trickle(double current_cpu_time,const char* wu_name,const char* result_name,const char* slot_path,int timestep) {
-    char trickle[_MAX_PATH];
-    char trickle_location[_MAX_PATH];
+void process_trickle(double current_cpu_time, const char* wu_name, const char* result_base_name, const char* slot_path, int timestep) {
+    std::string trickle, trickle_location;
     int rsize;
 
     //fprintf(stderr,"current_cpu_time: %f\n",current_cpu_time);
     //fprintf(stderr,"wu_name: %s\n",wu_name);
-    //fprintf(stderr,"result_name: %s\n",result_name);
+    //fprintf(stderr,"result_base_name: %s\n",result_base_name);
     //fprintf(stderr,"slot_path: %s\n",slot_path);
     //fprintf(stderr,"timestep: %d\n",timestep);
 
-    rsize = std::snprintf(trickle,sizeof(trickle), "<wu>%s</wu>\n<result>%s</result>\n<ph></ph>\n<ts>%d</ts>\n<cp>%ld</cp>\n<vr></vr>\n",\
-                           wu_name,result_name, timestep,(long) current_cpu_time);
-
-    if ( rsize >= (int)sizeof(trickle) || rsize < 0 ) {
-       cerr << "... Warning. trickle string overrun prevented. Return value: " << rsize << '\n';
-    }
-    //fprintf(stderr,"Contents of trickle: %s\n",trickle);
-
+    std::stringstream trickle_buffer;
+    trickle_buffer << "<wu>" << wu_name << "</wu>\n<result>" << result_base_name << "</result>\n<ph></ph>\n<ts>" \
+                   << timestep << "</ts>\n<cp>" << current_cpu_time << "</cp>\n<vr></vr>\n";
+    trickle = trickle_buffer.str();
+    cout << "Contents of trickle: " << trickle << "\n";
+      
     // Upload the trickle if not in standalone mode
     if (!boinc_is_standalone()) {
        std::string variety("orig");
 
        fprintf(stderr,"Uploading trickle at timestep: %d\n",timestep);
 
-       boinc_send_trickle_up(variety.data(), trickle);
+       boinc_send_trickle_up(variety.data(), const_cast<char*> (trickle.c_str()));
     }
 
     // Write out the trickle in standalone mode
     else {
-       std::snprintf(trickle_location,sizeof(trickle_location),"%s/trickle_%lu.xml",slot_path,(unsigned long) time(NULL));
+       std::stringstream trickle_location_buffer;
+       trickle_location_buffer << slot_path << "/trickle_" << time(NULL) << ".xml" << "\n";
+       trickle_location = trickle_location_buffer.str();
 
-       fprintf(stderr,"Writing trickle to: %s\n",trickle_location);
+       fprintf(stderr,"Writing trickle to: %s\n", trickle_location.c_str());
 
-       FILE* trickle_file = boinc_fopen(trickle_location,"w");
+       FILE* trickle_file = boinc_fopen(trickle_location.c_str(), "w");
        if (trickle_file) {
-          fwrite(trickle, 1, strlen(trickle), trickle_file);
+          fwrite(trickle.c_str(), 1, strlen(trickle.c_str()), trickle_file);
           fclose(trickle_file);
        }
     }
@@ -1511,7 +1503,6 @@ double model_frac_done(double step, double total_steps, int nthreads ) {
    }
 
    return frac_done;
-
 }
 
 // Construct the second part of the file to be uploaded
@@ -1522,19 +1513,19 @@ std::string get_second_part(string last_iter, string exptid) {
       second_part = exptid +"+"+ "00000" + last_iter;
    }
    else if (last_iter.length() == 2) {
-      second_part = exptid +"+"+ "0000" + last_iter;
+      second_part = exptid + "+" + "0000" + last_iter;
    }
    else if (last_iter.length() == 3) {
-      second_part = exptid +"+"+ "000" + last_iter;
+      second_part = exptid + "+" + "000" + last_iter;
    }
    else if (last_iter.length() == 4) {
-      second_part = exptid +"+"+ "00" + last_iter;
+      second_part = exptid + "+" + "00" + last_iter;
    }
    else if (last_iter.length() == 5) {
-      second_part = exptid +"+"+ "0" + last_iter;
+      second_part = exptid + "+" + "0" + last_iter;
    }
    else if (last_iter.length() == 6) {
-      second_part = exptid +"+"+ last_iter;
+      second_part = exptid + "+" + last_iter;
    }
 
    return second_part;
@@ -1617,7 +1608,7 @@ bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
     static streamoff   p = 0;             // stream offset position
 
     if ( !ifs_stat.is_open() ) {
-        cerr << "oifs_get_stat: Error. ifs.stat file is not open" << endl;
+        cerr << "oifs_get_stat: error, ifs.stat file is not open" << endl;
         p = 0;
         current_line = "";
         return false;
@@ -1681,11 +1672,11 @@ int print_last_lines(string filename, int maxlines) {
       start = count > maxlines ? (count%maxlines) : 0;
       end   = min(maxlines,count);
 
-      cerr << ">>> Printing last " << end << " lines from file: " << filename << '\n';
+      cout << ">>> Printing last " << end << " lines from file: " << filename << '\n';
       for ( int i=0; i<end; i++ ) {
-         cerr << lines[ (start+i)%maxlines ] << '\n';
+         cout << lines[ (start+i)%maxlines ] << '\n';
       }
-      cerr << "------------------------------------------------" << '\n';
+      cout << "------------------------------------------------" << '\n';
    }
 
    return count;
