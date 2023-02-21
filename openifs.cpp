@@ -33,19 +33,12 @@
 #include "rapidxml.hpp"
 #include <algorithm>
 
-#ifndef _MAX_PATH
-   #define _MAX_PATH 512
-#endif
-#ifndef _MAX_FNAME
-   #define _MAX_FNAME 64
-#endif
-
 const char* strip_path(const char* path);
 int check_child_status(long, int);
 int check_boinc_status(long, int);
 long launch_process(const std::string, const char*, const char*, const std::string);
 std::string get_tag(const std::string &str);
-void process_trickle(double, const char*, const char*, const char*, int);
+void process_trickle(double, const char*, const char*, const std::string, int);
 bool file_exists(const std::string &str);
 bool file_is_empty(std::string &str);
 double cpu_time(long);
@@ -137,11 +130,13 @@ int main(int argc, char** argv) {
     int num_days_trunc = (int) num_days; // number of simulation days truncated to an integer
 	
     // Get the slots path (the current working path)
-    char slot_path[_MAX_PATH];
-    if (getcwd(slot_path, sizeof(slot_path)) == NULL)
-      cerr << "..getcwd returned an error" << "\n";
-    else
-      fprintf(stderr,"Working directory is: %s\n",slot_path);
+    std::string slot_path = std::filesystem::current_path();
+    if (slot_path == "") {
+      cerr << "..current_path() returned empty" << "\n";
+    }
+    else {
+      cerr << "Working directory is: "<< slot_path << "\n";      
+    }
 
     if (!boinc_is_standalone()) {
 
@@ -1369,7 +1364,7 @@ std::string get_tag(const std::string &filename) {
 }
 
 // Produce the trickle and either upload to the project server or as a physical file
-void process_trickle(double current_cpu_time, const char* wu_name, const char* result_base_name, const char* slot_path, int timestep) {
+void process_trickle(double current_cpu_time, const char* wu_name, const char* result_base_name, std::string slot_path, int timestep) {
     std::string trickle, trickle_location;
     int rsize;
 
