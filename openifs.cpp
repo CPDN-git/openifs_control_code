@@ -38,7 +38,7 @@ int check_child_status(long, int);
 int check_boinc_status(long, int);
 long launch_process(const std::string, const char*, const char*, const std::string);
 std::string get_tag(const std::string &str);
-void process_trickle(double, const char*, const char*, const std::string, int);
+void process_trickle(double, const std::string, const std::string, const std::string, int);
 bool file_exists(const std::string &str);
 bool file_is_empty(std::string &str);
 double cpu_time(long);
@@ -872,7 +872,7 @@ int main(int argc, char** argv) {
                       trickle_upload_count++;
                       if (trickle_upload_count == 10) {
                         // Produce trickle
-                        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);
+                        process_trickle(current_cpu_time,wu_name,result_base_name,slot_path,current_iter);
                         trickle_upload_count = 0;
                       }
                    }
@@ -913,7 +913,7 @@ int main(int argc, char** argv) {
                    trickle_upload_count++;
                    if (trickle_upload_count == 10) {
                       // Produce trickle
-                      process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);
+                      process_trickle(current_cpu_time,wu_name,result_base_name,slot_path,current_iter);
                       trickle_upload_count = 0;
                    }
 
@@ -1117,7 +1117,7 @@ int main(int argc, char** argv) {
           }
 	       
 	  // Produce trickle
-          process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);
+          process_trickle(current_cpu_time,wu_name,result_base_name,slot_path,current_iter);
        }
        boinc_end_critical_section();
     }
@@ -1149,7 +1149,7 @@ int main(int argc, char** argv) {
           }
         }
 	// Produce trickle
-        process_trickle(current_cpu_time,wu_name.c_str(),result_base_name.c_str(),slot_path,current_iter);     
+        process_trickle(current_cpu_time,wu_name,result_base_name,slot_path,current_iter);     
     }
 
     // Now task has finished, remove the temp folder
@@ -1359,7 +1359,7 @@ std::string get_tag(const std::string &filename) {
 }
 
 // Produce the trickle and either upload to the project server or as a physical file
-void process_trickle(double current_cpu_time, const char* wu_name, const char* result_base_name, std::string slot_path, int timestep) {
+void process_trickle(double current_cpu_time, std::string wu_name, std::string result_base_name, std::string slot_path, int timestep) {
     std::string trickle, trickle_location;
     int rsize;
 
