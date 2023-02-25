@@ -651,16 +651,20 @@ int main(int argc, char** argv) {
 
     // Get result_base_name to construct upload file names using 
     // the first upload as an example and then stripping off '_0.zip'
+
     if (!boinc_is_standalone()) {
        retval = boinc_resolve_filename_s("upload_file_0.zip", resolved_name);
        if (retval) {
-          cerr << "..boinc_resolve_filename failed" << "\n";
+          cerr << "..boinc_resolve_filename failed" << "\n";      // should we return at this point?
        }
 
-       cerr << "resolved_name: " << resolved_name << "\n";
-       strncpy(const_cast<char*> (result_base_name.c_str()), strip_path(resolved_name.c_str()), strlen(strip_path(resolved_name.c_str()))-6);
+       result_base_name = std::filesystem::path(resolved_name).stem();     // returns filename without path nor '.zip'
+       if ( resolved_name.length() > 2 ){
+          result_base_name.erase(resolved_name.length()-2);                   // removes the '_0'
+       }
+
        cerr << "result_base_name: " << result_base_name << "\n";
-       if (strcmp(result_base_name.c_str(), "upload_file")==0) {
+       if (result_base_name.compare("upload_file") == 0) {
           cerr << "..Failed to get result name" << "\n";
           return 1;
        }
