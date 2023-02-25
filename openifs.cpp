@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
 	
     // Parse the fort.4 namelist for the filenames and variables
     std::string namelist_file = slot_path + std::string("/") + namelist;
-    std::string namelist_line="", nss="", delimiter="=";
+    std::string namelist_line="", delimiter="=";
     std::ifstream namelist_filestream;
 
    // Check for the existence of the namelist
