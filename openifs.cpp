@@ -1374,7 +1374,7 @@ void process_trickle(double current_cpu_time, std::string wu_name, std::string r
     trickle_buffer << "<wu>" << wu_name << "</wu>\n<result>" << result_base_name << "</result>\n<ph></ph>\n<ts>" \
                    << timestep << "</ts>\n<cp>" << current_cpu_time << "</cp>\n<vr></vr>\n";
     trickle = trickle_buffer.str();
-    cerr << "Contents of trickle: " << trickle << '\n';
+    cerr << "Contents of trickle:\n" << trickle << '\n';
       
     // Upload the trickle if not in standalone mode
     if (!boinc_is_standalone()) {
