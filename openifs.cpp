@@ -659,8 +659,8 @@ int main(int argc, char** argv) {
        }
 
        result_base_name = std::filesystem::path(resolved_name).stem();     // returns filename without path nor '.zip'
-       if ( resolved_name.length() > 2 ){
-          result_base_name.erase(resolved_name.length()-2);                   // removes the '_0'
+       if ( result_base_name.length() > 2 ){
+          result_base_name.erase(result_base_name.length()-2);                   // removes the '_0'
        }
 
        cerr << "result_base_name: " << result_base_name << '\n';
