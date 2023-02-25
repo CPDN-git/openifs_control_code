@@ -1380,7 +1380,7 @@ void process_trickle(double current_cpu_time, std::string wu_name, std::string r
     if (!boinc_is_standalone()) {
        std::string variety("orig");
        cerr << "Uploading trickle at timestep: " << timestep << '\n';
-       boinc_send_trickle_up(variety.data(), const_cast<char*> (trickle.c_str()));
+       boinc_send_trickle_up(variety.data(), trickle.data());
     }
 
     // Write out the trickle in standalone mode
