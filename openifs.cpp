@@ -1386,12 +1386,12 @@ void process_trickle(double current_cpu_time, std::string wu_name, std::string r
     // Write out the trickle in standalone mode
     else {
        std::stringstream trickle_location_buffer;
-       trickle_location_buffer << slot_path << "/trickle_" << time(NULL) << ".xml" << '\n';
+       trickle_location_buffer << slot_path << "/trickle_" << time(NULL) << ".xml";
        trickle_location = trickle_location_buffer.str();
        cerr << "Writing trickle to: " << trickle_location << '\n';
        FILE* trickle_file = boinc_fopen(trickle_location.c_str(), "w");
        if (trickle_file) {
-          fwrite(trickle.c_str(), 1, strlen(trickle.c_str()), trickle_file);
+          fwrite(trickle.c_str(), 1, trickle.length(), trickle_file);
           fclose(trickle_file);
        }
     }
