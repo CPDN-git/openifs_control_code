@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     cerr << "(argv5) wuid: " << argv[5] << '\n';
     cerr << "(argv6) fclen: " << argv[6] << '\n';
     cerr << "(argv7) app_name: " << argv[7] << '\n';
-    cerr << "(argv8) nthreads: " << argv[8] << '\n';
+    cerr << "(argv8) nthreads: " << argv[8] << std::endl;
 
     // Read the exptid, batchid, version, wuid from the command line
     std::string start_date = argv[1]; // simulation start date
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
     // Get the slots path (the current working path)
     std::string slot_path = std::filesystem::current_path();
     if (slot_path == "") {
-      cerr << "..current_path() returned empty" << '\n';
+      cerr << "..current_path() returned empty" << std::endl;
     }
     else {
       cerr << "Working directory is: "<< slot_path << '\n';      
@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
     // BOINC measures the disk usage on the slots directory so we must move all results out of this folder
     std::string temp_path = project_path + app_name + std::string("_") + wuid;
     cerr << "Location of temp folder: " << temp_path << '\n';
-    if (mkdir(temp_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) cerr << "..mkdir for temp folder for results failed" << '\n';
+    if (mkdir(temp_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) cerr << "..mkdir for temp folder for results failed" << std::endl;
 
     // macOS
     #if defined (__APPLE__)
@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
     cerr << "Copying: " << app_source << " to: " << app_destination << '\n';
     retval = boinc_copy(app_source.c_str(), app_destination.c_str());
     if (retval) {
-       cerr << "..Copying the app file to the working directory failed: error " << retval << '\n';
+       cerr << "..Copying the app file to the working directory failed: error " << retval << std::endl;
        return retval;
     }
 
@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
     retval = boinc_zip(UNZIP_IT, app_zip.c_str(), slot_path);
 
     if (retval) {
-       cerr << "..Unzipping the app file failed" << '\n';
+       cerr << "..Unzipping the app file failed" << std::endl;
        return retval;
     }
     // Remove the zip file
@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
     cerr << "Copying the namelist files from: " << wu_source << " to: " << wu_destination << '\n';
     retval = boinc_copy(wu_source.c_str(), wu_destination.c_str());
     if (retval) {
-       cerr << "..Copying the namelist files to the working directory failed" << '\n';
+       cerr << "..Copying the namelist files to the working directory failed" << std::endl;
        return retval;
     }
 
@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
     cerr << "Unzipping the namelist zip file: " << namelist_zip << '\n';
     retval = boinc_zip(UNZIP_IT, namelist_zip.c_str(), slot_path);
     if (retval) {
-       cerr << "..Unzipping the namelist file failed" << '\n';
+       cerr << "..Unzipping the namelist file failed" << std::endl;
        return retval;
     }
     // Remove the zip file
@@ -253,7 +253,7 @@ int main(int argc, char** argv) {
 
    // Check for the existence of the namelist
    if( !file_exists(namelist_file) ) {
-      cerr << "..The namelist file does not exist: " << namelist_file << '\n';
+      cerr << "..The namelist file does not exist: " << namelist_file << std::endl;
       return 1;        // should terminate, the model won't run.
     }
 
@@ -333,7 +333,7 @@ int main(int argc, char** argv) {
           if ( check_stoi(tmpstr3) ) {
             restart_interval = stoi(tmpstr3);
           } else {
-            cerr << "..Warning, unable to read restart interval, setting to zero, got string: " << tmpstr3 << '\n';
+            cerr << "..Warning, unable to read restart interval, setting to zero, got string: " << tmpstr3 << std::endl;
             restart_interval = 0;
           }
        }
@@ -361,7 +361,7 @@ int main(int argc, char** argv) {
     cerr << "Copying IC ancils from: " << ic_ancil_source << " to: " << ic_ancil_destination << '\n';
     retval = boinc_copy(ic_ancil_source.c_str(), ic_ancil_destination.c_str());
     if (retval) {
-       cerr << "..Copying the IC ancils to the working directory failed" << '\n';
+       cerr << "..Copying the IC ancils to the working directory failed" << std::endl;
        return retval;
     }
 
@@ -369,7 +369,7 @@ int main(int argc, char** argv) {
     cerr << "Unzipping the IC ancils zip file: " << ic_ancil_zip << '\n';
     retval = boinc_zip(UNZIP_IT, ic_ancil_zip.c_str(), slot_path);
     if (retval) {
-       cerr << "..Unzipping the IC ancils file failed" << '\n';
+       cerr << "..Unzipping the IC ancils file failed" << std::endl;
        return retval;
     }
     // Remove the zip file
@@ -391,7 +391,7 @@ int main(int argc, char** argv) {
     cerr << "Copying the ifsdata_file from: " << ifsdata_source << " to: " << ifsdata_destination << '\n';
     retval = boinc_copy(ifsdata_source.c_str(), ifsdata_destination.c_str());
     if (retval) {
-       cerr << "..Copying the ifsdata file to the working directory failed" << '\n';
+       cerr << "..Copying the ifsdata file to the working directory failed" << std::endl;
        return retval;
     }
 
@@ -400,7 +400,7 @@ int main(int argc, char** argv) {
     cerr << "Unzipping the ifsdata_zip file: " << ifsdata_zip << '\n';
     retval = boinc_zip(UNZIP_IT, ifsdata_zip.c_str(), ifsdata_folder + std::string("/"));
     if (retval) {
-       cerr << "..Unzipping the ifsdata_zip file failed" << '\n';
+       cerr << "..Unzipping the ifsdata_zip file failed" << std::endl;
        return retval;
     }
     // Remove the zip file
@@ -413,7 +413,7 @@ int main(int argc, char** argv) {
     // Make the climate data directory
     std::string climate_data_path = slot_path + std::string("/") + horiz_resolution + grid_type;
     if (mkdir(climate_data_path.c_str(),S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) \
-                       cerr << "..mkdir for the climate data folder failed" << '\n';
+                       cerr << "..mkdir for the climate data folder failed" << std::endl;
 
     // Get the name of the 'jf_' filename from a link within the climate_data_file
     std::string climate_data_source = get_tag(slot_path + std::string("/") + climate_data_file + std::string(".zip"));
@@ -423,7 +423,7 @@ int main(int argc, char** argv) {
     cerr << "Copying the climate data file from: " << climate_data_source << " to: " << climate_data_destination << '\n';
     retval = boinc_copy(climate_data_source.c_str(), climate_data_destination.c_str());
     if (retval) {
-       cerr << "..Copying the climate data file to the working directory failed" << '\n';
+       cerr << "..Copying the climate data file to the working directory failed" << std::endl;
        return retval;
     }	
 
@@ -432,7 +432,7 @@ int main(int argc, char** argv) {
     cerr << "Unzipping the climate data zip file: " << climate_zip << '\n';
     retval = boinc_zip(UNZIP_IT, climate_zip.c_str(), climate_data_path);
     if (retval) {
-       cerr << "..Unzipping the climate data file failed" << '\n';
+       cerr << "..Unzipping the climate data file failed" << std::endl;
        return retval;
     }
     // Remove the zip file
@@ -446,7 +446,7 @@ int main(int argc, char** argv) {
     // Possible values are: 'quiet', 'verbose' or 'abort'
     std::string OIFS_var("OIFS_DUMMY_ACTION=abort");
     if (putenv((char *)OIFS_var.c_str())) {
-      cerr << "..Setting the OIFS_DUMMY_ACTION environmental variable failed" << '\n';
+      cerr << "..Setting the OIFS_DUMMY_ACTION environmental variable failed" << std::endl;
       return 1;
     }
     pathvar = getenv("OIFS_DUMMY_ACTION");
@@ -455,7 +455,7 @@ int main(int argc, char** argv) {
     // Set the OMP_NUM_THREADS environmental variable, the number of threads
     std::string OMP_NUM_var = std::string("OMP_NUM_THREADS=") + nthreads;
     if (putenv((char *)OMP_NUM_var.c_str())) {
-      cerr << "..Setting the OMP_NUM_THREADS environmental variable failed" << '\n';
+      cerr << "..Setting the OMP_NUM_THREADS environmental variable failed" << std::endl;
       return 1;
     }
     pathvar = getenv("OMP_NUM_THREADS");
@@ -464,7 +464,7 @@ int main(int argc, char** argv) {
     // Set the OMP_SCHEDULE environmental variable, this enforces static thread scheduling
     std::string OMP_SCHED_var("OMP_SCHEDULE=STATIC");
     if (putenv((char *)OMP_SCHED_var.c_str())) {
-      cerr << "..Setting the OMP_SCHEDULE environmental variable failed" << '\n';
+      cerr << "..Setting the OMP_SCHEDULE environmental variable failed" << std::endl;
       return 1;
     }
     pathvar = getenv("OMP_SCHEDULE");
@@ -473,7 +473,7 @@ int main(int argc, char** argv) {
     // Set the DR_HOOK environmental variable, this controls the tracing facility in OpenIFS, off=0 and on=1
     std::string DR_HOOK_var("DR_HOOK=1");
     if (putenv((char *)DR_HOOK_var.c_str())) {
-      cerr << "..Setting the DR_HOOK environmental variable failed" << '\n';
+      cerr << "..Setting the DR_HOOK environmental variable failed" << std::endl;
       return 1;
     }
     pathvar = getenv("DR_HOOK");
@@ -482,7 +482,7 @@ int main(int argc, char** argv) {
     // Set the DR_HOOK_HEAPCHECK environmental variable, this ensures the heap size statistics are reported
     std::string DR_HOOK_HEAP_var("DR_HOOK_HEAPCHECK=no");
     if (putenv((char *)DR_HOOK_HEAP_var.c_str())) {
-      cerr << "..Setting the DR_HOOK_HEAPCHECK environmental variable failed" << '\n';
+      cerr << "..Setting the DR_HOOK_HEAPCHECK environmental variable failed" << std::endl;
       return 1;
     }
     pathvar = getenv("DR_HOOK_HEAPCHECK");
@@ -491,7 +491,7 @@ int main(int argc, char** argv) {
     // Set the DR_HOOK_STACKCHECK environmental variable, this ensures the stack size statistics are reported
     std::string DR_HOOK_STACK_var("DR_HOOK_STACKCHECK=no");
     if (putenv((char *)DR_HOOK_STACK_var.c_str())) {
-      cerr << "..Setting the DR_HOOK_STACKCHECK environmental variable failed" << '\n';
+      cerr << "..Setting the DR_HOOK_STACKCHECK environmental variable failed" << std::endl;
       return 1;
     }
     pathvar = getenv("DR_HOOK_STACKCHECK");
@@ -501,7 +501,7 @@ int main(int argc, char** argv) {
     // Disable EC_MEMINFO to remove the useless EC_MEMINFO messages to the stdout file to reduce filesize.
     std::string EC_MEMINFO("EC_MEMINFO=0");
     if (putenv((char *)EC_MEMINFO.c_str())) {
-       cerr << "..Setting the EC_MEMINFO environment variable failed" << '\n';
+       cerr << "..Setting the EC_MEMINFO environment variable failed" << std::endl;
        return 1;
     }
     pathvar = getenv("EC_MEMINFO");
@@ -510,7 +510,7 @@ int main(int argc, char** argv) {
     // Disable Heap memory stats at end of run; does not work for CPDN version of OpenIFS
     std::string EC_PROFILE_HEAP("EC_PROFILE_HEAP=0");
     if (putenv((char *)EC_PROFILE_HEAP.c_str())) {
-       cerr << "..Setting the EC_PROFILE_HEAP environment variable failed" << '\n';
+       cerr << "..Setting the EC_PROFILE_HEAP environment variable failed" << std::endl;
        return 1;
     }
     pathvar = getenv("EC_PROFILE_HEAP");
@@ -519,7 +519,7 @@ int main(int argc, char** argv) {
     // Disable all memory stats at end of run; does not work for CPDN version of OpenIFS
     std::string EC_PROFILE_MEM("EC_PROFILE_MEM=0");
     if (putenv((char *)EC_PROFILE_MEM.c_str())) {
-       cerr << "..Setting the EC_PROFILE_MEM environment variable failed" << '\n';
+       cerr << "..Setting the EC_PROFILE_MEM environment variable failed" << std::endl;
        return 1;
     }
     pathvar = getenv("EC_PROFILE_MEM");
@@ -528,7 +528,7 @@ int main(int argc, char** argv) {
     // Set the OMP_STACKSIZE environmental variable, OpenIFS needs more stack memory per process
     std::string OMP_STACK_var("OMP_STACKSIZE=128M");
     if (putenv((char *)OMP_STACK_var.c_str())) {
-      cerr << "..Setting the OMP_STACKSIZE environmental variable failed" << '\n';
+      cerr << "..Setting the OMP_STACKSIZE environmental variable failed" << std::endl;
       return 1;
     }
     pathvar = getenv("OMP_STACKSIZE");
@@ -538,14 +538,14 @@ int main(int argc, char** argv) {
     // Set the core dump size to 0
     struct rlimit core_limits;
     core_limits.rlim_cur = core_limits.rlim_max = 0;
-    if (setrlimit(RLIMIT_CORE, &core_limits) != 0) cerr << "..Setting the core dump size to 0 failed" << '\n';
+    if (setrlimit(RLIMIT_CORE, &core_limits) != 0) cerr << "..Setting the core dump size to 0 failed" << std::endl;
 
     // Set the stack limit to be unlimited
     struct rlimit stack_limits;
     // In macOS we cannot set the stack size limit to infinity
     #ifndef __APPLE__ // Linux
        stack_limits.rlim_cur = stack_limits.rlim_max = RLIM_INFINITY;
-       if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) cerr << "..Setting the stack limit to unlimited failed" << '\n';
+       if (setrlimit(RLIMIT_STACK, &stack_limits) != 0) cerr << "..Setting the stack limit to unlimited failed" << std::endl;
     #endif
 
     int last_cpu_time, restart_cpu_time = 0, upload_file_number, last_upload, model_completed, restart_iter;
@@ -641,7 +641,7 @@ int main(int argc, char** argv) {
 
     // Check if upload_interval x timestep_interval equal to zero
     if (upload_interval * timestep_interval == 0) {
-       cerr << "..upload_interval x timestep_interval equals zero" << '\n';
+       cerr << "..upload_interval x timestep_interval equals zero" << std::endl;
        return 1;
     }
 
@@ -654,7 +654,8 @@ int main(int argc, char** argv) {
     if (!boinc_is_standalone()) {
        retval = boinc_resolve_filename_s("upload_file_0.zip", resolved_name);
        if (retval) {
-          cerr << "..boinc_resolve_filename failed" << '\n';      // should we return at this point?
+          cerr << "..boinc_resolve_filename failed" << std::endl;
+	  return 1;
        }
 
        result_base_name = std::filesystem::path(resolved_name).stem();     // returns filename without path nor '.zip'
@@ -664,7 +665,7 @@ int main(int argc, char** argv) {
 
        cerr << "result_base_name: " << result_base_name << '\n';
        if (result_base_name.compare("upload_file") == 0) {
-          cerr << "..Failed to get result name" << '\n';
+          cerr << "..Failed to get result name" << std::endl;
           return 1;
        }
     }
@@ -676,7 +677,7 @@ int main(int argc, char** argv) {
        // If exists then run file
        FILE* pipe = popen(override_env_vars.c_str(), "r");
        if (!pipe) {
-          cerr << "..Failed to open environment variables override file" << '\n';
+          cerr << "..Failed to open environment variables override file" << std::endl;
           return 1;
        }
        pclose(pipe);
@@ -744,7 +745,7 @@ int main(int argc, char** argv) {
                 retval = boinc_copy((slot_path + std::string("/ICMGG") + second_part).c_str() , \
                                     (temp_path + std::string("/ICMGG") + second_part).c_str());
                 if (retval) {
-                   cerr << "..Copying ICMGG result file to the temp folder in the projects directory failed" << '\n';
+                   cerr << "..Copying ICMGG result file to the temp folder in the projects directory failed" << std::endl;
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
@@ -759,7 +760,7 @@ int main(int argc, char** argv) {
                 retval = boinc_copy((slot_path + std::string("/ICMSH") + second_part).c_str() , \
                                     (temp_path + std::string("/ICMSH") + second_part).c_str());
                 if (retval) {
-                   cerr << "..Copying ICMSH result file to the temp folder in the projects directory failed" << '\n';
+                   cerr << "..Copying ICMSH result file to the temp folder in the projects directory failed" << std::endl;
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
@@ -774,7 +775,7 @@ int main(int argc, char** argv) {
                 retval = boinc_copy((slot_path+std::string("/ICMUA") + second_part).c_str() , \
                                     (temp_path+std::string("/ICMUA") + second_part).c_str());
                 if (retval) {
-                   cerr << "..Copying ICMUA result file to the temp folder in the projects directory failed" << '\n';
+                   cerr << "..Copying ICMUA result file to the temp folder in the projects directory failed" << std::endl;
                    return retval;
                 }
                 // If result file has been successfully copied over, remove it from slots directory
@@ -847,7 +848,7 @@ int main(int argc, char** argv) {
                       upfile.clear();
 
                       if (retval) {
-                         cerr << "..Zipping up the intermediate file failed" << '\n';
+                         cerr << "..Zipping up the intermediate file failed" << std::endl;
                          boinc_end_critical_section();
                          return retval;
                       }
@@ -896,7 +897,7 @@ int main(int argc, char** argv) {
                       upfile.clear();
 
                       if (retval) {
-                         cerr << "..Creating the zipped upload file failed" << '\n';
+                         cerr << "..Creating the zipped upload file failed" << std::endl;
                          boinc_end_critical_section();
                          return retval;
                       }
@@ -989,13 +990,13 @@ int main(int argc, char** argv) {
          print_last_lines("rcf",11);              // openifs restart control
          print_last_lines("waminfo",17);          // wave model restart control
          print_last_lines(progress_file,8);
-         cerr << "..Failed, model did not complete successfully" << endl;
+         cerr << "..Failed, model did not complete successfully" << std::endl;
          return 1;
        }
     }
     // ifs.stat has not been produced, then model did not start
     else {
-       cerr << "..Failed, model did not start" << endl;
+       cerr << "..Failed, model did not start" << std::endl;
        return 1;	    
     }
 	
@@ -1013,7 +1014,7 @@ int main(int argc, char** argv) {
        retval = boinc_copy((slot_path + std::string("/ICMGG") + second_part).c_str() , \
                            (temp_path + std::string("/ICMGG") + second_part).c_str());
        if (retval) {
-          cerr << "..Copying ICMGG result file to the temp folder in the projects directory failed" << '\n';
+          cerr << "..Copying ICMGG result file to the temp folder in the projects directory failed" << std::endl;
           return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
@@ -1028,7 +1029,7 @@ int main(int argc, char** argv) {
        retval = boinc_copy((slot_path + std::string("/ICMSH") + second_part).c_str() , \
                            (temp_path + std::string("/ICMSH") + second_part).c_str());
        if (retval) {
-          cerr << "..Copying ICMSH result file to the temp folder in the projects directory failed" << '\n';
+          cerr << "..Copying ICMSH result file to the temp folder in the projects directory failed" << std::endl;
           return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
@@ -1043,7 +1044,7 @@ int main(int argc, char** argv) {
        retval = boinc_copy((slot_path + std::string("/ICMUA") + second_part).c_str() , \
                            (temp_path + std::string("/ICMUA") + second_part).c_str());
        if (retval) {
-          cerr << "..Copying ICMUA result file to the temp folder in the projects directory failed" << '\n';
+          cerr << "..Copying ICMUA result file to the temp folder in the projects directory failed" << std::endl;
 	  return retval;
        }
        // If result file has been successfully copied over, remove it from slots directory
@@ -1094,7 +1095,7 @@ int main(int argc, char** argv) {
           upfile.clear();
 
           if (retval) {
-             cerr << "..Zipping up the final file failed" << '\n';
+             cerr << "..Zipping up the final file failed" << std::endl;
              boinc_end_critical_section();
              return retval;
           }
@@ -1136,7 +1137,7 @@ int main(int argc, char** argv) {
           retval = boinc_zip(ZIP_IT,upfile,&zfl);
           upfile.clear();
           if (retval) {
-             cerr << "..Creating the zipped upload file failed" << '\n';
+             cerr << "..Creating the zipped upload file failed" << std::endl;
              boinc_end_critical_section();
              return retval;
           }
@@ -1161,19 +1162,19 @@ int main(int argc, char** argv) {
     if (process_status == 1){
       boinc_end_critical_section();
       boinc_finish(0);
-      cerr << "Task finished" << endl;
+      cerr << "Task finished" << std::endl;
       return 0;
     }
     else if (process_status == 2){
       boinc_end_critical_section();
       boinc_finish(0);
-      cerr << "Task finished" << endl;
+      cerr << "Task finished" << std::endl;
       return 0;
     }
     else {
       boinc_end_critical_section();
       boinc_finish(1);
-      cerr << "Task finished" << endl;
+      cerr << "Task finished" << std::endl;
       return 1;
     }	
 }
@@ -1191,24 +1192,24 @@ int check_child_status(long handleProcess, int process_status) {
        // Child exited normally but model might still have failed
        if (WIFEXITED(stat)) {
           process_status = 1;
-          cerr << "..The child process terminated with status: " << WEXITSTATUS(stat) << '\n';
+          cerr << "..The child process terminated with status: " << WEXITSTATUS(stat) << std::endl;
        }
        // Child process has exited due to signal that was not caught
        // n.b. OpenIFS has its own signal handler.
        else if (WIFSIGNALED(stat)) {
           process_status = 3;
-          cerr << "..The child process has been killed with signal: " << WTERMSIG(stat) << '\n';
+          cerr << "..The child process has been killed with signal: " << WTERMSIG(stat) << std::endl;
        }
        // Child is stopped
        else if (WIFSTOPPED(stat)) {
           process_status = 4;
-          cerr << "..The child process has stopped with signal: " << WSTOPSIG(stat) << '\n';
+          cerr << "..The child process has stopped with signal: " << WSTOPSIG(stat) << std::endl;
        }
     }
     else if ( pid == -1) {
       // should not get here, it means the child could not be found
       process_status = 5;
-      cerr << "..Unable to retrieve status of child process " << '\n';
+      cerr << "..Unable to retrieve status of child process " << std::endl;
       perror("waitpid() error");
     }
     return process_status;
@@ -1221,19 +1222,19 @@ int check_boinc_status(long handleProcess, int process_status) {
 
     // If a quit, abort or no heartbeat has been received from the BOINC client, end child process
     if (status.quit_request) {
-       cerr << "Quit request received from BOINC client, ending the child process" << '\n';
+       cerr << "Quit request received from BOINC client, ending the child process" << std::endl;
        kill(handleProcess, SIGKILL);
        process_status = 2;
        return process_status;
     }
     else if (status.abort_request) {
-       cerr << "Abort request received from BOINC client, ending the child process" << '\n';
+       cerr << "Abort request received from BOINC client, ending the child process" << std::endl;
        kill(handleProcess, SIGKILL);
        process_status = 1;
        return process_status;
     }
     else if (status.no_heartbeat) {
-       cerr << "No heartbeat received from BOINC client, ending the child process" << '\n';
+       cerr << "No heartbeat received from BOINC client, ending the child process" << std::endl;
        kill(handleProcess, SIGKILL);
        process_status = 1;
        return process_status;
@@ -1241,25 +1242,25 @@ int check_boinc_status(long handleProcess, int process_status) {
     // Else if BOINC client is suspended, suspend child process and periodically check BOINC client status
     else {
        if (status.suspended) {
-          cerr << "Suspend request received from the BOINC client, suspending the child process" << '\n';
+          cerr << "Suspend request received from the BOINC client, suspending the child process" << std::endl;
           kill(handleProcess, SIGSTOP);
 
           while (status.suspended) {
              boinc_get_status(&status);
              if (status.quit_request) {
-                cerr << "Quit request received from the BOINC client, ending the child process" << '\n';
+                cerr << "Quit request received from the BOINC client, ending the child process" << std::endl;
                 kill(handleProcess, SIGKILL);
                 process_status = 2;
                 return process_status;
              }
              else if (status.abort_request) {
-                cerr << "Abort request received from the BOINC client, ending the child process" << '\n';
+                cerr << "Abort request received from the BOINC client, ending the child process" << std::endl;
                 kill(handleProcess, SIGKILL);
                 process_status = 1;
                 return process_status;
              }
              else if (status.no_heartbeat) {
-                cerr << "No heartbeat received from the BOINC client, ending the child process" << '\n';
+                cerr << "No heartbeat received from the BOINC client, ending the child process" << std::endl;
                 kill(handleProcess, SIGKILL);
                 process_status = 1;
                 return process_status;
@@ -1267,13 +1268,14 @@ int check_boinc_status(long handleProcess, int process_status) {
              sleep_until(system_clock::now() + seconds(1));
           }
           // Resume child process
-          cerr << "Resuming the child process" << '\n';
+          cerr << "Resuming the child process" << std::endl;
           kill(handleProcess, SIGCONT);
           process_status = 0;
        }
        return process_status;
     }
 }
+
 
 long launch_process(const std::string slot_path,const char* strCmd,const char* exptid, const std::string app_name) {
     int retval = 0;
@@ -1285,7 +1287,7 @@ long launch_process(const std::string slot_path,const char* strCmd,const char* e
 
     switch((handleProcess=fork())) {
        case -1: {
-          cerr << "..Unable to start a new child process" << '\n';
+          cerr << "..Unable to start a new child process" << std::endl;
           exit(0);
           break;
        }
@@ -1295,7 +1297,7 @@ long launch_process(const std::string slot_path,const char* strCmd,const char* e
           std::string GRIB_SAMPLES_var = std::string("GRIB_SAMPLES_PATH=") + slot_path + \
                                          std::string("/eccodes/ifs_samples/grib1_mlgrib2");
           if (putenv((char *)GRIB_SAMPLES_var.c_str())) {
-            cerr << "..Setting the GRIB_SAMPLES_PATH failed" << '\n';
+            cerr << "..Setting the GRIB_SAMPLES_PATH failed" << std::endl;
           }
           pathvar = getenv("GRIB_SAMPLES_PATH");
           cerr << "The GRIB_SAMPLES_PATH environmental variable is: " << pathvar << '\n';
@@ -1304,7 +1306,7 @@ long launch_process(const std::string slot_path,const char* strCmd,const char* e
           std::string GRIB_DEF_var = std::string("GRIB_DEFINITION_PATH=") + slot_path + \
                                      std::string("/eccodes/definitions");
           if (putenv((char *)GRIB_DEF_var.c_str())) {
-            cerr << "..Setting the GRIB_DEFINITION_PATH failed" << '\n';
+            cerr << "..Setting the GRIB_DEFINITION_PATH failed" << std::endl;
           }
           pathvar = getenv("GRIB_DEFINITION_PATH");
           cerr << "The GRIB_DEFINITION_PATH environmental variable is: " << pathvar << '\n';
@@ -1319,7 +1321,7 @@ long launch_process(const std::string slot_path,const char* strCmd,const char* e
           }
 
           // If execl returns then there was an error
-          cerr << "..The execl() command failed slot_path=" << slot_path << ",strCmd=" << strCmd << ",exptid=" << exptid << '\n';
+          cerr << "..The execl() command failed slot_path=" << slot_path << ",strCmd=" << strCmd << ",exptid=" << exptid << std::endl;
           exit(retval);
           break;
        }
@@ -1328,6 +1330,7 @@ long launch_process(const std::string slot_path,const char* strCmd,const char* e
     }
     return handleProcess;
 }
+
 
 // Open a file and return the string contained between the arrow tags
 std::string get_tag(const std::string &filename) {
@@ -1350,6 +1353,7 @@ std::string get_tag(const std::string &filename) {
     }
     return "";
 }
+
 
 // Produce the trickle and either upload to the project server or as a physical file
 void process_trickle(double current_cpu_time, std::string wu_name, std::string result_base_name, std::string slot_path, int timestep) {
@@ -1388,6 +1392,7 @@ void process_trickle(double current_cpu_time, std::string wu_name, std::string r
        }
     }
 }
+
 
 // Check whether a file exists
 bool file_exists(const std::string& filename)
@@ -1512,7 +1517,7 @@ bool check_stoi(std::string& cin) {
     int step;
 
     if (std::any_of(cin.begin(), cin.end(), ::isalpha)) {
-        cerr << "Invalid characters in stoi string: " << cin << '\n';
+        cerr << "..Invalid characters in stoi string: " << cin << std::endl;
         return false;
     }
 
@@ -1524,14 +1529,15 @@ bool check_stoi(std::string& cin) {
         return true;
     }
     catch (const std::invalid_argument &excep) {
-        cerr << "Invalid input argument for stoi : " << excep.what() << '\n';
+        cerr << "..Invalid input argument for stoi : " << excep.what() << std::endl;
         return false;
     }
     catch (const std::out_of_range &excep) {
-        cerr << "Out of range value for stoi : " << excep.what() << '\n';
+        cerr << "..Out of range value for stoi : " << excep.what() << std::endl;
         return false;
     }
 }
+
 
 bool oifs_parse_stat(std::string& logline, std::string& stat_column, int index) {
    //   Parse a line of the OpenIFS ifs.stat log file, previously obtained from oifs_get_statline
@@ -1556,6 +1562,7 @@ bool oifs_parse_stat(std::string& logline, std::string& stat_column, int index) 
    }
 }
 
+
 bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
    // Parse content of ifs.stat and always return last non-zero line read from log file.
    //
@@ -1579,7 +1586,7 @@ bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
     static streamoff   p = 0;             // stream offset position
 
     if ( !ifs_stat.is_open() ) {
-        cerr << "oifs_get_stat: error, ifs.stat file is not open" << endl;
+        cerr << "oifs_get_stat: error, ifs.stat file is not open" << std::endl;
         p = 0;
         current_line = "";
         return false;
@@ -1600,6 +1607,7 @@ bool oifs_get_stat(std::ifstream& ifs_stat, std::string& logline) {
 
     return true;
 }
+
 
 bool oifs_valid_step(std::string& step, int nsteps) {
    //  checks for a valid step count in arg 'step'
@@ -1647,7 +1655,7 @@ int print_last_lines(string filename, int maxlines) {
       for ( int i=0; i<end; i++ ) {
          cerr << lines[ (start+i)%maxlines ] << '\n';
       }
-      cerr << "------------------------------------------------" << '\n';
+      cerr << "------------------------------------------------" << std::endl;
    }
 
    return count;
