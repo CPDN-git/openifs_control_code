@@ -30,7 +30,6 @@
 #include "rapidxml.hpp"
 #include <algorithm>
 
-const char* strip_path(const char* path);
 int check_child_status(long, int);
 int check_boinc_status(long, int);
 long launch_process(const std::string, const char*, const char*, const std::string);
@@ -1180,13 +1179,6 @@ int main(int argc, char** argv) {
 }
 
 
-
-const char* strip_path(const char* path) {
-    int jj;
-    for (jj = (int) strlen(path);
-    jj > 0 && path[jj-1] != '/' && path[jj-1] != '\\'; jj--);
-    return (const char*) path+jj;
-}
 
 
 int check_child_status(long handleProcess, int process_status) {
