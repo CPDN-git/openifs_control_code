@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
 	
     // Get the slots path (the current working path)
     std::string slot_path = std::filesystem::current_path();
-    if (slot_path == "") {
+    if (slot_path.empty()) {
       cerr << "..current_path() returned empty" << std::endl;
     }
     else {
