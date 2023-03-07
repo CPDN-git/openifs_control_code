@@ -6,7 +6,6 @@
 
 if __name__ == "__main__":
 
-    #import fileinput
     import os, zipfile, shutil, datetime, calendar, math, MySQLdb, fcntl, hashlib, gzip
     import json, argparse, subprocess, time, sys, xml.etree.ElementTree as ET
     from email.mime.text import MIMEText
@@ -21,13 +20,14 @@ if __name__ == "__main__":
     # submission_test is either true of false
     parser.add_argument("--submission_test",help="submission script test",default="false")
     options = parser.parse_args()
+    if (options.submission_test):
+      print "Running as a test\n"
     if options.app_name not in ('oifs_43r3','oifs_43r3_arm','oifs_43r3_bl','oifs_43r3_ps'):
       raise ValueError('Incorrect app_name')
     print "Application name: "+options.app_name
     if options.submission_test not in ('true','false'):
       raise ValueError('Submission script test must be either true or false')
     #print "Submission script test: "+options.submission_test
-    
 
     # Check if a lockfile is present from an ongoing submission
     lockfile='/tmp/lockfile_workgen'
@@ -35,10 +35,6 @@ if __name__ == "__main__":
     f=open(lockfile,'w')
     fcntl.lockf(f,fcntl.LOCK_EX)
     print "got lock\n"
-
-    project_dir = '/storage/www/<PROJECT_NAME>'
-    input_directory = project_dir+'oifs_workgen/incoming_xmls'
-    oifs_ancil_dir = '/storage/cpdn_ancil_files/oifs_ancil_files/'
 
     # Set the regionid as global
     regionid = 15
@@ -51,32 +47,48 @@ if __name__ == "__main__":
     # flops_factor = 1078000000000 # Original
 
     # Parse the project config xml file
-    xmldoc3 = minidom.parse(project_dir+'config.xml')
+    #xmldoc3 = minidom.parse(project_dir+'../../config.xml')
+    xmldoc3 = minidom.parse('../../config.xml')
     configs = xmldoc3.getElementsByTagName('config')
-    for config in configs:
-      db_host = str(config.getElementsByTagName('db_host')[0].childNodes[0].nodeValue)
-      db_user = str(config.getElementsByTagName('db_user')[0].childNodes[0].nodeValue)
-      db_passwd = str(config.getElementsByTagName('db_passwd')[0].childNodes[0].nodeValue)
-      primary_db = str(config.getElementsByTagName('db_name')[0].childNodes[0].nodeValue)
+    if not(options.submission_test):
+      for config in configs:
+        db_host = str(config.getElementsByTagName('db_host')[0].childNodes[0].nodeValue)
+        db_user = str(config.getElementsByTagName('db_user')[0].childNodes[0].nodeValue)
+        db_passwd = str(config.getElementsByTagName('db_passwd')[0].childNodes[0].nodeValue)
+        primary_db = str(config.getElementsByTagName('db_name')[0].childNodes[0].nodeValue)
+
+      project_dir = '/storage/www/'+primary_db+'/'
+      input_directory = project_dir+'oifs_workgen/incoming_xmls'
+      ancil_file_location = '/storage/cpdn_ancil_files/oifs_ancil_files/'
+    else:
+      primary_db = ''
+      project_dir = './test_directory/'
+      input_directory = './test_directory/'
+      ancil_file_location = './test_directory/ancils/'
 
     # Set batch id prefix, adding a 'd' if a dev batch
-    if primary_db == "cpdnboinc_dev":
-      batch_prefix = "d"
+    if primary_db == 'cpdnboinc_dev':
+      batch_prefix = 'd'
       secondary_db = 'cpdnexpt_dev'
       project_url = 'https://dev.cpdn.org/'
       database_port = 33001
-    elif primary_db == "cpdnboinc_alpha":
-      batch_prefix = "a"
+    elif primary_db == 'cpdnboinc_alpha':
+      batch_prefix = 'a'
       secondary_db = 'cpdnexpt_alpha'
       project_url = 'https://alpha.cpdn.org/'
       database_port = 33001
-    elif primary_db == "cpdnboinc":
-      batch_prefix = ""
+    elif primary_db == 'cpdnboinc':
+      batch_prefix = ''
       secondary_db = 'cpdnexpt'
       project_url = 'https://www.cpdn.org/'
       database_port = 3306
+    else:
+      batch_prefix = ''
+      secondary_db = ''
+      project_url = ''
+      database_port = ''
 
-    # If submission_test is not true, query the database 
+    # If submission_test is not true, query the database
     if not(options.submission_test):
       # Open cursor and connection to primary_db
       db = MySQLdb.connect(db_host,db_user,db_passwd,primary_db,port=database_port)
@@ -97,15 +109,14 @@ if __name__ == "__main__":
       cursor.close()
       db.close()
     else:
-      last_wuid = 0
+      appid = 1
 
     # Catch the case of no workunits in the database
-    if last_wuid[0] == None:
-       last_id = 0
+    if (options.submission_test) or last_wuid[0] == None:
+      wuid = 0
     else:
-       last_id = last_wuid[0]
-    print "Last workunit id: "+str(last_id)
-    wuid = last_id
+      wuid = last_wuid[0]
+    print "Last workunit id: "+str(wuid)
 
     # If submission_test is not true, query the database
     if not(options.submission_test):
@@ -117,16 +128,13 @@ if __name__ == "__main__":
       query = 'select max(id) from cpdn_batch'
       cursor.execute(query)
       last_batchid = cursor.fetchone()
-    else:
-      last_batchid = 0 
 
     # Catch the case of no batches in the database
-    if last_batchid[0] == None:
-      last_id_2 = 0
+    if (options.submission_test) or last_batchid[0] == None:
+      batch_count = 0
     else:
-      last_id_2 = last_batchid[0]
-    print "Last batch id: "+str(last_id_2)
-    batch_count = last_id_2
+      batch_count = last_batchid[0]
+    print "Last batch id: "+str(batch_count)
 
     print ""
     print "--------------------------------------"
@@ -135,8 +143,9 @@ if __name__ == "__main__":
     print ""
 
     # Make a temporary directory for reorganising the files required by the workunit
-    if not os.path.isdir(project_dir+"temp_openifs_submission_files"):
-      os.mkdir(project_dir+"temp_openifs_submission_files")
+    if not(options.submission_test):
+      if not os.path.isdir(project_dir+"temp_openifs_submission_files"):
+        os.mkdir(project_dir+"temp_openifs_submission_files")
 
     # Iterate over the xmlfile in the input directory
     for input_xmlfile in os.listdir(input_directory):
@@ -152,14 +161,14 @@ if __name__ == "__main__":
         batches = xmldoc.getElementsByTagName('batch')
         for batch in batches:
 
-          batch_count = batch_count + 1  
+          batch_count = batch_count + 1
           number_of_workunits = 0
 
           # Check model_class and if it is not openifs then exit loop and move on to the next xml file
           model_class = str(batch.getElementsByTagName('model_class')[0].childNodes[0].nodeValue)
           print "model_class: "+model_class
           non_openifs_class = False
-          if model_class != 'openifs': 
+          if model_class != 'openifs':
             non_openifs_class = True
             print "The model class of the XML is not openifs, so moving on to the next XML file\n"
             batch_count = batch_count - 1
@@ -169,7 +178,10 @@ if __name__ == "__main__":
           print "model_config: "+model_config
 
           fullpos_namelist_file = str(batch.getElementsByTagName('fullpos_namelist')[0].childNodes[0].nodeValue)
-          fullpos_namelist = oifs_ancil_dir + 'fullpos_namelist/' + fullpos_namelist_file
+          if not(options.submission_test):
+            fullpos_namelist = ancil_file_location + 'fullpos_namelist/' + fullpos_namelist_file
+          else:
+            fullpos_namelist = './config/' + fullpos_namelist_file
           print "fullpos_namelist: "+fullpos_namelist
 
           nthreads = str(batch.getElementsByTagName('num_threads')[0].childNodes[0].nodeValue)
@@ -194,26 +206,33 @@ if __name__ == "__main__":
           if xml_batchid.isdigit():
             # Second, check whether xml_batchid is contained in the cpdn_batch table
             #print "xml_batchid: "+xml_batchid
-            query = """select 1 from cpdn_batch where id = '%s'""" % (xml_batchid)
-            cursor.execute(query)
-            # If xml_batchid contained in the cpdn_batch table then overwrite batchid with xml_batchid
-            if cursor.fetchone():
-              batchid = int(xml_batchid)
+            if not(options.submission_test):
+              query = """select 1 from cpdn_batch where id = '%s'""" % (xml_batchid)
+              cursor.execute(query)
+              # If xml_batchid contained in the cpdn_batch table then overwrite batchid with xml_batchid
+              if cursor.fetchone():
+                batchid = int(xml_batchid)
+            else:
+              batchid = 0
 
           # Create the batch folder structure in the download directory
-          download_dir = project_dir + "/download/"
-          # If folders do not exist, create them
-          if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/')):
-            os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/')
-          if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')):
-            os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')
-          if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')):
-            os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
+          download_dir = project_dir + "download/"
+          if not(options.submission_test):
+            # If folders do not exist, create them
+            if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/')):
+              os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/')
+            if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')):
+              os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/')
+            if not(os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')):
+              os.mkdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
 
           # Find the project id
-          query = """select id from cpdn_project where name ='%s'""" %(project_name)
-          cursor.execute(query)
-          projectid = cursor.fetchone()[0]
+          if not(options.submission_test):
+            query = """select id from cpdn_project where name ='%s'""" %(project_name)
+            cursor.execute(query)
+            projectid = cursor.fetchone()[0]
+          else:
+            projectid = 0
 
           print "batchid: "+batch_prefix+str(batchid)
           print "batch_desc: "+batch_desc
@@ -226,7 +245,11 @@ if __name__ == "__main__":
           #print "projectid: "+str(projectid)
 
           # Parse the config xmlfile
-          xmldoc2 = minidom.parse(project_dir+'oifs_workgen/config_dir/'+model_config)
+          if not(options.submission_test):
+            xmldoc2 = minidom.parse(project_dir+'oifs_workgen/config_dir/'+model_config)
+          else:
+            xmldoc2 = minidom.parse(project_dir+'config/'+model_config)
+
           model_configs = xmldoc2.getElementsByTagName('model_config')
           for model_config in model_configs:
             horiz_resolution = str(model_config.getElementsByTagName('horiz_resolution')[0].childNodes[0].nodeValue)
@@ -354,9 +377,11 @@ if __name__ == "__main__":
             elif start_hour > 0 and start_hour < 25:
                start_date = start_date + str(start_hour).zfill(2)
 
-            # Construct ancil_file_location
-            ancil_file_location = oifs_ancil_dir
-            ic_ancil_location = oifs_ancil_dir +"ic_ancil/"+str(exptid)+"/"+str(start_date)+"/"+str(analysis_member_number)+"/"
+            # Construct ic_ancil_location
+            if not(options.submission_test):
+              ic_ancil_location = ancil_file_location+"ic_ancil/"+str(exptid)+"/"+str(start_date)+"/"+str(analysis_member_number)+"/"
+            else:
+              ic_ancil_location = '../ancils/'
 
             ic_ancils = workunit.getElementsByTagName('ic_ancil')
             for ic_ancil in ic_ancils:
@@ -369,11 +394,16 @@ if __name__ == "__main__":
               print "The following file is not present in the oifs_ancil_files: "+ic_ancil_zip_in
 
             # Change to the download dir and create link to file
-            os.chdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
-            args = ['ln','-s',ic_ancil_location+str(ic_ancil_zip_in),ic_ancil_zip]
-            p = subprocess.Popen(args)
-            p.wait()
-
+            if not(options.submission_test):
+              os.chdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
+              args = ['ln','-s',ic_ancil_location+str(ic_ancil_zip_in),ic_ancil_zip]
+              p = subprocess.Popen(args)
+              p.wait()
+            else:
+              args = ['ln','-s','../ancils/'+str(ic_ancil_zip_in),project_dir+ic_ancil_zip]
+              #print args
+              p = subprocess.Popen(args)
+              p.wait()
 
             ifsdatas = workunit.getElementsByTagName('ifsdata')
             for ifsdata in ifsdatas:
@@ -382,47 +412,80 @@ if __name__ == "__main__":
               SO4_zip = str(ifsdata.getElementsByTagName('SO4_zip')[0].childNodes[0].nodeValue)
 
             # Copy each of the ifsdata zip files to the temp directory
-            copyfile(ancil_file_location+"ifsdata/GHG_files/"+GHG_zip,project_dir+"temp_openifs_submission_files/"+GHG_zip)
-            copyfile(ancil_file_location+"ifsdata/other_radiation_files/"+radiation_zip,project_dir+"temp_openifs_submission_files/"+radiation_zip)
-            copyfile(ancil_file_location+"ifsdata/SO4_files/"+SO4_zip,project_dir+"temp_openifs_submission_files/"+SO4_zip)
+            if not(options.submission_test):
+              copyfile(ancil_file_location+"ifsdata/GHG_files/"+GHG_zip,project_dir+"temp_openifs_submission_files/"+GHG_zip)
+              copyfile(ancil_file_location+"ifsdata/other_radiation_files/"+radiation_zip,project_dir+"temp_openifs_submission_files/"+radiation_zip)
+              copyfile(ancil_file_location+"ifsdata/SO4_files/"+SO4_zip,project_dir+"temp_openifs_submission_files/"+SO4_zip)
+            else:
+              copyfile(ancil_file_location+GHG_zip,download_dir+GHG_zip)
+              copyfile(ancil_file_location+radiation_zip,download_dir+radiation_zip)
+              copyfile(ancil_file_location+SO4_zip,download_dir+SO4_zip)
 
             # Unzip each of the ifsdata files in the temp directory
-            zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+GHG_zip,'r')
-            zip_file.extractall(project_dir+"temp_openifs_submission_files/")
-            zip_file.close()
-            zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+radiation_zip,'r')
-            zip_file.extractall(project_dir+"temp_openifs_submission_files/")
-            zip_file.close()
-            zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+SO4_zip,'r')
-            zip_file.extractall(project_dir+"temp_openifs_submission_files/")
-            zip_file.close()
+            if not(options.submission_test):
+              zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+GHG_zip,'r')
+              zip_file.extractall(project_dir+"temp_openifs_submission_files/")
+              zip_file.close()
+              zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+radiation_zip,'r')
+              zip_file.extractall(project_dir+"temp_openifs_submission_files/")
+              zip_file.close()
+              zip_file = zipfile.ZipFile(project_dir+"temp_openifs_submission_files/"+SO4_zip,'r')
+              zip_file.extractall(project_dir+"temp_openifs_submission_files/")
+              zip_file.close()
+            else:
+              zip_file = zipfile.ZipFile(download_dir+GHG_zip,'r')
+              zip_file.extractall(download_dir)
+              zip_file.close()
+              zip_file = zipfile.ZipFile(download_dir+radiation_zip,'r')
+              zip_file.extractall(download_dir)
+              zip_file.close()
+              zip_file = zipfile.ZipFile(download_dir+SO4_zip,'r')
+              zip_file.extractall(download_dir)
+              zip_file.close()
 
             # Remove the zip files
-            os.remove(project_dir+"temp_openifs_submission_files/"+GHG_zip)
-            os.remove(project_dir+"temp_openifs_submission_files/"+radiation_zip)
-            os.remove(project_dir+"temp_openifs_submission_files/"+SO4_zip)
+            if not(options.submission_test):
+              os.remove(project_dir+"temp_openifs_submission_files/"+GHG_zip)
+              os.remove(project_dir+"temp_openifs_submission_files/"+radiation_zip)
+              os.remove(project_dir+"temp_openifs_submission_files/"+SO4_zip)
+            else:
+              os.remove(download_dir+GHG_zip)
+              os.remove(download_dir+radiation_zip)
+              os.remove(download_dir+SO4_zip)
 
             # Zip together the ifsdata files
-            shutil.make_archive(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/ifsdata_'+str(wuid), 'zip', project_dir+"temp_openifs_submission_files/")
+            if not(options.submission_test):
+              shutil.make_archive(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/ifsdata_'+str(wuid), 'zip', project_dir+"temp_openifs_submission_files/")
+            else:
+              shutil.make_archive(project_dir+'/ifsdata_'+str(wuid), 'zip', download_dir)
+              shutil.move(project_dir+'/ifsdata_'+str(wuid)+'.zip',project_dir+'download/ifsdata_'+str(wuid)+'.zip')
+              shutil.move(project_dir+'/ic_ancil_'+str(wuid)+'.zip',project_dir+'download/ic_ancil_'+str(wuid)+'.zip')
 
             # Change the working path
             os.chdir(project_dir)
 
             climate_datas = workunit.getElementsByTagName('climate_data')
             for climate_data in climate_datas:
-                climate_data_zip_in = str(climate_data.getElementsByTagName('climate_data_zip')[0].childNodes[0].nodeValue)
+              climate_data_zip_in = str(climate_data.getElementsByTagName('climate_data_zip')[0].childNodes[0].nodeValue)
 
             # Test whether the climate_data_zip is present
-            try:
-              os.path.exists(ancil_file_location+"climate_data/"+str(climate_data_zip_in))
-            except OSError:
-              print "The following file is not present in the oifs_ancil_files: "+str(climate_data_zip_in)
+            if not(options.submission_test):
+              try:
+                os.path.exists(ancil_file_location+"climate_data/"+str(climate_data_zip_in))
+              except OSError:
+                print "The following file is not present in the oifs_ancil_files: "+str(climate_data_zip_in)
 
             # Change to the download dir and create link to file
-            os.chdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
-            args = ['ln','-s',ancil_file_location+"climate_data/"+str(climate_data_zip_in),climate_data_zip]
-            p = subprocess.Popen(args)
-            p.wait()
+            if not(options.submission_test):
+              os.chdir(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/')
+              args = ['ln','-s',ancil_file_location+"climate_data/"+str(climate_data_zip_in),climate_data_zip]
+              p = subprocess.Popen(args)
+              p.wait()
+            else:
+              args = ['ln','-s','../ancils/'+str(climate_data_zip_in),'./download/'+climate_data_zip]
+              #print args
+              p = subprocess.Popen(args)
+              p.wait()
 
             # GC: Set the memory bound & estimated output instance filesizes
             # These are taken from measurements by G.Carver and listed at:
@@ -559,7 +622,7 @@ if __name__ == "__main__":
               #print "result_template: "+project_dir+result_template
 
             # If result template does not exist, then create a new template
-            if not (os.path.exists(project_dir+result_template)):
+            if not (os.path.exists(project_dir+result_template)) or (options.submission_test):
               output_string="<output_template>\n"
 
               for upload_iteration in range(number_of_uploads):
@@ -582,18 +645,24 @@ if __name__ == "__main__":
               output_string = output_string + "</result>\n" +\
                 "</output_template>"
 
-              #print "output_string: "+output_string
-
-              OUTPUT=open(project_dir+result_template,"w")
-              # Create the result_template
-              print >> OUTPUT, output_string
-              OUTPUT.close()
+              if not(options.submission_test):
+                OUTPUT=open(project_dir+result_template,"w")
+                # Create the result_template
+                print >> OUTPUT, output_string
+                OUTPUT.close()
+              else:
+                print "result template = "+output_string
 
             # Set the server_cgi from the upload_handler string
             server_cgi = upload_handler[:-19]
 
+            if not(options.submission_test):
+              namelist_template_dir = project_dir+'oifs_workgen/namelist_template_files/'
+            else:
+              namelist_template_dir = './config/'
+
             # Read in the namelist template file
-            with open(project_dir+'oifs_workgen/namelist_template_files/'+namelist_template, 'r') as namelist_file :
+            with open(namelist_template_dir+namelist_template, 'r') as namelist_file :
               template_file = []
               for line in namelist_file:
                 # Replace the values
@@ -630,10 +699,13 @@ if __name__ == "__main__":
                 if not line.startswith('!!'):
                   template_file.append(line)
 
-            # Run dos2unix on the fullpos namelist to eliminate Windows end-of-line characters
-            args = ['dos2unix',fullpos_namelist]
-            p = subprocess.Popen(args)
-            p.wait()
+            if not(options.submission_test):
+              # Run dos2unix on the fullpos namelist to eliminate Windows end-of-line characters
+              args = ['dos2unix',fullpos_namelist]
+              p = subprocess.Popen(args)
+              p.wait()
+
+            print os.getcwd()
 
             # Read in the fullpos_namelist
             with open(fullpos_namelist) as namelist_file_2:
@@ -649,7 +721,7 @@ if __name__ == "__main__":
             workunit_file.close()
 
             # Read in the wam_namelist template file
-            with open(project_dir+'oifs_workgen/namelist_template_files/'+wam_namelist_template, 'r') as wam_namelist_file :
+            with open(namelist_template_dir+wam_namelist_template, 'r') as wam_namelist_file :
               wam_template_file = []
               for line_2 in wam_namelist_file:
                 # Replace the values
@@ -662,33 +734,41 @@ if __name__ == "__main__":
               wam_file.writelines(wam_template_file)
             wam_file.close()
 
+            print os.getcwd()
+
             # Zip together the fort.4 and wam_namelist files
-            zip_file = zipfile.ZipFile(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip','w')            
+            if not(options.submission_test):
+              zip_file = zipfile.ZipFile(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip','w')
+            else:
+              zip_file = zipfile.ZipFile('./download/'+workunit_name+'.zip','w')
             zip_file.write('fort.4')
             zip_file.write('wam_namelist')
             zip_file.close()
 
             # Remove the copied wam_namelist file
-            args = ['rm','-rf','wam_namelist']
-            p = subprocess.Popen(args)
-            p.wait()
+            if not(options.submission_test):
+              args = ['rm','-rf','wam_namelist']
+              p = subprocess.Popen(args)
+              p.wait()
 
             # Remove the fort.4 file
-            args = ['rm','-f','fort.4']
-            p = subprocess.Popen(args)
-            p.wait()
+            if not(options.submission_test):
+              args = ['rm','-f','fort.4']
+              p = subprocess.Popen(args)
+              p.wait()
 
-            # Test whether the workunit_name_zip is present
-            try:
-              os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip')
-            except OSError:
-              print "The following file is not present in the download files: "+workunit_name+'.zip'
+            if not(options.submission_test):
+              # Test whether the workunit_name_zip is present
+              try:
+                os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip')
+              except OSError:
+                print "The following file is not present in the download files: "+workunit_name+'.zip'
 
-            # Test whether the ifsdata_zip is present
-            try:
-              os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+ifsdata_zip)
-            except OSError:
-              print "The following file is not present in the download files: "+ifsdata_zip
+              # Test whether the ifsdata_zip is present
+              try:
+                os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+ifsdata_zip)
+              except OSError:
+                print "The following file is not present in the download files: "+ifsdata_zip
 
             # Construct the input template
             input_string="<input_template>\n" +\
@@ -735,55 +815,97 @@ if __name__ == "__main__":
               "</workunit>\n"+\
               "</input_template>"
 
-            OUTPUT=open(project_dir+"templates/"+str(options.app_name)+"_in_"+str(wuid),"w")
-            # Print out the input_template
-            print >> OUTPUT, input_string
-            OUTPUT.close()
+            if not(options.submission_test):
+              OUTPUT=open(project_dir+"templates/"+str(options.app_name)+"_in_"+str(wuid),"w")
+              # Make the input_template
+              print >> OUTPUT, input_string
+              OUTPUT.close()
+            else:
+              print "input template = "+input_string
 
             # Change back to the project directory
-            os.chdir(project_dir)
+            if not(options.submission_test):
+              os.chdir(project_dir)
 
-            workunit_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip'
+            if not(options.submission_test):
+              workunit_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip'
+            else:
+              workunit_url = project_url+workunit_name+'.zip'
 
             # Get the md5 checksum of the workunit zip file
-            workunit_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip','rb').read()).hexdigest()
+            if not(options.submission_test):
+              workunit_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip','rb').read()).hexdigest()
+            else:
+              workunit_zip_cksum = hashlib.md5(open('./download/'+workunit_name+'.zip','rb').read()).hexdigest()
             print "workunit_zip_cksum = "+str(workunit_zip_cksum)
 
             # Calculate the size of the workunit zip in bytes
-            workunit_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip')
+            if not(options.submission_test):
+              workunit_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip')
+            else:
+              workunit_zip_size = os.path.getsize('./download/'+workunit_name+'.zip')
             print "workunit_zip_size = "+str(workunit_zip_size)
 
 
-            ic_ancil_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip)
+            if not(options.submission_test):
+              ic_ancil_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip)
+            else:
+              ic_ancil_url = project_url+str(ic_ancil_zip)
+
+            print os.getcwd()
 
             # Get the md5 checksum of the ic_ancil zip file
-            ic_ancil_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip),'rb').read()).hexdigest()
+            if not(options.submission_test):
+              ic_ancil_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip),'rb').read()).hexdigest()
+            else:
+              ic_ancil_zip_cksum = hashlib.md5(open('./download/'+str(ic_ancil_zip),'rb').read()).hexdigest()
             print "ic_ancil_zip_cksum = "+str(ic_ancil_zip_cksum)
 
             # Calculate the size of the ic_ancil zip in bytes
-            ic_ancil_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip))
+            if not(options.submission_test):
+              ic_ancil_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip))
+            else:
+              ic_ancil_zip_size = os.path.getsize('./download/'+str(ic_ancil_zip))
             print "ic_ancil_zip_size = "+str(ic_ancil_zip_size)
 
 
-            ifsdata_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip)
+            if not(options.submission_test):
+              ifsdata_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip)
+            else:
+              ifsdata_url = project_url+str(ifsdata_zip)
 
             # Get the md5 checksum of the ifsdata zip file
-            ifsdata_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip),'rb').read()).hexdigest()
+            if not(options.submission_test):
+              ifsdata_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip),'rb').read()).hexdigest()
+            else:
+              ifsdata_zip_cksum = hashlib.md5(open('./download/'+str(ifsdata_zip),'rb').read()).hexdigest()
             print "ifsdata_zip_cksum = "+str(ifsdata_zip_cksum)
 
             # Calculate the size of the ifsdata zip in bytes
-            ifsdata_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip))
+            if not(options.submission_test):
+              ifsdata_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip))
+            else:
+              ifsdata_zip_size = os.path.getsize('./download/'+str(ifsdata_zip))
             print "ifsdata_zip_size = "+str(ifsdata_zip_size)
 
 
-            climate_data_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip)
+            if not(options.submission_test):
+              climate_data_url = project_url+'download/batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip)
+            else:
+              climate_data_url = project_url+str(climate_data_zip)
 
             # Get the md5 checksum of the climate_data zip file
-            climate_data_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip),'rb').read()).hexdigest()
+            if not(options.submission_test):
+              climate_data_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip),'rb').read()).hexdigest()
+            else:
+              climate_data_zip_cksum = hashlib.md5(open('./download/'+str(climate_data_zip),'rb').read()).hexdigest()
             print "climate_data_zip_cksum = "+str(climate_data_zip_cksum)
 
             # Calculate the size of the climate_data zip in bytes
-            climate_data_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip))
+            if not(options.submission_test):
+              climate_data_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip))
+            else:
+              climate_data_zip_size = os.path.getsize('./download/'+str(climate_data_zip))
             print "climate_data_zip_size = "+str(climate_data_zip_size)
 
             # Run the create_work script to create the workunit
@@ -793,10 +915,12 @@ if __name__ == "__main__":
                     "-remote_file",str(ic_ancil_url),str(ic_ancil_zip_size),str(ic_ancil_zip_cksum),\
                     "-remote_file",str(ifsdata_url),str(ifsdata_zip_size),str(ifsdata_zip_cksum),\
                     "-remote_file",str(climate_data_url),str(climate_data_zip_size),str(climate_data_zip_cksum)]
-            #print args
             time.sleep(2)
-            p = subprocess.Popen(args)
-            p.wait()
+            if not(options.submission_test):
+              p = subprocess.Popen(args)
+              p.wait()
+            else:
+              print args
 
             # Calculate the run_years 
             if fclen_units == 'days':
@@ -1040,7 +1164,7 @@ if __name__ == "__main__":
                  db.commit()
                else:
                  print query
-                
+
                # Enter the zuncertb details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
@@ -1050,7 +1174,7 @@ if __name__ == "__main__":
                  db.commit()
                else:
                  print query
-                
+
                # Enter the zuncertc details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
@@ -1060,7 +1184,7 @@ if __name__ == "__main__":
                  db.commit()
                else:
                  print query
-                
+
                # Enter the zuncertd details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
@@ -1070,7 +1194,7 @@ if __name__ == "__main__":
                  db.commit()
                else:
                  print query
-                
+
                # Enter the zuncerte details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
                                              values(%s,'%s',%s,%s)""" \
@@ -1082,37 +1206,35 @@ if __name__ == "__main__":
                  print query
 
 
-            # Remove the contents of the temp_openifs_submission_files directory
-            args = ['rm','-rf','temp_openifs_submission_files/*']
-            p = subprocess.Popen(args)
-            p.wait()
-
         # Check if class is openifs
         if not non_openifs_class:
           # Substitute the values of the workunit_range and batchid into the submission XML and write out into the sent folder
-          with open(input_directory+'/'+input_xmlfile) as xmlfile:
-            # print "input_directory+input_xmlfile: "+input_directory+'/'+input_xmlfile
-            # print "xmlfile: "+str(xmlfile)
-            xmlfile_tree = ET.parse(xmlfile)
-            xmlfile_root = xmlfile_tree.getroot()
-            for elem in xmlfile_root.getiterator():
-              try:
-                elem.text = elem.text.replace('workunit_range',str(first_wuid)+','+str(last_wuid))
-                elem.text = elem.text.replace('batchid',str(batchid))
-              except AttributeError:
-                pass
-          xmlfile_tree.write(project_dir+"oifs_workgen/sent_xmls/sent-"+input_xmlfile)
+          if not(options.submission_test):
+            with open(input_directory+'/'+input_xmlfile) as xmlfile:
+              # print "input_directory+input_xmlfile: "+input_directory+'/'+input_xmlfile
+              # print "xmlfile: "+str(xmlfile)
+              xmlfile_tree = ET.parse(xmlfile)
+              xmlfile_root = xmlfile_tree.getroot()
+              for elem in xmlfile_root.getiterator():
+                try:
+                  elem.text = elem.text.replace('workunit_range',str(first_wuid)+','+str(last_wuid))
+                  elem.text = elem.text.replace('batchid',str(batchid))
+                except AttributeError:
+                  pass
+              xmlfile_tree.write(project_dir+"oifs_workgen/sent_xmls/sent-"+input_xmlfile)
 
           # Remove the processed input xml file from the incoming folder
-          if os.path.exists(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile)):
-            os.remove(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile))
+          if not(options.submission_test):
+            if os.path.exists(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile)):
+              os.remove(project_dir+"oifs_workgen/incoming_xmls/"+str(input_xmlfile))
 
-          # Copy the sent XML into the batch folder and gzip  
-          f_in = open(project_dir+"oifs_workgen/sent_xmls/sent-"+input_xmlfile)
-          f_out = gzip.open(download_dir+'batch_'+batch_prefix+str(batchid)+'/batch_'+batch_prefix+str(batchid)+'_workunit_submission.xml.gz','wb')
-          f_out.writelines(f_in)
-          f_out.close()
-          f_in.close()
+          # Copy the sent XML into the batch folder and gzip
+          if not(options.submission_test):
+            f_in = open(project_dir+"oifs_workgen/sent_xmls/sent-"+input_xmlfile)
+            f_out = gzip.open(download_dir+'batch_'+batch_prefix+str(batchid)+'/batch_'+batch_prefix+str(batchid)+'_workunit_submission.xml.gz','wb')
+            f_out.writelines(f_in)
+            f_out.close()
+            f_in.close()
 
           # If a new batch then enter the details of this new batch into the cpdn_batch table
           if not(xml_batchid.isdigit()):
@@ -1128,16 +1250,19 @@ if __name__ == "__main__":
               print query
 
     # Change back to the project directory
-    os.chdir(project_dir)
+    if not(options.submission_test):
+      os.chdir(project_dir)
 
     # Delete the temp_openifs_submission_files folder
-    args = ['rm','-rf','temp_openifs_submission_files']
-    p = subprocess.Popen(args)
-    p.wait()
+    if not(options.submission_test):
+      args = ['rm','-rf','temp_openifs_submission_files']
+      p = subprocess.Popen(args)
+      p.wait()
 
     # Close the connection to the secondary database
-    cursor.close()
-    db.close()
+    if not(options.submission_test):
+      cursor.close()
+      db.close()
 
     # Now that the submission has completed, remove lockfile
     if os.path.exists(lockfile):
