@@ -18,7 +18,7 @@ if __name__ == "__main__":
     # app_name is either oifs_43r3, oifs_43r3_arm, oifs_43r3_bl or oifs_43r3_ps
     parser.add_argument("--app_name",help="application name",default="oifs_43r3")
     # submission_test is either true of false
-    parser.add_argument("--submission_test",help="submission script test",default="true")
+    parser.add_argument("--submission_test",help="submission script test",default="false")
     options = parser.parse_args()
     if (options.submission_test):
       print("Running as a test\n")
