@@ -1,4 +1,4 @@
-#! /usr/bin/python2.7
+#! /usr/bin/python3
 
 # Script to submit OpenIFS workunits
 
@@ -18,23 +18,23 @@ if __name__ == "__main__":
     # app_name is either oifs_43r3, oifs_43r3_arm, oifs_43r3_bl or oifs_43r3_ps
     parser.add_argument("--app_name",help="application name",default="oifs_43r3")
     # submission_test is either true of false
-    parser.add_argument("--submission_test",help="submission script test",default="false")
+    parser.add_argument("--submission_test",help="submission script test",default="true")
     options = parser.parse_args()
     if (options.submission_test):
-      print "Running as a test\n"
+      print("Running as a test\n")
     if options.app_name not in ('oifs_43r3','oifs_43r3_arm','oifs_43r3_bl','oifs_43r3_ps'):
       raise ValueError('Incorrect app_name')
-    print "Application name: "+options.app_name
+    print("Application name: "+options.app_name)
     if options.submission_test not in ('true','false'):
       raise ValueError('Submission script test must be either true or false')
-    #print "Submission script test: "+options.submission_test
+    #print("Submission script test: "+options.submission_test
 
     # Check if a lockfile is present from an ongoing submission
     lockfile='/tmp/lockfile_workgen'
-    print "Waiting for lock...\n"
+    print("Waiting for lock...\n")
     f=open(lockfile,'w')
     fcntl.lockf(f,fcntl.LOCK_EX)
-    print "got lock\n"
+    print("got lock\n")
 
     # Set the regionid as global
     regionid = 15
@@ -98,7 +98,7 @@ if __name__ == "__main__":
       query = """select id from app where name = '%s'""" % (options.app_name)
       cursor.execute(query)
       appid = cursor.fetchone()[0]
-      print "appid: "+str(appid)
+      print("appid: "+str(appid))
 
       # Find the last workunit id
       query = 'select max(id) from workunit'
@@ -116,7 +116,7 @@ if __name__ == "__main__":
       wuid = 0
     else:
       wuid = last_wuid[0]
-    print "Last workunit id: "+str(wuid)
+    print("Last workunit id: "+str(wuid))
 
     # If submission_test is not true, query the database
     if not(options.submission_test):
@@ -134,13 +134,13 @@ if __name__ == "__main__":
       batch_count = 0
     else:
       batch_count = last_batchid[0]
-    print "Last batch id: "+str(batch_count)
+    print("Last batch id: "+str(batch_count))
 
-    print ""
-    print "--------------------------------------"
-    print "Starting submission run: "+str(datetime.datetime.now())
-    print "--------------------------------------"
-    print ""
+    print("")
+    print("--------------------------------------")
+    print("Starting submission run: "+str(datetime.datetime.now()))
+    print("--------------------------------------")
+    print("")
 
     # Make a temporary directory for reorganising the files required by the workunit
     if not(options.submission_test):
@@ -150,9 +150,9 @@ if __name__ == "__main__":
     # Iterate over the xmlfile in the input directory
     for input_xmlfile in os.listdir(input_directory):
       if input_xmlfile.endswith(".xml"):
-        print "--------------------------------------"
-        print "Processing input xmlfile: "+str(input_xmlfile)
-        print ""
+        print("--------------------------------------")
+        print("Processing input xmlfile: "+str(input_xmlfile))
+        print("")
 
         # Parse the input xmlfile
         xmldoc = minidom.parse(input_directory+"/"+input_xmlfile)
@@ -166,26 +166,26 @@ if __name__ == "__main__":
 
           # Check model_class and if it is not openifs then exit loop and move on to the next xml file
           model_class = str(batch.getElementsByTagName('model_class')[0].childNodes[0].nodeValue)
-          print "model_class: "+model_class
+          print("model_class: "+model_class)
           non_openifs_class = False
           if model_class != 'openifs':
             non_openifs_class = True
-            print "The model class of the XML is not openifs, so moving on to the next XML file\n"
+            print("The model class of the XML is not openifs, so moving on to the next XML file\n")
             batch_count = batch_count - 1
             break
 
           model_config = str(batch.getElementsByTagName('model_config')[0].childNodes[0].nodeValue)
-          print "model_config: "+model_config
+          print("model_config: "+model_config)
 
           fullpos_namelist_file = str(batch.getElementsByTagName('fullpos_namelist')[0].childNodes[0].nodeValue)
           if not(options.submission_test):
             fullpos_namelist = ancil_file_location + 'fullpos_namelist/' + fullpos_namelist_file
           else:
             fullpos_namelist = './config/' + fullpos_namelist_file
-          print "fullpos_namelist: "+fullpos_namelist
+          print("fullpos_namelist: "+fullpos_namelist)
 
           nthreads = str(batch.getElementsByTagName('num_threads')[0].childNodes[0].nodeValue)
-          print "num_threads: "+nthreads
+          print("num_threads: "+nthreads)
 
           batch_infos = batch.getElementsByTagName('batch_info')
           for batch_info in batch_infos:
@@ -205,7 +205,7 @@ if __name__ == "__main__":
           # First, check whether xml_batchid is a numerical value
           if xml_batchid.isdigit():
             # Second, check whether xml_batchid is contained in the cpdn_batch table
-            #print "xml_batchid: "+xml_batchid
+            #print("xml_batchid: "+xml_batchid)
             if not(options.submission_test):
               query = """select 1 from cpdn_batch where id = '%s'""" % (xml_batchid)
               cursor.execute(query)
@@ -234,15 +234,15 @@ if __name__ == "__main__":
           else:
             projectid = 0
 
-          print "batchid: "+batch_prefix+str(batchid)
-          print "batch_desc: "+batch_desc
-          #print "batch_name: "+batch_name
-          print "batch_owner: "+batch_owner
-          print "project_name: "+project_name
-          print "tech_info: "+tech_info
-          #print "umid_start: "+umid_start
-          #print "umid_end: "+umid_end
-          #print "projectid: "+str(projectid)
+          print("batchid: "+batch_prefix+str(batchid))
+          print("batch_desc: "+batch_desc)
+          #print("batch_name: "+batch_name)
+          print("batch_owner: "+batch_owner)
+          print("project_name: "+project_name)
+          print("tech_info: "+tech_info)
+          #print("umid_start: "+umid_start)
+          #print("umid_end: "+umid_end)
+          #print("projectid: "+str(projectid))
 
           # Parse the config xmlfile
           if not(options.submission_test):
@@ -261,14 +261,14 @@ if __name__ == "__main__":
             namelist_template = str(model_config.getElementsByTagName('namelist_template_global')[0].childNodes[0].nodeValue)
             wam_namelist_template = str(model_config.getElementsByTagName('wam_template_global')[0].childNodes[0].nodeValue)
 
-            #print "horiz_resolution: "+horiz_resolution
-            #print "vert_resolution: "+vert_resolution
-            #print "grid_type: "+grid_type
-            #print "timestep: "+timestep
-            #print "timestep_units: "+timestep_units
-            #print "upload_frequency: "+upload_frequency
-            print "namelist_template: "+namelist_template
-            print "wam_namelist_template: "+wam_namelist_template
+            #print("horiz_resolution: "+horiz_resolution)
+            #print("vert_resolution: "+vert_resolution)
+            #print("grid_type: "+grid_type)
+            #print("timestep: "+timestep)
+            #print("timestep_units: "+timestep_units)
+            #print("upload_frequency: "+upload_frequency)
+            print("namelist_template: "+namelist_template)
+            print("wam_namelist_template: "+wam_namelist_template)
 
           first_wuid = wuid + 1
           first_start_year = 9999
@@ -317,7 +317,7 @@ if __name__ == "__main__":
             ##with open(project_dir+'oifs_workgen/src/FILE_OF_WORKUNITS_TO_RESEND', 'r') as umids_resubmit:
             ##  for umid_line in umids_resubmit:
             ##    if umid_line.rstrip() == str(unique_member_id):
-            ##      print "umid_present"
+            ##      print("umid_present")
             ##      umid_present = 1
             ##if umid_present == 0:
             ##  continue
@@ -342,19 +342,19 @@ if __name__ == "__main__":
             if grid_type not in ('l_2','_2','_full','_3','_4'):
                raise ValueError('Invalid grid_type')
 
-            print "--------------------------------------"
-            print "wuid:" +str(wuid)
-            print "batchid: "+str(batchid)
-            print "analysis_member_number: "+analysis_member_number
-            print "ensemble_member_number: "+ensemble_member_number
-            #print "exptid: "+exptid
-            #print "fclen: "+fclen
-            #print "fclen_units: "+fclen_units
-            #print "start_day: "+str(start_day)
-            #print "start_hour: "+str(start_hour)
-            #print "start_month: "+str(start_month)
-            #print "start_year: "+str(start_year)
-            #print "unique_member_id: "+unique_member_id
+            print("--------------------------------------")
+            print("wuid:" +str(wuid))
+            print("batchid: "+str(batchid))
+            print("analysis_member_number: "+analysis_member_number)
+            print("ensemble_member_number: "+ensemble_member_number)
+            #print("exptid: "+exptid)
+            #print("fclen: "+fclen)
+            #print("fclen_units: "+fclen_units)
+            #print("start_day: "+str(start_day))
+            #print("start_hour: "+str(start_hour))
+            #print("start_month: "+str(start_month))
+            #print("start_year: "+str(start_year))
+            #print("unique_member_id: "+unique_member_id)
 
             # Set the start_date field
             if str(start_year) is None or start_year <= 0:
@@ -391,7 +391,7 @@ if __name__ == "__main__":
             try:
               os.path.exists(ic_ancil_location+str(ic_ancil_zip_in))
             except OSError:
-              print "The following file is not present in the oifs_ancil_files: "+ic_ancil_zip_in
+              print("The following file is not present in the oifs_ancil_files: "+ic_ancil_zip_in)
 
             # Change to the download dir and create link to file
             if not(options.submission_test):
@@ -401,7 +401,7 @@ if __name__ == "__main__":
               p.wait()
             else:
               args = ['ln','-s','../ancils/'+str(ic_ancil_zip_in),project_dir+ic_ancil_zip]
-              #print args
+              #print(args)
               p = subprocess.Popen(args)
               p.wait()
 
@@ -473,7 +473,7 @@ if __name__ == "__main__":
               try:
                 os.path.exists(ancil_file_location+"climate_data/"+str(climate_data_zip_in))
               except OSError:
-                print "The following file is not present in the oifs_ancil_files: "+str(climate_data_zip_in)
+                print("The following file is not present in the oifs_ancil_files: "+str(climate_data_zip_in))
 
             # Change to the download dir and create link to file
             if not(options.submission_test):
@@ -483,7 +483,7 @@ if __name__ == "__main__":
               p.wait()
             else:
               args = ['ln','-s','../ancils/'+str(climate_data_zip_in),'./download/'+climate_data_zip]
-              #print args
+              #print(args)
               p = subprocess.Popen(args)
               p.wait()
 
@@ -543,13 +543,15 @@ if __name__ == "__main__":
             # Calculate the number of timesteps from the number of days of the simulation
             if fclen_units == 'days':
               num_timesteps = (int(fclen) * 86400)/int(timestep)
-              #print "timestep: "+str(timestep)
-              #print "num_timesteps: "+str(num_timesteps)
+              print("timestep: "+str(timestep))
+              print("num_timesteps: "+str(num_timesteps))
+              print("fclen: "+str(int(fclen)))
               num_hours = int(fclen) * 24
               num_days = fclen
 
               # Throw an error if not cleanly divisible
-              if not(isinstance(num_timesteps,int)):
+              #if not(isinstance(num_timesteps,int)):
+              if int(num_timesteps) != num_timesteps:
                 raise ValueError('Length of simulation (in days) does not divide equally by timestep')
 
               # Set upload interval and number of uploads, upload_interval is the number of timesteps between uploads
@@ -563,7 +565,7 @@ if __name__ == "__main__":
                 upload_interval = (num_timesteps / int(fclen)) * 365
 
               # Throw an error if not cleanly divisible
-              if not(isinstance(upload_interval,int)):
+              if int(upload_interval) != upload_interval:
                 raise ValueError('The number of time steps does not divide equally by the upload frequency')
 
               # Set the name of the workunit (days)
@@ -573,8 +575,8 @@ if __name__ == "__main__":
               num_timesteps = (int(fclen) * 3600)/int(timestep)
               num_hours = int(fclen)
               num_days = str('{0:.3f}'.format(int(fclen) * 0.041666667)) # Convert to days and round to three decimals figures
-              # print "num_days: "+num_days
-              # print "fclen: "+fclen
+              # print("num_days: "+num_days)
+              # print("fclen: "+fclen)
 
               # Throw an error if not cleanly divisible
               if not(isinstance(num_timesteps,int)):
@@ -598,9 +600,9 @@ if __name__ == "__main__":
 
             number_of_uploads = int(math.ceil(float(num_timesteps) / float(upload_interval)))
 
-            print "upload_interval: "+str(upload_interval)
-            print "number_of_uploads: "+str(number_of_uploads)
-            print "disk_bound, disk_bound (Gb): "+disk_bound+", "+str(disk_bound_gb)
+            print("upload_interval: "+str(upload_interval))
+            print("number_of_uploads: "+str(number_of_uploads))
+            print("disk_bound, disk_bound (Gb): "+disk_bound+", "+str(disk_bound_gb))
 
             # Throw an error if not cleanly divisible
             if not(isinstance(number_of_uploads,int)):
@@ -610,16 +612,16 @@ if __name__ == "__main__":
             # Set the fpops_est and fpops_bound for the workunit
             fpops_est = str(flops_factor * int(float(num_days)))
             fpops_bound = str(flops_factor * int(float(num_days)) * 10)
-            #print "fpops_est: "+fpops_est
-            #print "fpops_bound: "+fpops_bound
+            #print("fpops_est: "+fpops_est)
+            #print("fpops_bound: "+fpops_bound)
 
             upload_infos = batch.getElementsByTagName('upload_info')
             for upload_info in upload_infos:
               upload_handler = str(upload_info.getElementsByTagName('upload_handler')[0].childNodes[0].nodeValue)
               result_template_prefix = str(upload_info.getElementsByTagName('result_template_prefix')[0].childNodes[0].nodeValue)
               result_template = result_template_prefix+'_n'+str(number_of_uploads)+'.xml'
-              #print "upload_handler: "+upload_handler
-              #print "result_template: "+project_dir+result_template
+              #print("upload_handler: "+upload_handler)
+              #print("result_template: "+project_dir+result_template)
 
             # If result template does not exist, then create a new template
             if not (os.path.exists(project_dir+result_template)) or (options.submission_test):
@@ -651,7 +653,7 @@ if __name__ == "__main__":
                 print >> OUTPUT, output_string
                 OUTPUT.close()
               else:
-                print "result template = "+output_string
+                print("result template = "+output_string)
 
             # Set the server_cgi from the upload_handler string
             server_cgi = upload_handler[:-19]
@@ -705,7 +707,7 @@ if __name__ == "__main__":
               p = subprocess.Popen(args)
               p.wait()
 
-            print os.getcwd()
+            #print os.getcwd()
 
             # Read in the fullpos_namelist
             with open(fullpos_namelist) as namelist_file_2:
@@ -734,8 +736,6 @@ if __name__ == "__main__":
               wam_file.writelines(wam_template_file)
             wam_file.close()
 
-            print os.getcwd()
-
             # Zip together the fort.4 and wam_namelist files
             if not(options.submission_test):
               zip_file = zipfile.ZipFile(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip','w')
@@ -762,13 +762,13 @@ if __name__ == "__main__":
               try:
                 os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip')
               except OSError:
-                print "The following file is not present in the download files: "+workunit_name+'.zip'
+                print("The following file is not present in the download files: "+workunit_name+'.zip')
 
               # Test whether the ifsdata_zip is present
               try:
                 os.path.exists(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+ifsdata_zip)
               except OSError:
-                print "The following file is not present in the download files: "+ifsdata_zip
+                print("The following file is not present in the download files: "+ifsdata_zip)
 
             # Construct the input template
             input_string="<input_template>\n" +\
@@ -821,7 +821,7 @@ if __name__ == "__main__":
               print >> OUTPUT, input_string
               OUTPUT.close()
             else:
-              print "input template = "+input_string
+              print("input template = "+input_string)
 
             # Change back to the project directory
             if not(options.submission_test):
@@ -837,14 +837,14 @@ if __name__ == "__main__":
               workunit_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip','rb').read()).hexdigest()
             else:
               workunit_zip_cksum = hashlib.md5(open('./download/'+workunit_name+'.zip','rb').read()).hexdigest()
-            print "workunit_zip_cksum = "+str(workunit_zip_cksum)
+            print("workunit_zip_cksum = "+str(workunit_zip_cksum))
 
             # Calculate the size of the workunit zip in bytes
             if not(options.submission_test):
               workunit_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/workunits/'+workunit_name+'.zip')
             else:
               workunit_zip_size = os.path.getsize('./download/'+workunit_name+'.zip')
-            print "workunit_zip_size = "+str(workunit_zip_size)
+            print("workunit_zip_size = "+str(workunit_zip_size))
 
 
             if not(options.submission_test):
@@ -852,21 +852,19 @@ if __name__ == "__main__":
             else:
               ic_ancil_url = project_url+str(ic_ancil_zip)
 
-            print os.getcwd()
-
             # Get the md5 checksum of the ic_ancil zip file
             if not(options.submission_test):
               ic_ancil_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip),'rb').read()).hexdigest()
             else:
               ic_ancil_zip_cksum = hashlib.md5(open('./download/'+str(ic_ancil_zip),'rb').read()).hexdigest()
-            print "ic_ancil_zip_cksum = "+str(ic_ancil_zip_cksum)
+            print("ic_ancil_zip_cksum = "+str(ic_ancil_zip_cksum))
 
             # Calculate the size of the ic_ancil zip in bytes
             if not(options.submission_test):
               ic_ancil_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ic_ancil_zip))
             else:
               ic_ancil_zip_size = os.path.getsize('./download/'+str(ic_ancil_zip))
-            print "ic_ancil_zip_size = "+str(ic_ancil_zip_size)
+            print("ic_ancil_zip_size = "+str(ic_ancil_zip_size))
 
 
             if not(options.submission_test):
@@ -879,14 +877,14 @@ if __name__ == "__main__":
               ifsdata_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip),'rb').read()).hexdigest()
             else:
               ifsdata_zip_cksum = hashlib.md5(open('./download/'+str(ifsdata_zip),'rb').read()).hexdigest()
-            print "ifsdata_zip_cksum = "+str(ifsdata_zip_cksum)
+            print("ifsdata_zip_cksum = "+str(ifsdata_zip_cksum))
 
             # Calculate the size of the ifsdata zip in bytes
             if not(options.submission_test):
               ifsdata_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(ifsdata_zip))
             else:
               ifsdata_zip_size = os.path.getsize('./download/'+str(ifsdata_zip))
-            print "ifsdata_zip_size = "+str(ifsdata_zip_size)
+            print("ifsdata_zip_size = "+str(ifsdata_zip_size))
 
 
             if not(options.submission_test):
@@ -899,14 +897,14 @@ if __name__ == "__main__":
               climate_data_zip_cksum = hashlib.md5(open(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip),'rb').read()).hexdigest()
             else:
               climate_data_zip_cksum = hashlib.md5(open('./download/'+str(climate_data_zip),'rb').read()).hexdigest()
-            print "climate_data_zip_cksum = "+str(climate_data_zip_cksum)
+            print("climate_data_zip_cksum = "+str(climate_data_zip_cksum))
 
             # Calculate the size of the climate_data zip in bytes
             if not(options.submission_test):
               climate_data_zip_size = os.path.getsize(download_dir+'batch_'+batch_prefix+str(batchid)+'/ancils/'+str(climate_data_zip))
             else:
               climate_data_zip_size = os.path.getsize('./download/'+str(climate_data_zip))
-            print "climate_data_zip_size = "+str(climate_data_zip_size)
+            print("climate_data_zip_size = "+str(climate_data_zip_size))
 
             # Run the create_work script to create the workunit
             args = ["./bin/create_work","-appname",str(options.app_name),"-wu_name",str(workunit_name),"-wu_template",\
@@ -920,7 +918,7 @@ if __name__ == "__main__":
               p = subprocess.Popen(args)
               p.wait()
             else:
-              print args
+              print(args)
 
             # Calculate the run_years 
             if fclen_units == 'days':
@@ -936,7 +934,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the fullpos_namelist details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -946,7 +944,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the analysis_member_number details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -956,7 +954,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the ensemble_member_number details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -966,7 +964,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the fclen details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -976,7 +974,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the fclen_units details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -986,7 +984,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the start_day details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -996,7 +994,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the start_hour details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1006,7 +1004,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the start_month details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1016,7 +1014,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the start_year details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1026,7 +1024,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the ic_ancil_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1036,7 +1034,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the GHG_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1046,7 +1044,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the SO4_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1056,7 +1054,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the radiation_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1066,7 +1064,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
             # Enter the climate_data_zip details of the submitted workunit into the parameter table
             query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1076,7 +1074,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
 
             # If baroclinic wave simulation enter values for parameters into parameter table
@@ -1090,7 +1088,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zb details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1100,7 +1098,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zt0 details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1110,7 +1108,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zu0 details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1120,7 +1118,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zrh0 details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1130,7 +1128,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zgamma details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1140,7 +1138,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zchar details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1150,7 +1148,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
             # If perturbed surface enter values for parameters into parameter table
             if options.app_name == 'oifs_43r3_ps':
@@ -1163,7 +1161,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zuncertb details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1173,7 +1171,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zuncertc details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1183,7 +1181,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zuncertd details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1193,7 +1191,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
                # Enter the zuncerte details of the submitted workunit into the parameter table
                query = """insert into parameter(paramtypeid,charvalue,submodelid,workunitid) \
@@ -1203,7 +1201,7 @@ if __name__ == "__main__":
                  cursor.execute(query)
                  db.commit()
                else:
-                 print query
+                 print(query)
 
 
         # Check if class is openifs
@@ -1211,8 +1209,8 @@ if __name__ == "__main__":
           # Substitute the values of the workunit_range and batchid into the submission XML and write out into the sent folder
           if not(options.submission_test):
             with open(input_directory+'/'+input_xmlfile) as xmlfile:
-              # print "input_directory+input_xmlfile: "+input_directory+'/'+input_xmlfile
-              # print "xmlfile: "+str(xmlfile)
+              # print("input_directory+input_xmlfile: "+input_directory+'/'+input_xmlfile)
+              # print("xmlfile: "+str(xmlfile))
               xmlfile_tree = ET.parse(xmlfile)
               xmlfile_root = xmlfile_tree.getroot()
               for elem in xmlfile_root.getiterator():
@@ -1247,7 +1245,7 @@ if __name__ == "__main__":
               cursor.execute(query)
               db.commit()
             else:
-              print query
+              print(query)
 
     # Change back to the project directory
     if not(options.submission_test):
@@ -1268,7 +1266,7 @@ if __name__ == "__main__":
     if os.path.exists(lockfile):
       os.remove(lockfile)
 
-    print ""
-    print "--------------------------------------"
-    print "Finishing submission: "+str(datetime.datetime.now())
-    print "--------------------------------------"
+    print("")
+    print("--------------------------------------")
+    print("Finishing submission: "+str(datetime.datetime.now()))
+    print("--------------------------------------")
