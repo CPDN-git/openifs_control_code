@@ -2,7 +2,7 @@
 
 # Script to submit OpenIFS workunits
 
-# This script has been written by Andy Bowery (Oxford University, 2022)
+# This script has been written by Andy Bowery (Oxford University, 2023)
 
 if __name__ == "__main__":
 
@@ -48,7 +48,6 @@ if __name__ == "__main__":
 
     # Set the flops factor (for the progress bar)
     flops_factor = 12800000000000
-    # flops_factor = 1078000000000 # Original
 
     #-----------------Parse the project config xml file-----------------
     
