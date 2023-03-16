@@ -13,6 +13,8 @@ if __name__ == "__main__":
     from xml.dom import minidom
     from shutil import copyfile
 
+    #-----------------Parse command line-----------------
+    
     # use argparse to read in the options from the shell command line
     parser = argparse.ArgumentParser()
     # app_name is either oifs_43r3, oifs_43r3_arm, oifs_43r3_bl or oifs_43r3_ps
@@ -29,6 +31,8 @@ if __name__ == "__main__":
       raise ValueError('Submission script test must be either true or false')
     #print("Submission script test: "+options.submission_test
 
+    #----------------------------------------------------
+    
     # Check if a lockfile is present from an ongoing submission
     lockfile='/tmp/lockfile_workgen'
     print("Waiting for lock...\n")
@@ -46,7 +50,8 @@ if __name__ == "__main__":
     flops_factor = 12800000000000
     # flops_factor = 1078000000000 # Original
 
-    # Parse the project config xml file
+    #-----------------Parse the project config xml file-----------------
+    
     #xmldoc3 = minidom.parse(project_dir+'../../config.xml')
     xmldoc3 = minidom.parse('../../config.xml')
     configs = xmldoc3.getElementsByTagName('config')
@@ -87,6 +92,8 @@ if __name__ == "__main__":
       secondary_db = ''
       project_url = ''
       database_port = ''
+        
+    #------From database read appid, last workunitid and last batchid------
 
     # If submission_test is not true, query the database
     if not(options.submission_test):
@@ -136,6 +143,8 @@ if __name__ == "__main__":
       batch_count = last_batchid[0]
     print("Last batch id: "+str(batch_count))
 
+    #--------------------------------------------------------------------------
+    
     print("")
     print("--------------------------------------")
     print("Starting submission run: "+str(datetime.datetime.now()))
@@ -147,6 +156,8 @@ if __name__ == "__main__":
       if not os.path.isdir(project_dir+"temp_openifs_submission_files"):
         os.mkdir(project_dir+"temp_openifs_submission_files")
 
+    #------------------Read the submission and config XMLs--------------------
+        
     # Iterate over the xmlfile in the input directory
     for input_xmlfile in os.listdir(input_directory):
       if input_xmlfile.endswith(".xml"):
@@ -377,6 +388,8 @@ if __name__ == "__main__":
             elif start_hour > 0 and start_hour < 25:
                start_date = start_date + str(start_hour).zfill(2)
 
+            #----------------------------Construct the ancillary files----------------------------
+            
             # Construct ic_ancil_location
             if not(options.submission_test):
               ic_ancil_location = ancil_file_location+"ic_ancil/"+str(exptid)+"/"+str(start_date)+"/"+str(analysis_member_number)+"/"
@@ -487,6 +500,8 @@ if __name__ == "__main__":
               p = subprocess.Popen(args)
               p.wait()
 
+            #--------------------------Calculate model parameters required for submission----------------------------                
+                
             # GC: Set the memory bound & estimated output instance filesizes
             # These are taken from measurements by G.Carver and listed at:
             #  https://docs.google.com/document/d/1AxLzZ6-m2owRscf_9SCv2TwRAcMl1pzbxFfbm6qeSL4/edit?usp=sharing
@@ -614,7 +629,9 @@ if __name__ == "__main__":
             fpops_bound = str(flops_factor * int(float(num_days)) * 10)
             #print("fpops_est: "+fpops_est)
             #print("fpops_bound: "+fpops_bound)
-
+            
+            #----------------------Construct XML for entry into workunit table----------------------
+            
             upload_infos = batch.getElementsByTagName('upload_info')
             for upload_info in upload_infos:
               upload_handler = str(upload_info.getElementsByTagName('upload_handler')[0].childNodes[0].nodeValue)
@@ -658,6 +675,8 @@ if __name__ == "__main__":
             # Set the server_cgi from the upload_handler string
             server_cgi = upload_handler[:-19]
 
+            #-------------------------Construct namelist files----------------------------
+            
             if not(options.submission_test):
               namelist_template_dir = project_dir+'oifs_workgen/namelist_template_files/'
             else:
@@ -770,6 +789,8 @@ if __name__ == "__main__":
               except OSError:
                 print("The following file is not present in the download files: "+ifsdata_zip)
 
+            #----------------------Construct the XML for entry into the result table-------------------    
+                
             # Construct the input template
             input_string="<input_template>\n" +\
               "<file_info>\n" +\
@@ -823,6 +844,8 @@ if __name__ == "__main__":
             else:
               print("input template = "+input_string)
 
+            #------------------------Set file URLs and get file sizes-------------------------
+            
             # Change back to the project directory
             if not(options.submission_test):
               os.chdir(project_dir)
@@ -906,6 +929,8 @@ if __name__ == "__main__":
               climate_data_zip_size = os.path.getsize('./download/'+str(climate_data_zip))
             print("climate_data_zip_size = "+str(climate_data_zip_size))
 
+            #----------------------Create the workunit in the BOINC database-----------------------
+            
             # Run the create_work script to create the workunit
             args = ["./bin/create_work","-appname",str(options.app_name),"-wu_name",str(workunit_name),"-wu_template",\
                     "templates/"+str(options.app_name)+"_in_"+str(wuid),"-result_template",result_template,\
@@ -920,6 +945,8 @@ if __name__ == "__main__":
             else:
               print(args)
 
+            #------------Enter workunit details into the cpdn_workunit and parameter tables------------
+            
             # Calculate the run_years 
             if fclen_units == 'days':
               run_years = 0.00274 * int(fclen)
@@ -1203,6 +1230,7 @@ if __name__ == "__main__":
                else:
                  print(query)
 
+        #------------Enter into the processed submission XML the batch and workunit details---------------
 
         # Check if class is openifs
         if not non_openifs_class:
@@ -1234,6 +1262,8 @@ if __name__ == "__main__":
             f_out.close()
             f_in.close()
 
+          #---------------Enter into the cpdn_batch table the details of the submitted batch---------------
+            
           # If a new batch then enter the details of this new batch into the cpdn_batch table
           if not(xml_batchid.isdigit()):
             query = """insert into cpdn_batch(id,name,description,first_start_year,appid,server_cgi,owner,ul_files,tech_info,\
@@ -1246,6 +1276,8 @@ if __name__ == "__main__":
               db.commit()
             else:
               print(query)
+
+    #--------------------Clean up and finish--------------------
 
     # Change back to the project directory
     if not(options.submission_test):
